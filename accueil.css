@@ -1,0 +1,40 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    font-size: 3rem;
+    margin: 50px 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    border-bottom: 10px solid white;
+    display: inline-block; 
+}
+
+.image_jeu img {
+    width: 300px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 15px;
+    
+}
+.image_jeu a:hover img {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+.image_jeu img{
+    border-radius: 15px;
+}
+.jeux1 img {
+    border: 5px solid rgba(0, 153, 255, 0.8); 
+}
+
+.jeux2 img {
+    border: 5px solid rgba(255, 0, 0, 0.8); 
+}
