@@ -1,0 +1,76 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f1de;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #3d405b;
+    color: white;
+    padding: 20px;
+    font-size: 24px;
+}
+
+.games-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    margin-top: 50px;
+}
+
+.game-card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 250px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out;
+}
+
+.pendu {
+    background-color: #ffcc00;
+}
+
+.wordle {
+    background-color: #d3d3d3;
+}
+
+.game-card img {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 10px;
+}
+
+.game-card:hover {
+    transform: scale(1.05);
+}
+
+button {
+    display: block;
+    width: 80%;
+    padding: 10px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #3d405b;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    margin: 10px auto;
+    transition: background-color 0.3s;
+}
+
+
+button:hover {
+    background-color: #282c40;
+}
+
+@media (max-width: 768px) {
+    .games-container {
+        flex-direction: column;
+    }
+}
