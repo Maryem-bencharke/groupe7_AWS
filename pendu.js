@@ -1,9 +1,13 @@
 let life = 6;
 let wordToGuess = "";
 let lettersTyped = [];
+let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 let keyboardEventHandler = (event) => {
     event.preventDefault();
-    guess(event.key.toUpperCase());
+    // potentiellement rajouter un parser pour les accents au clavier
+    if (alphabet.includes(event.key.toUpperCase())) {
+        guess(event.key.toUpperCase());
+    }
 }
 
 function guess(letterGuessed) {
@@ -40,7 +44,6 @@ function guess(letterGuessed) {
 
 function createVirtualKeyboard() {
     let Virtualkeyboard = document.getElementById('keyboard');
-    let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     for (let letter of alphabet) {
         let button = document.createElement("button");
         button.innerText = letter;
