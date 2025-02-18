@@ -1,7 +1,12 @@
+import { collection, query, where, getDocs, doc} from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+import { db } from "./firebase-config.js";
+
+
 let life = 6;
 let wordToGuess = "";
 let lettersTyped = [];
 let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+let wordCount = 0;
 let keyboardEventHandler = (event) => {
     event.preventDefault();
     // potentiellement rajouter un parser pour les accents au clavier
@@ -62,9 +67,10 @@ function removeKeyboardEvent() {
     document.removeEventListener("keydown", keyboardEventHandler);
 }
 
-function initWord() {
+async function initWord() {
     // il faudra prendre un mot aléatoire depuis la base de donnée
-    wordToGuess = "BONJOUR".toUpperCase();
+    //wordToGuess = "BONJOUR".toUpperCase();
+    wordToGuess = await getRandomWord();
     document.getElementById("word-display").innerText = "_ ".repeat(wordToGuess.length);
 }
 
@@ -138,7 +144,34 @@ function replayButton() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+async function getRandomWord() {
+    try {
+        const random = ~~(Math.random() * wordCount);
+        const wordQuery = query(collection(db, "words"), where("id", "==", random));
+        const querySnapshot = await getDocs(wordQuery);
+        if (!querySnapshot.empty) {
+            console.log("mot trouvé " + querySnapshot.docs[0].data().word.toUpperCase())
+            return querySnapshot.docs[0].data().word.toUpperCase();
+        } else {
+            console.log("Aucun mot trouvé dans la base de données")
+            return null;
+        }
+    } catch (error) {
+        console.error("Erreur lors de la récupération :", error);
+    }
+}
+
+async function getWordCount() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "words"));
+        wordCount = querySnapshot.size;
+    } catch (error) {
+        console.error("Erreur lors de la récupération du nombre de mots :", error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await getWordCount();
     initWord();
     createVirtualKeyboard();
     addKeyboardEvent();
