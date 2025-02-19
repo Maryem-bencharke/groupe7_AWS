@@ -6,6 +6,7 @@ let currentGuess = "";
 // Écouteur pour le clavier de l'ordi
 document.addEventListener("keydown", (event) => {
     const key = event.key.toUpperCase();
+    //event.key pass la valeur de la touche
 
     if (key === "ENTER") {
         event.preventDefault(); 
@@ -22,9 +23,11 @@ document.addEventListener("keydown", (event) => {
 });
 
 // Écouteur pour le clavier sur le site
+//ajouter un listener sur chaque bouton de la classe keyboard
 document.querySelectorAll(".keyboard button").forEach(button => {
     button.addEventListener("click", () => {
         const key = button.dataset.key;
+        //on recupére la valeur du data-key equivalent à chaque bouton
 
         if (key === "Backspace" && currentGuess.length > 0) {
             currentGuess = currentGuess.slice(0, -1);
