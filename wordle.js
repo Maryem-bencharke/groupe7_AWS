@@ -17,22 +17,23 @@ socket.on("startGame", (data) => {
         return;
     }
 
-    alert(` Partie trouvée ! Devinez un mot de ${data.wordLength} lettres.`);
+    alert(`🎮 Partie trouvée ! Devinez un mot de ${data.wordLength} lettres.`);
     room = data.room;
     targetWord = data.word.toUpperCase();  // Définir le mot cible
+    createGrid(targetWord.length);
 });
 
 // Mise à jour du jeu lorsqu'un adversaire joue
 socket.on("updateGame", (data) => {
-    console.log(`L'adversaire a proposé : ${data.guess}`);
+    console.log(`📝 L'adversaire a proposé : ${data.guess}`);
 });
 
 // Fin de la partie
 socket.on("gameOver", (data) => {
     if (data.winner === socket.id) {
-        alert(" Vous avez gagné !");
+        alert("🏆 Vous avez gagné !");
     } else {
-        alert(`Vous avez perdu. Le mot était : ${data.correctWord}`);
+        alert(`😢 Vous avez perdu. Le mot était : ${data.correctWord}`);
     }
 });
 
@@ -55,7 +56,53 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-// Vérifier si le mot est correct et gérer les couleurs
+// Écouteur pour le clavier virtuel
+document.querySelectorAll(".keyboard button").forEach(button => {
+    button.addEventListener("click", () => {
+        const key = button.dataset.key;
+
+        if (key === "Backspace" && currentGuess.length > 0) {
+            currentGuess = currentGuess.slice(0, -1);
+        } else if (key === "Enter" && currentGuess.length === targetWord.length) {
+            checkWord();
+            socket.emit("guessWord", { room, guess: currentGuess });
+        } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWord.length) {
+            currentGuess += key;
+        }
+
+        updateGrid();
+    });
+});
+
+//Mise à jour de la grille affichée
+function updateGrid() {
+    for (let i = 0; i < targetWord.length; i++) {
+        const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
+        cell.textContent = currentGuess[i] || "";
+    }
+}
+
+//Création dynamique de la grille de jeu
+function createGrid(wordLength) {
+    const gridContainer = document.querySelector(".grid");
+    gridContainer.innerHTML = ""; // Nettoie la grille existante
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const row = document.createElement("div");
+        row.classList.add("row");
+
+        for (let i = 0; i < wordLength; i++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            cell.id = `cell-${attempt}-${i}`;
+            row.appendChild(cell);
+        }
+
+        gridContainer.appendChild(row);
+    }
+}
+
+//Vérification et affichage des couleurs des lettres
 function checkWord() {
     if (!room) {
         console.error("Erreur: la room n'a pas été définie !");
@@ -64,22 +111,25 @@ function checkWord() {
 
     if (currentGuess.length !== targetWord.length) return;
 
+    let correctLetters = 0;
+
     for (let i = 0; i < targetWord.length; i++) {
         const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
         const letter = currentGuess[i];
 
         if (letter === targetWord[i]) {
-            cell.style.backgroundColor = "green";  // Lettre bien placée
+            cell.style.backgroundColor = "green";  
+            correctLetters++;
         } else if (targetWord.includes(letter)) {
-            cell.style.backgroundColor = "orange";  // Lettre mal placée
+            cell.style.backgroundColor = "orange";  
         } else {
-            cell.style.backgroundColor = "grey";  // Mauvaise lettre
+            cell.style.backgroundColor = "grey";  
         }
     }
 
-    if (currentGuess === targetWord) {
+    if (correctLetters === targetWord.length) {
         socket.emit("gameOver", { room, winner: socket.id, correctWord: targetWord });
-        alert("Bravo, vous avez trouvé le mot !");
+        alert("🏆 Bravo, vous avez trouvé le mot !");
         return;
     }
 
@@ -88,7 +138,7 @@ function checkWord() {
 
     if (currentAttempt >= maxAttempts) {
         socket.emit("gameOver", { room, winner: "opponent", correctWord: targetWord });
-        alert(`Dommage ! Le mot était : ${targetWord}`);
+        alert(`😢 Dommage ! Le mot était : ${targetWord}`);
     }
 }
 

@@ -15,7 +15,7 @@ let waitingPlayer = null; // Stocke un joueur en attente
 let rooms = {}; // Stocke les parties en cours
 
 io.on("connection", (socket) => {
-    console.log(`Un joueur s'est connecté : ${socket.id}`);
+    console.log(`👤 Un joueur s'est connecté : ${socket.id}`);
 
     // Vérification pour éviter les connexions fantômes
     if (waitingPlayer === null) {
@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
         socket.join(room);
         io.to(room).emit("startGame", { room, wordLength: word.length, word });
 
-        console.log(`Salle créée : ${room} avec ${waitingPlayer.id} et ${socket.id}`);
+        console.log(`🆕 Salle créée : ${room} avec ${waitingPlayer.id} et ${socket.id}`);
         waitingPlayer = null; // Réinitialiser la file d’attente
     }
 
@@ -56,7 +56,7 @@ io.on("connection", (socket) => {
 
     // Gestion de la déconnexion d’un joueur
     socket.on("disconnect", () => {
-        console.log(`Un joueur s'est déconnecté : ${socket.id}`);
+        console.log(`❌ Un joueur s'est déconnecté : ${socket.id}`);
         Object.keys(rooms).forEach(room => {
             if (rooms[room].players.includes(socket.id)) {
                 io.to(room).emit("gameOver", { winner: "Déconnexion", correctWord: rooms[room].word });
