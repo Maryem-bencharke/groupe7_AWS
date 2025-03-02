@@ -1,24 +1,54 @@
-import { collection, query, where, getDocs, doc} from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 import { db } from "./firebase-config.js";
+import { io } from "https://cdn.socket.io/4.4.1/socket.io.min.js";
 
-
+const socket = io("http://127.0.0.1:3000"); // Connexion au serveur
+let room = null;
 let life = 6;
 let wordToGuess = "";
 let lettersTyped = [];
-let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let wordCount = 0;
+
+// Gestion du matchmaking
+socket.on("waiting", (message) => {
+    alert(message);
+});
+
+socket.on("startGame", (data) => {
+    alert("Partie trouvée ! Devinez le mot !");
+    room = data.room;
+    wordToGuess = data.word.toUpperCase();
+    document.getElementById("word-display").innerText = "_ ".repeat(wordToGuess.length);
+});
+
+socket.on("opponentGuess", (data) => {
+    console.log(`L'adversaire a tenté la lettre : ${data.letter}`);
+});
+
+socket.on("gameOver", (data) => {
+    if (data.winner === socket.id) {
+        alert("Vous avez gagné !");
+    } else {
+        alert(`Vous avez perdu. Le mot était : ${data.correctWord}`);
+    }
+});
+
+// Gestion des entrées clavier
 let keyboardEventHandler = (event) => {
     event.preventDefault();
-    // potentiellement rajouter un parser pour les accents au clavier
-    if (alphabet.includes(event.key.toUpperCase())) {
-        guess(event.key.toUpperCase());
+    let letter = event.key.toUpperCase();
+    if (alphabet.includes(letter) && !lettersTyped.includes(letter)) {
+        guess(letter);
+        socket.emit("guessLetter", { room, letter });
     }
-}
+};
 
 function guess(letterGuessed) {
     if (!lettersTyped.includes(letterGuessed)) {
         lettersTyped.push(letterGuessed);
         document.getElementById(letterGuessed).disabled = true;
+
         if (wordToGuess.includes(letterGuessed)) {
             let display = document.getElementById("word-display");
             let text = display.innerText.split(" ");
@@ -27,21 +57,17 @@ function guess(letterGuessed) {
                     text[index] = letterGuessed;
                 }
             }
-            text = text.join(" ");
-            display.innerText = text;
+            display.innerText = text.join(" ");
             if (!text.includes("_")) {
-                // Victoire
                 victory();
-                console.log("victoire");
+                socket.emit("gameOver", { room, winner: socket.id, correctWord: wordToGuess });
             }
         } else {
             life -= 1;
-            // affichage dans le canvas du pendu
             drawHangman(life);
             if (life < 1) {
-                // Défaite
                 defeat();
-                console.log("défaite");
+                socket.emit("gameOver", { room, winner: "opponent", correctWord: wordToGuess });
             }
         }
     }
@@ -54,9 +80,12 @@ function createVirtualKeyboard() {
         button.innerText = letter;
         button.id = letter;
         button.classList.add("letter");
-        button.onclick = function () {guess(letter)};
+        button.onclick = function () {
+            guess(letter);
+            socket.emit("guessLetter", { room, letter });
+        };
         Virtualkeyboard.appendChild(button);
-    }   
+    }
 }
 
 function addKeyboardEvent() {
@@ -67,25 +96,16 @@ function removeKeyboardEvent() {
     document.removeEventListener("keydown", keyboardEventHandler);
 }
 
-async function initWord() {
-    // il faudra prendre un mot aléatoire depuis la base de donnée
-    //wordToGuess = "BONJOUR".toUpperCase();
-    wordToGuess = await getRandomWord();
-    document.getElementById("word-display").innerText = "_ ".repeat(wordToGuess.length);
-}
-
 function victory() {
     document.getElementById("endBanner").style.display = "block";
-    let text = document.getElementById("victoryBanner");
-    text.innerText = "Victoire";
+    document.getElementById("victoryBanner").innerText = "Victoire !";
     blockVirtualKeyboard();
     removeKeyboardEvent();
 }
 
 function defeat() {
     document.getElementById("endBanner").style.display = "block";
-    let text = document.getElementById("victoryBanner");
-    text.innerText = "Défaite";
+    document.getElementById("victoryBanner").innerText = "Défaite !";
     blockVirtualKeyboard();
     removeKeyboardEvent();
 }
@@ -111,69 +131,28 @@ function activateVirtualKeyboard() {
 function drawHangman(step) {
     const canvas = document.getElementById("hangmanCanvas");
     switch (step) {
-        case 5 : // tête
+        case 5: // tête
             break;
-        case 4 : // corps
+        case 4: // corps
             break;
-        case 3 : // bras gauche
+        case 3: // bras gauche
             break;
-        case 2 : // bras droit
+        case 2: // bras droit
             break;
-        case 1 : // jambe gauche
+        case 1: // jambe gauche
             break;
-        case 0 : // jambe droite + X_X
+        case 0: // jambe droite + X_X
             break;
     }
-
 }
 
 function clearHangman() {
     const canvas = document.getElementById("hangmanCanvas");
-    // remettre à 0 le canvas
+    // Remettre à zéro le canvas
 }
 
-function replayButton() {
-    let replay = document.getElementById("buttonReplay");
-    replay.addEventListener("click", () => {
-        initWord();
-        activateVirtualKeyboard();
-        addKeyboardEvent();
-        hideEndBanner();
-        life = 6;
-        lettersTyped = [];
-    });
-}
-
-async function getRandomWord() {
-    try {
-        const random = ~~(Math.random() * wordCount);
-        const wordQuery = query(collection(db, "words"), where("id", "==", random));
-        const querySnapshot = await getDocs(wordQuery);
-        if (!querySnapshot.empty) {
-            console.log("mot trouvé " + querySnapshot.docs[0].data().word.toUpperCase())
-            return querySnapshot.docs[0].data().word.toUpperCase();
-        } else {
-            console.log("Aucun mot trouvé dans la base de données")
-            return null;
-        }
-    } catch (error) {
-        console.error("Erreur lors de la récupération :", error);
-    }
-}
-
-async function getWordCount() {
-    try {
-        const querySnapshot = await getDocs(collection(db, "words"));
-        wordCount = querySnapshot.size;
-    } catch (error) {
-        console.error("Erreur lors de la récupération du nombre de mots :", error);
-    }
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-    await getWordCount();
-    initWord();
+document.addEventListener("DOMContentLoaded", () => {
     createVirtualKeyboard();
     addKeyboardEvent();
-    replayButton();
-  });
+    socket.emit("joinGame");
+});
