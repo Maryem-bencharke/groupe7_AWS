@@ -5,32 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jeu du Pendu</title>
     <link rel="stylesheet" href="pendu.css">
-    <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script> <!-- Ajout de Socket.io -->
-    <script src="pendu.js" defer></script> <!-- Suppression du type module -->
+    <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
+    <script src="pendu.js" defer></script>
 </head>
 <body>
     <div class="banner">Jeu du Pendu</div>
-    <table class="endBanner" id="endBanner">
-        <tr>
-            <td colspan="2">
-                <div class="victoryBanner" id="victoryBanner"></div>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <button class="buttonEndGame" id="buttonReplay">Rejouer</button>
-            </td>
-            <td>
-                <button class="buttonEndGame" onclick="location.href='games.html'">Menu principal</button>
-            </td>
-        </tr>
-    </table>
-    <div class="hangman-container">
-        <div class="hangman-drawing">
-            <canvas id="hangmanCanvas" width="200" height="150"></canvas>
-        </div>
-        <div class="word-display" id="word-display"></div>
-        <div class="letter-grid" id="keyboard"></div>
+
+    <!-- Choix du mode de jeu -->
+    <div id="modeSelection">
+        <h2>Choisissez un mode :</h2>
+        <button onclick="startGame('solo')">Jouer en Solo</button>
+        <button onclick="startGame('multi')">Jouer en Multijoueur</button>
     </div>
+
+    <!-- Contenu du jeu caché au début -->
+    <div id="gameContainer" style="display: none;">
+        <div class="hangman-container">
+            <div class="hangman-drawing">
+                <canvas id="hangmanCanvas" width="200" height="150"></canvas>
+            </div>
+            <div class="word-display" id="word-display"></div>
+            <div class="letter-grid" id="keyboard"></div>
+        </div>
+    </div>
+
+    <div id="endBanner" style="display: none;">
+        <h2 id="victoryBanner"></h2>
+        <button onclick="resetGame()">Rejouer</button>
+        <button onclick="goToMainMenu()">Menu Principal</button>
+    </div>
+    
 </body>
 </html>
