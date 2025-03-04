@@ -5,66 +5,74 @@ let life = 6;
 let wordToGuess = "";
 let lettersTyped = [];
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+let gameEnded = false; //Empêcher le joueur de continuer après la fin
 
-//Gestion du matchmaking et début de partie
-socket.on("waiting", (message) => {
-    alert(message);
-});
-
+// ✅ Gestion du matchmaking et début de partie
 socket.on("startGame", (data) => {
+    console.log("🎮 Partie trouvée !", data);
     alert("🎮 Partie trouvée ! Devinez le mot !");
+    
     room = data.room;
     wordToGuess = data.word.toUpperCase();
+    
     document.getElementById("word-display").innerText = "_ ".repeat(wordToGuess.length);
 
     createVirtualKeyboard();
     addKeyboardEvent();
 });
 
-//Événements de l’adversaire
-socket.on("opponentGuess", (data) => {
-    console.log(`📝 L'adversaire a tenté la lettre : ${data.letter}`);
-});
-
-//Fin de partie immédiate
-socket.on("gameOver", (data) => {
-    if (data.winner === socket.id) {
-        alert("🏆 Vous avez gagné !");
-    } else {
-        alert(`😢 Vous avez perdu. Le mot était : ${data.correctWord}`);
+// ✅ Création du clavier virtuel
+function createVirtualKeyboard() {
+    let keyboard = document.getElementById("keyboard");
+    if (!keyboard) {
+        console.error("ERREUR : Élément clavier introuvable !");
+        return;
     }
 
-    //Désactiver le clavier et bloquer le jeu après la fin
-    blockVirtualKeyboard();
-    removeKeyboardEvent();
+    keyboard.innerHTML = ""; // Nettoyer le clavier pour éviter les doublons
 
-    //Affichage du message de fin
-    document.getElementById("endBanner").style.display = "block";
-    document.getElementById("victoryBanner").innerText =
-        data.winner === socket.id ? "Victoire !" : "Défaite !";
-});
+    for (let letter of alphabet) {
+        let button = document.createElement("button");
+        button.innerText = letter;
+        button.id = letter;
+        button.classList.add("letter");
+        button.onclick = function () {
+            if (!gameEnded) {
+                guess(letter);
+                socket.emit("guessLetter", { room, letter });
+            }
+        };
+        keyboard.appendChild(button);
+    }
 
-//Ajout des événements clavier physique
+    console.log("Clavier virtuel chargé !");
+}
+
+//Gérer les entrées clavier physiques
 function addKeyboardEvent() {
     document.addEventListener("keydown", keyboardEventHandler);
 }
 
-//Suppression des événements clavier lorsque le jeu se termine
+// ❌ Supprimer les événements clavier si le jeu est terminé
 function removeKeyboardEvent() {
     document.removeEventListener("keydown", keyboardEventHandler);
 }
 
-//Gestion du clavier physique
-let keyboardEventHandler = (event) => {
+// ✅ Fonction qui gère les touches du clavier physique
+function keyboardEventHandler(event) {
+    if (gameEnded) return; //Bloque les entrées si la partie est finie
+
     let letter = event.key.toUpperCase();
     if (alphabet.includes(letter) && !lettersTyped.includes(letter)) {
         guess(letter);
         socket.emit("guessLetter", { room, letter });
     }
-};
+}
 
-//Vérification des lettres et mise à jour de l'affichage
+// ✅ Fonction `guess()` corrigée
 function guess(letterGuessed) {
+    if (gameEnded) return; //Bloque si le jeu est terminé
+
     if (!lettersTyped.includes(letterGuessed)) {
         lettersTyped.push(letterGuessed);
         document.getElementById(letterGuessed).disabled = true;
@@ -73,8 +81,12 @@ function guess(letterGuessed) {
             updateWordDisplay(letterGuessed);
         } else {
             life -= 1;
-            drawHangman(life);
-            if (life < 1) {
+            if (life >= 0) {
+                drawHangman(life);
+            }
+
+            // ✅ Envoie "gameOver" SEULEMENT SI `life == 0`
+            if (life === 0) {
                 defeat();
                 socket.emit("gameOver", { room, winner: "opponent", correctWord: wordToGuess });
             }
@@ -82,7 +94,7 @@ function guess(letterGuessed) {
     }
 }
 
-//Mise à jour du mot affiché
+//Met à jour l'affichage du mot caché
 function updateWordDisplay(letterGuessed) {
     let display = document.getElementById("word-display");
     let text = display.innerText.split(" ");
@@ -99,41 +111,27 @@ function updateWordDisplay(letterGuessed) {
     }
 }
 
-//Création du clavier virtuel
-function createVirtualKeyboard() {
-    let keyboard = document.getElementById('keyboard');
-    keyboard.innerHTML = ""; // Nettoyer le clavier
-
-    for (let letter of alphabet) {
-        let button = document.createElement("button");
-        button.innerText = letter;
-        button.id = letter;
-        button.classList.add("letter");
-        button.onclick = function () {
-            guess(letter);
-            socket.emit("guessLetter", { room, letter });
-        };
-        keyboard.appendChild(button);
-    }
-}
-
-//Gérer la victoire
+//Fonction `victory()`
 function victory() {
+    alert("🏆 Vous avez gagné !");
+    gameEnded = true;
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "Victoire !";
     blockVirtualKeyboard();
     removeKeyboardEvent();
 }
 
-//Gérer la défaite
+//Fonction `defeat()`
 function defeat() {
+    alert("😢 Vous avez perdu !");
+    gameEnded = true;
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "Défaite !";
     blockVirtualKeyboard();
     removeKeyboardEvent();
 }
 
-//Désactiver le clavier
+//Désactiver le clavier après la fin de partie
 function blockVirtualKeyboard() {
     let buttons = document.getElementsByClassName("letter");
     for (let button of buttons) {
@@ -141,13 +139,21 @@ function blockVirtualKeyboard() {
     }
 }
 
-//Dessiner le pendu
+//Dessiner le pendu (fixé, toutes les parties sont bien affichées)
 function drawHangman(step) {
+    if (step < 0) return; // Évite les étapes négatives
+
     const canvas = document.getElementById("hangmanCanvas");
+    if (!canvas) {
+        console.error("❌ ERREUR : Canvas introuvable !");
+        return;
+    }
+
     const ctx = canvas.getContext("2d");
-    
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 3;
+
+    console.log(`✏ Dessin du pendu, étape ${step}`);
 
     switch (step) {
         case 5: // Tête
@@ -179,25 +185,36 @@ function drawHangman(step) {
             ctx.lineTo(75, 130);
             ctx.stroke();
             break;
-        case 0: // Jambe droite + Face triste
+        case 0: // Jambe droite + Visage triste
             ctx.beginPath();
             ctx.moveTo(100, 100);
             ctx.lineTo(125, 130);
             ctx.stroke();
 
-            // X_X sur le visage
+            // ❌ Ajout d'un visage triste "X_X"
             ctx.fillText("X   X", 90, 25);
             ctx.fillText("  -  ", 90, 35);
             break;
     }
 }
 
-//Rejouer une partie
-document.getElementById("buttonReplay").addEventListener("click", () => {
-    location.reload();
+//Gestion immédiate de la fin de partie pour les deux joueurs
+socket.on("gameOver", (data) => {
+    gameEnded = true; //Bloque les entrées immédiatement
+    if (data.winner === socket.id) {
+        alert("🏆 Vous avez gagné !");
+    } else {
+        alert(`😢 Vous avez perdu. Le mot était : ${data.correctWord}`);
+    }
+    blockVirtualKeyboard();
+    removeKeyboardEvent();
+    document.getElementById("endBanner").style.display = "block";
+    document.getElementById("victoryBanner").innerText =
+        data.winner === socket.id ? "Victoire !" : "Défaite !";
 });
 
 //Initialisation du jeu
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("📢 Page chargée, attente de connexion...");
     socket.emit("joinGame");
 });
