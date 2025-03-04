@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bomb Game</title>
+    <link rel="stylesheet" href="bombGame.css">
+    <script type="module" src="bombGame.js" defer></script>
+</head>
+<body>
+    <div class="banner">Bomb Game</div>
+    <div class="syllable" id="syllableDisplay"></div>
+    <input type="text"  id="textArea" maxlength="30" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="textArea">
+    <table class="endBanner" id="endBanner">
+        <tr>
+            <td colspan="2">
+                <div class="victoryBanner" id="victoryBanner"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button class="buttonEndGame" id="buttonReplay">Rejouer</button>
+            </td>
+            <td>
+                <button class="buttonEndGame" onclick="location.href='games.html'">Menu principal</button>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
