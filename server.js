@@ -16,10 +16,10 @@ let rooms = {};
 let players = new Set();
 
 io.on("connection", (socket) => {
-    console.log(`👤 Un vrai joueur s'est connecté : ${socket.id}`);
+    console.log(`Un joueur s'est connecté : ${socket.id}`);
 
     socket.on("joinGame", () => {
-        console.log(`✅ Un joueur a rejoint une partie : ${socket.id}`);
+        console.log(`Un joueur a rejoint une partie : ${socket.id}`);
         players.add(socket.id);
 
         if (waitingPlayer === null) {
@@ -27,7 +27,7 @@ io.on("connection", (socket) => {
             socket.emit("waiting", "En attente d'un adversaire...");
         } else {
             if (!waitingPlayer.connected) {
-                console.log(`❌ Suppression d'un joueur déconnecté`);
+                console.log(`Suppression d'un joueur déconnecté`);
                 waitingPlayer = socket;
                 socket.emit("waiting", "En attente d'un adversaire...");
                 return;
@@ -46,7 +46,7 @@ io.on("connection", (socket) => {
             socket.join(room);
             io.to(room).emit("startGame", { room, wordLength: word.length, word });
 
-            console.log(`🆕 Salle créée : ${room} avec ${waitingPlayer.id} et ${socket.id}`);
+            console.log(`Salle créée : ${room} avec ${waitingPlayer.id} et ${socket.id}`);
             waitingPlayer = null;
         }
     });
@@ -57,17 +57,17 @@ io.on("connection", (socket) => {
         }
     });
 
-    // 🔴 GESTION IMMÉDIATE DE LA FIN DE PARTIE
+    //GESTION IMMÉDIATE DE LA FIN DE PARTIE
     socket.on("gameOver", ({ room, winner, correctWord }) => {
         if (rooms[room]) {
             io.to(room).emit("gameOver", { winner, correctWord });
-            console.log(`🔴 Fin de partie dans ${room} : gagnant ${winner}, mot correct ${correctWord}`);
+            console.log(`Fin de partie dans ${room} : gagnant ${winner}, mot correct ${correctWord}`);
             delete rooms[room];
         }
     });
 
     socket.on("disconnect", () => {
-        console.log(`❌ Un joueur s'est déconnecté : ${socket.id}`);
+        console.log(`Un joueur s'est déconnecté : ${socket.id}`);
         players.delete(socket.id);
 
         Object.keys(rooms).forEach(room => {
@@ -84,4 +84,4 @@ function getRandomWord() {
     return words[Math.floor(Math.random() * words.length)];
 }
 
-server.listen(3000, () => console.log("🚀 Serveur multijoueur démarré sur http://127.0.0.1:3000"));
+server.listen(3000, () => console.log("Serveur multijoueur démarré sur http://127.0.0.1:3000"));

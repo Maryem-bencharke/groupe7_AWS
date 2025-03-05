@@ -15,7 +15,7 @@ function startGame(mode) {
     document.getElementById("gameContainer").style.display = "block";
 
     if (mode === "multi") {
-        socket.emit("joinGame"); // ✅ Envoyer au serveur UNIQUEMENT si c'est du multijoueur
+        socket.emit("joinGame"); //Envoyer au serveur UNIQUEMENT si c'est du multijoueur
     } else {
         wordToGuess = getRandomWord().toUpperCase();
         initGame();
@@ -31,7 +31,7 @@ socket.on("waiting", (message) => {
 
 // Initialisation du jeu
 function initGame() {
-    clearHangman(); // ✅ Effacer l'ancien pendu avant de recommencer
+    clearHangman(); //Effacer l'ancien pendu avant de recommencer
     document.getElementById("word-display").innerText = "_ ".repeat(wordToGuess.length);
     createVirtualKeyboard();
     addKeyboardEvent();

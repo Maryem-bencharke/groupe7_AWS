@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wordle</title>
     <link rel="stylesheet" href="wordle.css">
-    <!-- Ajout du client Socket.io -->
     <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
     <script src="wordle.js" defer></script>
 </head>
@@ -13,55 +12,16 @@
     <header class="banniere">
         <h1>Wordle</h1>
     </header>
-    <main>
-        <div class="game-container">
-            <div class="grid">
-                
-                <div class="row">
-                    <div class="cell" id="cell-0-0"></div>
-                    <div class="cell" id="cell-0-1"></div>
-                    <div class="cell" id="cell-0-2"></div>
-                    <div class="cell" id="cell-0-3"></div>
-                    <div class="cell" id="cell-0-4"></div>
-                </div>
-                <div class="row">
-                    <div class="cell" id="cell-1-0"></div>
-                    <div class="cell" id="cell-1-1"></div>
-                    <div class="cell" id="cell-1-2"></div>
-                    <div class="cell" id="cell-1-3"></div>
-                    <div class="cell" id="cell-1-4"></div>
-                </div>
-                <div class="row">
-                    <div class="cell" id="cell-2-0"></div>
-                    <div class="cell" id="cell-2-1"></div>
-                    <div class="cell" id="cell-2-2"></div>
-                    <div class="cell" id="cell-2-3"></div>
-                    <div class="cell" id="cell-2-4"></div>
-                </div>
-                <div class="row">
-                    <div class="cell" id="cell-3-0"></div>
-                    <div class="cell" id="cell-3-1"></div>
-                    <div class="cell" id="cell-3-2"></div>
-                    <div class="cell" id="cell-3-3"></div>
-                    <div class="cell" id="cell-3-4"></div>
-                </div>
-                <div class="row">
-                    <div class="cell" id="cell-4-0"></div>
-                    <div class="cell" id="cell-4-1"></div>
-                    <div class="cell" id="cell-4-2"></div>
-                    <div class="cell" id="cell-4-3"></div>
-                    <div class="cell" id="cell-4-4"></div>
-                </div>
-                <div class="row">
-                    <div class="cell" id="cell-5-0"></div>
-                    <div class="cell" id="cell-5-1"></div>
-                    <div class="cell" id="cell-5-2"></div>
-                    <div class="cell" id="cell-5-3"></div>
-                    <div class="cell" id="cell-5-4"></div>
-                </div>
-            </div>
 
-            <!-- Clavier -->
+    <div id="modeSelection">
+        <h2>Choisissez un mode :</h2>
+        <button onclick="startGame('solo')">Jouer en Solo</button>
+        <button onclick="startGame('multi')">Jouer en Multijoueur</button>
+    </div>
+
+    <main id="gameContainer" style="display: none;">
+        <div class="game-container">
+            <div class="grid" id="grid"></div>
             <div class="keyboard">
                 <div class="key-row">
                     <button data-key="A">A</button>
@@ -98,6 +58,12 @@
                     <button data-key="Backspace">⌫</button>
                 </div>
             </div>
+            <div id="endScreen" style="display: none;">
+                <p>Partie terminée ! Que voulez-vous faire ?</p>
+                <button id="replayButton">Rejouer</button>
+                <button id="menuButton">Menu principal</button>
+            </div>
+            
         </div>
     </main>
 </body>
