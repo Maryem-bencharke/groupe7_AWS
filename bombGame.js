@@ -4,18 +4,15 @@ let currentSyllable;
 let life = 3;
 let timer;
 
-function guess(word, syllable) {
+async function guess(word, syllable) {
     // si le mot à la syllabe et que le mot existe et que le mot est pas deja tape
-    console.log(word + ' ' + syllable)
-    if (word.includes(syllable) && !usedWords.includes(word)) {
+    if (word.includes(syllable) && !usedWords.includes(word) && await checkWord(word)) {
         usedWords.push(word);
         currentSyllable = getRandomSyllable();
         reloadSyllableDisplay(currentSyllable);
         eraseTextArea();
         startOrResetTimer();
     } else {
-        life -= 1;
-        checkDefeat(life);
         eraseTextArea();
     }
 }
@@ -74,6 +71,18 @@ function replayButton() {
         document.getElementById("textArea").focus();
     });
 }
+
+async function checkWord(word) {
+    const url = `https://api.datamuse.com/words?sp=${word}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.length > 0 && data[0].word.toLowerCase() === word.toLowerCase()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 document.addEventListener("keydown", (event) => {
     const key = event.key.toUpperCase();
