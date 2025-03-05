@@ -3,11 +3,14 @@ let syllables = ["NS", "ALO", "ES", "TR", "CON", "PO", "AIE", "NT", "IS", "TO", 
 let currentSyllable;
 let life = 3;
 let timer;
+let currentStreak = 0;
+let maxStreak = 0;
 
 async function guess(word, syllable) {
     // si le mot à la syllabe et que le mot existe et que le mot est pas deja tape
-    if (word.includes(syllable) && !usedWords.includes(word) && await checkWord(word)) {
+    if (word.includes(syllable) && !usedWords.includes(word)) {
         usedWords.push(word);
+        currentStreak += 1;
         currentSyllable = getRandomSyllable();
         reloadSyllableDisplay(currentSyllable);
         eraseTextArea();
@@ -27,7 +30,13 @@ function checkDefeat(life) {
         let text = document.getElementById("victoryBanner");
         text.innerText = "Défaite";
         document.getElementById("textArea").display = "none";
-        clearTimeout(timer);
+        if (currentStreak > maxStreak) {
+            maxStreak = currentStreak;
+        }
+        currentStreak = 0;
+        return true;
+    } else {
+        return false;
     }
 }
 
@@ -48,11 +57,14 @@ function startOrResetTimer() {
 
 function guessTimeout() {
     life -= 1;
-    checkDefeat(life);
-    currentSyllable = getRandomSyllable();
-    reloadSyllableDisplay(currentSyllable);
-    eraseTextArea();
-    startOrResetTimer();
+    if (checkDefeat(life)) {
+        clearTimeout(timer);
+    } else {
+        currentSyllable = getRandomSyllable();
+        reloadSyllableDisplay(currentSyllable);
+        eraseTextArea();
+        startOrResetTimer();
+    }
 }
 
 function hideEndBanner() {
@@ -83,6 +95,10 @@ async function checkWord(word) {
     }
 }
 
+function loadScore() {
+    document.getElementById("maxStreak").innerText = "Maximum : " + maxStreak;
+    document.getElementById("currentStreak").innerText = "Score actuel : " + currentStreak;
+}
 
 document.addEventListener("keydown", (event) => {
     const key = event.key.toUpperCase();
@@ -98,5 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
     reloadSyllableDisplay(currentSyllable);
     startOrResetTimer();
     replayButton();
-    document.getElementById("textArea").focus();
+    loadScore();
+    //document.getElementById("textArea").focus();
 });
