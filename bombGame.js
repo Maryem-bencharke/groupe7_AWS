@@ -8,7 +8,7 @@ let maxStreak = 0;
 
 async function guess(word, syllable) {
     // si le mot à la syllabe et que le mot existe et que le mot est pas deja tape
-    if (word.includes(syllable) && !usedWords.includes(word)) {
+    if (word.includes(syllable) && !usedWords.includes(word) && await checkWord(word)) {
         usedWords.push(word);
         currentStreak += 1;
         currentSyllable = getRandomSyllable();
