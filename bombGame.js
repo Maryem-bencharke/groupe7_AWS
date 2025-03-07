@@ -5,6 +5,11 @@ let life = 3;
 let timer;
 let currentStreak = 0;
 let maxStreak = 0;
+let accents = {"É" : "E", "È" : "E", "Ê" : "E", "Ë" : "E", 
+               "À" : "A", "Â" : "A", "Ä" : "A",
+               "Î" : "I", "Ï" : "I",
+               "Ç" : "C",
+               "*" : "", "$" : ""};
 
 async function guess(word, syllable) {
     // si le mot à la syllabe et que le mot existe et que le mot est pas deja tape
@@ -13,6 +18,7 @@ async function guess(word, syllable) {
         currentStreak += 1;
         currentSyllable = getRandomSyllable();
         reloadSyllableDisplay(currentSyllable);
+        showStreak();
         eraseTextArea();
         startOrResetTimer();
     } else {
@@ -34,6 +40,7 @@ function checkDefeat(life) {
             maxStreak = currentStreak;
         }
         currentStreak = 0;
+        loadScore();
         return true;
     } else {
         return false;
@@ -100,12 +107,29 @@ function loadScore() {
     document.getElementById("currentStreak").innerText = "Score actuel : " + currentStreak;
 }
 
+function showStreak() {
+    document.getElementById("currentStreak").innerText = "Score actuel : " + currentStreak;
+}
+
+function removeAccents(word) {
+    let filtered = ""
+    for (let letters of word) {
+        if (accents[letters]) {
+            filtered += accents[letters];
+        } else {
+            filtered += letters;
+        }
+    }
+    return filtered;
+}
+
 document.addEventListener("keydown", (event) => {
     const key = event.key.toUpperCase();
     if (key === "ENTER") {
         const text = document.getElementById("textArea").value.toUpperCase();
         const syllable = document.getElementById("syllableDisplay").innerText;
-        guess(text, syllable);
+        console.log(removeAccents(text));
+        guess(removeAccents(text), syllable);
     }
 });
 
