@@ -11,6 +11,7 @@ const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let gameEnded = false;
 let gameMode = null;
 let wordCount = 0;
+let roomName;
 
 // Sélection du mode de jeu
 async function startGame(mode) {
@@ -21,12 +22,32 @@ async function startGame(mode) {
     if (mode === "multi") {
         socket.emit("joinGame", "pendu"); //Envoyer au serveur UNIQUEMENT si c'est du multijoueur
     } else {
-        wordToGuess = await getRandomWord1()
+        wordToGuess = await getRandomWord1();
         wordToGuess = wordToGuess.toUpperCase();
         initGame();
     }
 }
 window.startGame = startGame;
+
+document.addEventListener("keydown", (event) => {
+    if (event.key.toUpperCase() === "ENTER") {
+        const word = document.getElementById("choosenWord").value;
+        if (word.length < 1) {
+            // afficher un message pour dire trop petit
+            console.log("mot trop petit");
+        } else {
+            socket.emit("wordChoosen", ({name: roomName, word: word}));
+        }     
+    }
+});
+
+// affichage après avoir envoyé et reçu son mot
+socket.on("startGuessing", (word) => {
+    clearHangman();
+    document.getElementById("word-display").innerText = word;
+    createVirtualKeyboard();
+    addKeyboardEvent();
+});
 
 // Empêcher le message "Attente d'un adversaire" si c'est le mode solo
 socket.on("waiting", (message) => {
@@ -50,6 +71,10 @@ socket.on("startGame", (data) => {
         wordToGuess = data.word.toUpperCase();
         initGame();
     }
+});
+
+socket.on("chooseWords", (msg) => {
+    // afficher aux joueurs de taper un mot mour l'autre
 });
 
 // Mode solo : génération d'un mot aléatoire
@@ -90,9 +115,8 @@ function createVirtualKeyboard() {
         button.id = letter;
         button.classList.add("letter");
         button.onclick = function () {
-            if (!gameEnded) {
+            if (!lettersTyped.includes(letter)) {
                 guess(letter);
-                if (gameMode === "multi") socket.emit("guessLetter", { room, letter });
             }
         };
         keyboard.appendChild(button);
@@ -111,34 +135,33 @@ function removeKeyboardEvent() {
 
 // Gestion des entrées clavier physiques
 function keyboardEventHandler(event) {
-    if (gameEnded) return;
-
     let letter = event.key.toUpperCase();
     if (alphabet.includes(letter) && !lettersTyped.includes(letter)) {
-        guess(letter);
-        if (gameMode === "multi") socket.emit("guessLetter", { room, letter });
-    }
-}
-
-// Vérification des lettres entrées
-function guess(letterGuessed) {
-    if (gameEnded || lettersTyped.includes(letterGuessed)) return;
-
-    lettersTyped.push(letterGuessed);
-    document.getElementById(letterGuessed).disabled = true;
-
-    if (wordToGuess.includes(letterGuessed)) {
-        updateWordDisplay(letterGuessed);
-    } else {
-        life -= 1;
-        if (life >= 0) drawHangman(life);
-
-        if (life === 0) {
-            defeat();
-            if (gameMode === "multi") socket.emit("gameOver", { room, winner: "opponent", correctWord: wordToGuess });
+        if (!lettersTyped.includes(letter)) {
+            guess(letter);
         }
     }
 }
+
+function guess(letterGuessed) {
+    lettersTyped.push(letterGuessed);
+    document.getElementById(letterGuessed).disabled = true;
+    socket.emit("guessLetter", {name: roomName, letter: letterGuessed});
+}
+
+socket.on("correctGuess", (letterGuessed) => {
+    updateWordDisplay(letterGuessed);
+});
+
+socket.on("incorrectGuess", () => {
+    life -= 1;
+    if (life >= 0) drawHangman(life);
+    if (life === 0) {
+        defeat();
+        //if (gameMode === "multi") socket.emit("gameOver", { room, winner: "opponent", correctWord: wordToGuess });
+    }
+})
+
 
 // Mise à jour de l'affichage du mot caché
 function updateWordDisplay(letterGuessed) {
@@ -278,6 +301,10 @@ function showChoosenWordDisplay() {
 
 // Initialisation du jeu
 document.addEventListener("DOMContentLoaded", async () => {
+    roomName = localStorage.getItem("name");
+    if (roomName) {
+        socket.emit("joinRoom", (roomName));
+    }
     await getWordCount1();
     console.log("Jeu prêt");
 });

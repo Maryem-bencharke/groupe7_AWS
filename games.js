@@ -14,6 +14,7 @@ socket.on("roomList", (rooms) => {
             td.classList.add("cursor");
             tr.className = rooms[name].game;
             td.addEventListener("click", () => {
+                localStorage.setItem("name", name);
                 switch (rooms[name].game) {
                     case "pendu":
                         window.location.href = 'pendu.html';
@@ -32,14 +33,12 @@ socket.on("roomList", (rooms) => {
     }
 });
 
-socket.on("redirect", (url) => {
-    window.location.href = url;
-});
-
 function createRoom() {
     const name = document.getElementById("roomName").value;
     const game = document.getElementById("gameSelect").value;
+    localStorage.setItem("name", name);
     socket.emit("createRoom", ({name, game}));
+    window.location.href = `/${game}.html`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
