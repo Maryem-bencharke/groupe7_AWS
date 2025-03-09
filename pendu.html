@@ -6,7 +6,7 @@
     <title>Jeu du Pendu</title>
     <link rel="stylesheet" href="pendu.css">
     <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
-    <script src="pendu.js" defer></script>
+    <script type="module" src="pendu.js" defer></script>
 </head>
 <body>
     <div class="banner">Jeu du Pendu</div>
@@ -14,8 +14,8 @@
     <!-- Choix du mode de jeu -->
     <div id="modeSelection">
         <h2>Choisissez un mode :</h2>
-        <button onclick="startGame('solo')">Jouer en Solo</button>
-        <button onclick="startGame('multi')">Jouer en Multijoueur</button>
+        <button onclick="startGame('solo')" class="button">Jouer en Solo</button>
+        <button onclick="startGame('multi')" class="button">Jouer en Multijoueur</button>
     </div>
     
 

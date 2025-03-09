@@ -68,6 +68,17 @@ body {
     cursor: not-allowed;
 }
 
+.button {
+    padding: 10px;
+    font-size: 14px;
+    color: #fff;
+    background-color: #3d405b;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    width: 150px;
+}
+
 .endBanner {
     display: none;
     color: white;

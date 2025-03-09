@@ -40,6 +40,10 @@ header {
     background-color: #d3d3d3;
 }
 
+.bomb {
+    background-color: #788be7;
+}
+
 .game-card img {
     width: 100px;
     height: 100px;

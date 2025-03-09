@@ -5,11 +5,6 @@ let life = 3;
 let timer;
 let currentStreak = 0;
 let maxStreak = 0;
-let accents = {"É" : "E", "È" : "E", "Ê" : "E", "Ë" : "E", 
-               "À" : "A", "Â" : "A", "Ä" : "A",
-               "Î" : "I", "Ï" : "I",
-               "Ç" : "C",
-               "*" : "", "$" : ""};
 
 async function guess(word, syllable) {
     // si le mot à la syllabe et que le mot existe et que le mot est pas deja tape
@@ -57,9 +52,18 @@ function eraseTextArea() {
 
 function startOrResetTimer() {
     if (timer) {
-        clearTimeout(timer);
+        clearInterval(timer);
     }
-    timer = setTimeout(guessTimeout, 5000);
+    let timeLeft = 5.1;
+    let timerDisplay = document.getElementById("timer");
+    timer = setInterval(() => {
+        timeLeft -= 0.10;
+        timerDisplay.innerText = timeLeft.toFixed(1) + "s";
+        if (timeLeft <= 0.05) {
+            clearInterval(timer);
+            guessTimeout();
+        }
+    }, 100);
 }
 
 function guessTimeout() {
@@ -111,16 +115,11 @@ function showStreak() {
     document.getElementById("currentStreak").innerText = "Score actuel : " + currentStreak;
 }
 
-function removeAccents(word) {
-    let filtered = ""
-    for (let letters of word) {
-        if (accents[letters]) {
-            filtered += accents[letters];
-        } else {
-            filtered += letters;
-        }
-    }
-    return filtered;
+function removeAccents(str) {
+    return str
+        .normalize("NFD") // Décompose les caractères accentués
+        .replace(/[\u0300-\u036f]/g, "") // Supprime les accents
+        .replace(/[^a-zA-Z]/g, "");
 }
 
 document.addEventListener("keydown", (event) => {

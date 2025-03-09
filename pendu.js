@@ -1,3 +1,6 @@
+import { collection, query, where, getDocs, doc} from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+import { db } from "./firebase-config.js";
+
 const socket = io("http://127.0.0.1:3000"); // Connexion au serveur
 
 let room = null;
@@ -7,9 +10,10 @@ let lettersTyped = [];
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let gameEnded = false;
 let gameMode = null;
+let wordCount = 0;
 
 // Sélection du mode de jeu
-function startGame(mode) {
+async function startGame(mode) {
     gameMode = mode;
     document.getElementById("modeSelection").style.display = "none";
     document.getElementById("gameContainer").style.display = "block";
@@ -17,10 +21,12 @@ function startGame(mode) {
     if (mode === "multi") {
         socket.emit("joinGame"); //Envoyer au serveur UNIQUEMENT si c'est du multijoueur
     } else {
-        wordToGuess = getRandomWord().toUpperCase();
+        wordToGuess = await getRandomWord1()
+        wordToGuess = wordToGuess.toUpperCase();
         initGame();
     }
 }
+window.startGame = startGame;
 
 // Empêcher le message "Attente d'un adversaire" si c'est le mode solo
 socket.on("waiting", (message) => {
@@ -47,9 +53,30 @@ socket.on("startGame", (data) => {
 });
 
 // Mode solo : génération d'un mot aléatoire
-function getRandomWord() {
-    const words = ["APPLE", "BANANA", "CHERRY", "ORANGE", "MELON"];
-    return words[Math.floor(Math.random() * words.length)];
+async function getRandomWord() {
+    try {
+        const random = ~~(Math.random() * wordCount);
+        const wordQuery = query(collection(db, "words"), where("id", "==", random));
+        const querySnapshot = await getDocs(wordQuery);
+        if (!querySnapshot.empty) {
+            console.log("mot trouvé " + querySnapshot.docs[0].data().word.toUpperCase())
+            return querySnapshot.docs[0].data().word.toUpperCase();
+        } else {
+            console.log("Aucun mot trouvé dans la base de données")
+            return null;
+        }
+    } catch (error) {
+        console.error("Erreur lors de la récupération :", error);
+    }
+}
+
+async function getWordCount() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "words"));
+        wordCount = querySnapshot.size;
+    } catch (error) {
+        console.error("Erreur lors de la récupération du nombre de mots :", error);
+    }
 }
 
 // Création du clavier virtuel
@@ -178,19 +205,23 @@ function showReplayOptions() {
 function goToMainMenu() {
     location.reload();
 }
+window.goToMainMenu = goToMainMenu;
 
 // Réinitialisation du jeu
-function resetGame() {
+async function resetGame() {
     gameEnded = false;
     life = 6;
     lettersTyped = [];
-    wordToGuess = getRandomWord().toUpperCase();
+    wordToGuess = await getRandomWord1()
+    wordToGuess = wordToGuess.toUpperCase();
     document.getElementById("word-display").innerText = "_ ".repeat(wordToGuess.length);
     document.getElementById("endBanner").style.display = "none";
     clearHangman();
     createVirtualKeyboard();
     addKeyboardEvent();
 }
+window.resetGame = resetGame;
+
 
 // Désactivation du clavier après la fin du jeu
 function blockVirtualKeyboard() {
@@ -222,7 +253,20 @@ function drawHangman(step) {
     }
 }
 
+function getRandomWord1() {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve("pomme");
+        }, 2000);
+    });
+}
+
+function getWordCount1() {
+    return 1
+}
+
 // Initialisation du jeu
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    await getWordCount1();
     console.log("Jeu prêt");
 });
