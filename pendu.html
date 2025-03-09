@@ -9,18 +9,9 @@
     <script type="module" src="pendu.js" defer></script>
 </head>
 <body>
-    <div class="banner">Jeu du Pendu</div>
+    <div class="banner">Jeu du Pendu</div>  
 
-    <!-- Choix du mode de jeu -->
-    <div id="modeSelection">
-        <h2>Choisissez un mode :</h2>
-        <button onclick="startGame('solo')" class="button">Jouer en Solo</button>
-        <button onclick="startGame('multi')" class="button">Jouer en Multijoueur</button>
-    </div>
-    
-
-    <!-- Contenu du jeu caché au début -->
-    <div id="gameContainer" style="display: none;">
+    <div id="gameContainer">
         <div class="hangman-container">
             <div class="hangman-drawing">
                 <canvas id="hangmanCanvas" width="200" height="150"></canvas>
@@ -36,5 +27,7 @@
         <button onclick="goToMainMenu()">Menu Principal</button>
     </div>
     
+    <input id="choosenWord" class="textArea" placeholder="Saisissez un mot pour l'adversaire"></input>
+
 </body>
 </html>

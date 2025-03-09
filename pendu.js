@@ -19,7 +19,7 @@ async function startGame(mode) {
     document.getElementById("gameContainer").style.display = "block";
 
     if (mode === "multi") {
-        socket.emit("joinGame"); //Envoyer au serveur UNIQUEMENT si c'est du multijoueur
+        socket.emit("joinGame", "pendu"); //Envoyer au serveur UNIQUEMENT si c'est du multijoueur
     } else {
         wordToGuess = await getRandomWord1()
         wordToGuess = wordToGuess.toUpperCase();
@@ -263,6 +263,17 @@ function getRandomWord1() {
 
 function getWordCount1() {
     return 1
+}
+
+function getChoosenWord() {
+    const word = document.getElementById("choosenWord");
+    word.style="display: none";
+    socket.emit("wordChoosen", (word.value));
+}
+
+function showChoosenWordDisplay() {
+    const word = document.getElementById("choosenWord");
+    word.style = "display: block";
 }
 
 // Initialisation du jeu
