@@ -106,6 +106,24 @@ io.on("connection", (socket) => {
         io.to(socket.id).emit("startGuessing", "_ ".repeat(word.length));
     })
 
+    socket.on("disconnect", () => {
+        console.log(`Un joueur s'est déconnecté : ${socket.id}`);
+        if (privateRooms[socket.id]) {
+            delete privateRooms[socket.id];
+        } else {
+            Object.keys(publicRooms).forEach(room => {
+                if (publicRooms[room] && publicRooms[room].players.includes(socket.id)) {
+                    publicRooms[room].players = publicRooms[room].players.filter(id => id !== socket.id);
+                    if (publicRooms[room].players.length === 0) {
+                        delete publicRooms[room];
+                    } else {
+                        io.to(room).emit("victory", "L'adversaire s'est déconnecté.");
+                    }
+                }
+            });
+        }
+    });
+
 });
 
 function getRandomWordTest() {
