@@ -5,6 +5,77 @@ let life = 6;
 let currentGuess = "";
 let roomName;
 
+<<<<<<< HEAD
+=======
+//Fonction pour démarrer le jeu (Solo ou Multi)
+function startGame(mode) {
+    gameMode = mode;
+    document.getElementById("modeSelection").style.display = "none";
+    document.getElementById("gameContainer").style.display = "block";
+    resetGame();
+
+    if (mode === "multi") {
+        socket.emit("joinGame");
+    } else {
+        targetWordLenght = getRandomWord().toUpperCase();
+        createGrid(targetWordLenght);
+    }
+}
+
+//Gestion de l'attente d'un joueur
+socket.on("waiting", (message) => {
+    if (gameMode === "multi") {
+        alert(message);
+    }
+});
+
+//Lancement de la partie en mode multijoueur
+socket.on("startGame", (data) => {
+    if (!data.word) {
+        console.error("Erreur: le mot n'a pas été défini !");
+        return;
+    }
+    
+    room = data.room;
+    targetWordLenght = data.word.toUpperCase();
+    createGrid(targetWordLenght);
+});
+
+//Gestion des mises à jour pour l'adversaire
+socket.on("updateGame", (data) => {
+    console.log(`L'adversaire a proposé : ${data.guess}`);
+});
+
+<<<<<<< HEAD
+//in de la partie
+socket.on("gameOver", (data) => {
+    alert(data.winner === socket.id ? "Vous avez gagné !" : `Vous avez perdu. Le mot était : ${data.correctWord}`);
+    showEndScreen();
+=======
+// Fin de la partie
+socket.on("gameOver", async (data) => {
+    const user = auth.currentUser;
+    if (user) {
+        const isWinner = data.winner === socket.id;
+        await updatePlayerStats(user.uid, isWinner);
+        console.log("✅ Statistiques mises à jour !");
+    }
+
+    if (data.winner === socket.id) {
+        victory();
+    } else {
+        defeat(data.correctWord);
+    }
+>>>>>>> 4026239 (classment)
+});
+
+//Générer un mot aléatoire pour le mode solo
+function getRandomWord() {
+    const words = ["APPLE", "BANANA", "CHERRY", "ORANGE", "MELON"];
+    return words[Math.floor(Math.random() * words.length)];
+}
+
+>>>>>>> b5465cd (classment)
 //Mise à jour de la grille
 function updateGrid() {
     for (let i = targetWordLenght - 1; i >= 0; i--) {
@@ -199,6 +270,7 @@ socket.on("soloGameResult", (msg) => {
     document.getElementById("victoryBanner").innerText = "Victoire";
 });
 
+<<<<<<< HEAD
 function showChoosenWordDisplay() {
     const word = document.getElementById("choosenWord");
     word.style = "display: block";
@@ -207,6 +279,40 @@ function showChoosenWordDisplay() {
 }
 
 // Initialisation du jeu
+=======
+    if (correctLetters === targetWord.length) {
+        socket.emit("gameOver", { room, winner: socket.id, correctWord: targetWord });
+        victory();
+        return;
+    }
+
+    currentAttempt++;
+    currentGuess = "";
+
+    if (currentAttempt >= maxAttempts) {
+        socket.emit("gameOver", { room, winner: "opponent", correctWord: targetWord });
+        defeat(targetWord);
+    }
+}
+
+// Fonction Victoire
+function victory() {
+    document.getElementById("endBanner").style.display = "block";
+    document.getElementById("victoryBanner").innerText = "🏆 Victoire !";
+    blockVirtualKeyboard();
+    removeKeyboardEvent();
+}
+
+// Fonction Défaite
+function defeat(correctWord) {
+    document.getElementById("endBanner").style.display = "block";
+    document.getElementById("victoryBanner").innerText = `😢 Défaite ! Le mot était : ${correctWord}`;
+    blockVirtualKeyboard();
+    removeKeyboardEvent();
+}
+
+// Informer le serveur qu'on veut rejoindre une partie
+>>>>>>> 4026239 (classment)
 document.addEventListener("DOMContentLoaded", () => {
     roomName = localStorage.getItem("name");
     if (roomName) {

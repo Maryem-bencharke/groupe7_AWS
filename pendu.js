@@ -159,6 +159,7 @@ function createVirtualKeyboard() {
     }
 }
 
+<<<<<<< HEAD
 function hideChoosenWordDisplay() {
     const word = document.getElementById("choosenWord");
     word.style = "display: none";
@@ -172,19 +173,53 @@ function gameResult() {
 
 // Mode solo : affichage du message de victoire ou de défaite avec option de rejouer ou retourner au menu
 function victory() {
+=======
+//Gérer la victoire
+async function victory() {
+>>>>>>> 4026239 (classment)
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "Victoire";
     blockVirtualKeyboard();
     removeKeyboardEvent();
+
+    // Vérifier si c'est une partie en ligne avant de compter la victoire
+    if (room) {
+        const user = auth.currentUser;
+        if (user) {
+            await updatePlayerStats(user.uid, true);
+            console.log("🏆 Victoire enregistrée pour :", user.uid);
+        }
+    } else {
+        console.log("⚠️ Victoire ignorée (partie hors ligne).");
+    }
 }
 
+<<<<<<< HEAD
 function defeat() {
+=======
+
+
+//Gérer la défaite
+async function defeat() {
+>>>>>>> 4026239 (classment)
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "Défaite";
     blockVirtualKeyboard();
     removeKeyboardEvent();
+
+    // Vérifier si c'est une partie en ligne avant de compter la défaite
+    if (room) {
+        const user = auth.currentUser;
+        if (user) {
+            await updatePlayerStats(user.uid, false);
+            console.log("❌ Défaite enregistrée pour :", user.uid);
+        }
+    } else {
+        console.log("⚠️ Défaite ignorée (partie hors ligne).");
+    }
 }
 
+<<<<<<< HEAD
 // Efface l'ancien pendu
 function clearHangman() {
     const canvas = document.getElementById("hangmanCanvas");
@@ -210,6 +245,11 @@ function hideEndBanner() {
 }
 
 // Désactivation du clavier après la fin du jeu
+=======
+
+
+//Désactiver le clavier
+>>>>>>> 4026239 (classment)
 function blockVirtualKeyboard() {
     let buttons = document.getElementsByClassName("letter");
     for (let button of buttons) {
