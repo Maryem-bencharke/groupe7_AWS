@@ -21,11 +21,21 @@
         </div>
     </div>
 
-    <div id="endBanner" style="display: none;">
-        <h2 id="victoryBanner"></h2>
-        <button onclick="resetGame()">Rejouer</button>
-        <button onclick="goToMainMenu()">Menu Principal</button>
-    </div>
+    <table class="endBanner" id="endBanner">
+        <tr>
+            <td colspan="2">
+                <div class="victoryBanner" id="victoryBanner"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button class="buttonEndGame" id="buttonReplay">Rejouer</button>
+            </td>
+            <td>
+                <button class="buttonEndGame" onclick="location.href='games.html'">Menu principal</button>
+            </td>
+        </tr>
+    </table>
     
     <input id="choosenWord" class="textArea" placeholder="Saisissez un mot pour l'adversaire"></input>
 
