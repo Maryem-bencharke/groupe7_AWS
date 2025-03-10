@@ -118,20 +118,46 @@ function createVirtualKeyboard() {
 }
 
 //Gérer la victoire
-function victory() {
+async function victory() {
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "Victoire !";
     blockVirtualKeyboard();
     removeKeyboardEvent();
+
+    // Vérifier si c'est une partie en ligne avant de compter la victoire
+    if (room) {
+        const user = auth.currentUser;
+        if (user) {
+            await updatePlayerStats(user.uid, true);
+            console.log("🏆 Victoire enregistrée pour :", user.uid);
+        }
+    } else {
+        console.log("⚠️ Victoire ignorée (partie hors ligne).");
+    }
 }
 
+
+
 //Gérer la défaite
-function defeat() {
+async function defeat() {
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "Défaite !";
     blockVirtualKeyboard();
     removeKeyboardEvent();
+
+    // Vérifier si c'est une partie en ligne avant de compter la défaite
+    if (room) {
+        const user = auth.currentUser;
+        if (user) {
+            await updatePlayerStats(user.uid, false);
+            console.log("❌ Défaite enregistrée pour :", user.uid);
+        }
+    } else {
+        console.log("⚠️ Défaite ignorée (partie hors ligne).");
+    }
 }
+
+
 
 //Désactiver le clavier
 function blockVirtualKeyboard() {

@@ -29,11 +29,18 @@ socket.on("updateGame", (data) => {
 });
 
 // Fin de la partie
-socket.on("gameOver", (data) => {
+socket.on("gameOver", async (data) => {
+    const user = auth.currentUser;
+    if (user) {
+        const isWinner = data.winner === socket.id;
+        await updatePlayerStats(user.uid, isWinner);
+        console.log("✅ Statistiques mises à jour !");
+    }
+
     if (data.winner === socket.id) {
-        alert("🏆 Vous avez gagné !");
+        victory();
     } else {
-        alert(`😢 Vous avez perdu. Le mot était : ${data.correctWord}`);
+        defeat(data.correctWord);
     }
 });
 
@@ -129,7 +136,7 @@ function checkWord() {
 
     if (correctLetters === targetWord.length) {
         socket.emit("gameOver", { room, winner: socket.id, correctWord: targetWord });
-        alert("🏆 Bravo, vous avez trouvé le mot !");
+        victory();
         return;
     }
 
@@ -138,8 +145,24 @@ function checkWord() {
 
     if (currentAttempt >= maxAttempts) {
         socket.emit("gameOver", { room, winner: "opponent", correctWord: targetWord });
-        alert(`😢 Dommage ! Le mot était : ${targetWord}`);
+        defeat(targetWord);
     }
+}
+
+// Fonction Victoire
+function victory() {
+    document.getElementById("endBanner").style.display = "block";
+    document.getElementById("victoryBanner").innerText = "🏆 Victoire !";
+    blockVirtualKeyboard();
+    removeKeyboardEvent();
+}
+
+// Fonction Défaite
+function defeat(correctWord) {
+    document.getElementById("endBanner").style.display = "block";
+    document.getElementById("victoryBanner").innerText = `😢 Défaite ! Le mot était : ${correctWord}`;
+    blockVirtualKeyboard();
+    removeKeyboardEvent();
 }
 
 // Informer le serveur qu'on veut rejoindre une partie
