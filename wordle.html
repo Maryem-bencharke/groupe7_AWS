@@ -13,12 +13,6 @@
         <h1>Wordle</h1>
     </header>
 
-    <div id="modeSelection">
-        <h2>Choisissez un mode :</h2>
-        <button onclick="startGame('solo')">Jouer en Solo</button>
-        <button onclick="startGame('multi')">Jouer en Multijoueur</button>
-    </div>
-
     <main id="gameContainer" style="display: none;">
         <div class="game-container">
             <div class="grid" id="grid"></div>
@@ -63,8 +57,8 @@
                 <button id="replayButton">Rejouer</button>
                 <button id="menuButton">Menu principal</button>
             </div>
-            
         </div>
     </main>
+    <input id="choosenWord" class="textArea" placeholder="Saisissez un mot pour l'adversaire"></input>
 </body>
 </html>

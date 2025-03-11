@@ -40,6 +40,10 @@ io.on("connection", (socket) => {
     socket.on("joinRoom", (name) => {
         console.log("room : " + name + " connecter avec : " + socket.id);
         publicRooms[name].players.push(socket.id);
+        if (!publicRooms[name].life) {
+            publicRooms[name].life = {};
+        }
+        publicRooms[name].life[socket.id] = 6;
         socket.join(name);
         if (publicRooms[name].players.length === 2) {
             io.to(name).emit("chooseWords", "Choisissez un mot pour l'adversaire");
@@ -65,26 +69,30 @@ io.on("connection", (socket) => {
         if (name) {
             const players = Object.keys(publicRooms[name].words);
             if (players[0] === socket.id) {
-            guess(letter, publicRooms[name].words[players[1]], players[0]);
+            guessLetter(letter, publicRooms[name].words[players[1]], players[0]);
         } else {
-            guess(letter, publicRooms[name].words[players[0]], players[1]);
+            guessLetter(letter, publicRooms[name].words[players[0]], players[1]);
         }
         } else {
             // mode solo
-            guess(letter, privateRooms[socket.id], socket.id);
+            guessLetter(letter, privateRooms[socket.id], socket.id);
         }
     });
 
     socket.on("gameResult", ({name, life}) => {
-        if (!publicRooms[name].life) {
-            publicRooms[name].life = {};
+        //
+        // cas temporaire lifeP il faut gérer les vies du pendu ici
+        // pour le moment c'est pas le cas donc problème
+        //
+        if (!publicRooms[name].lifeP) {
+            publicRooms[name].lifeP = {};
         }
-        publicRooms[name].life[socket.id] = life;
+        publicRooms[name].lifeP[socket.id] = life;
 
-        if (Object.keys(publicRooms[name].life).length === 2) {
+        if (Object.keys(publicRooms[name].lifeP).length === 2) {
             const players = Object.keys(publicRooms[name].life);
-            const player1Life = publicRooms[name].life[players[0]];
-            const player2Life = publicRooms[name].life[players[1]];
+            const player1Life = publicRooms[name].lifeP[players[0]];
+            const player2Life = publicRooms[name].lifeP[players[1]];
             if (player1Life > player2Life) {
                 io.to(players[0]).emit("victory", "Vous avez gagné avec moins de tentatives que l'adversaire");
                 io.to(players[1]).emit("defeat", "Vous avez perdu");
@@ -96,7 +104,7 @@ io.on("connection", (socket) => {
                 io.to(players[1]).emit("even", "Égalité, vous avez eu le même score que l'adverdaire");
             }
             publicRooms[name].words = {};
-            publicRooms[name].life = {};
+            publicRooms[name].lifeP = {};
         }
     });
 
@@ -121,6 +129,59 @@ io.on("connection", (socket) => {
                     }
                 }
             });
+        }
+    });
+
+
+    // pour wordle
+    socket.on("guessWord", ({name, wordGuessed}) => {
+        if (name) {
+            const players = Object.keys(publicRooms[name].words);
+            if (!publicRooms[name].win) {
+                publicRooms[name].win = {};
+            }
+            let result, remainingLife, win;
+            if (players[0] === socket.id) {
+                ({result, remainingLife, win} = guessWord(wordGuessed, publicRooms[name].words[players[1]], publicRooms[name].life[players[0]]));
+                if (win == 2) {
+                    publicRooms[name].life[players[0]] = remainingLife;
+                } else {
+                    publicRooms[name].win[players[0]] = win;
+                    io.to(socket.id).emit("stopGuessing", "en attente de l'adversaire");
+                }
+            } else {
+                ({result, remainingLife, win} = guessWord(wordGuessed, publicRooms[name].words[players[0]], publicRooms[name].life[players[1]]));
+            
+                if (win == 2) {
+                    publicRooms[name].life[players[1]] = remainingLife;
+                } else {
+                    publicRooms[name].win[players[1]] = win;
+                    io.to(socket.id).emit("stopGuessing", "en attente de l'adversaire");
+                }
+            
+            }
+            io.to(socket.id).emit("guessResult", ({result, remainingLife}));
+            if (Object.keys(publicRooms[name].win).length === 2) {
+                const players = Object.keys(publicRooms[name].win);
+                const player1Life = publicRooms[name].win[players[0]];
+                const player2Life = publicRooms[name].win[players[1]];
+                if (player1Life > player2Life) {
+                    io.to(players[0]).emit("victory", "Vous avez gagné avec moins de tentatives que l'adversaire");
+                    io.to(players[1]).emit("defeat", "Vous avez perdu");
+                } else if (player1Life < player2Life) {
+                    io.to(players[1]).emit("victory", "Vous avez gagné avec moins de tentatives que l'adversaire");
+                    io.to(players[0]).emit("defeat", "Vous avez perdu");
+                } else {
+                    io.to(players[0]).emit("even", "Égalité, vous avez eu le même score que l'adverdaire");
+                    io.to(players[1]).emit("even", "Égalité, vous avez eu le même score que l'adverdaire");
+                }
+                publicRooms[name].words = {};
+                publicRooms[name].win = {};
+                publicRooms[name].life = {};
+            }
+        } else {
+            // mode solo
+            ({result, remainingLife, win} = guessWord(wordGuessed, privateRooms[socket.id], privateRooms[socket.id].life[socket.id]));
         }
     });
 
@@ -150,16 +211,16 @@ async function getRandomWord() {
 }
 
 // Vérification des lettres entrées
-function guess(letterGuessed, word, player) {
+function guessLetter(letterGuessed, word, player) {
     if (word.includes(letterGuessed)) {
-        io.to(player).emit("correctGuess", correctGuess(letterGuessed, word));
+        io.to(player).emit("correctGuess", correctLetterGuessed(letterGuessed, word));
     } else {
         io.to(player).emit("incorrectGuess");
     }
 }
 
 // envoie la partie du mot découverte au client
-function correctGuess(letterGuessed, word) {
+function correctLetterGuessed(letterGuessed, word) {
     let text = word.split("");
     for (let index in word) {
         if (word[index] !== letterGuessed) {
@@ -167,6 +228,32 @@ function correctGuess(letterGuessed, word) {
         }         
     }
     return text.join("");
+}
+
+//Vérification du mot et mise à jour des couleurs
+function guessWord(wordGuessed, word, remainingLife) {
+    const result = [];
+    let win = 0;
+    for (let i = 0; i < word.length; i++) {
+        const letter = wordGuessed[i];
+        if (letter === word[i]) {
+            result[i] = [letter, "green"];
+            win += 1;
+        } else if (word.includes(letter)) {
+            result[i] = [letter, "orange"];
+        } else {
+            result[i] = [letter, "grey"];
+        }
+    }
+    remainingLife -= 1;
+    if (win == word.length) {
+        win = 1; // victoire
+    } else if (remainingLife == 0) {
+        win = 0; // défaite
+    } else {
+        win = 2; // cas neutre
+    }
+    return {result, remainingLife, win};
 }
 
 server.listen(3000, () => console.log("Serveur multijoueur démarré sur http://127.0.0.1:3000"));

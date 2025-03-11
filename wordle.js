@@ -1,11 +1,12 @@
 const socket = io("http://127.0.0.1:3000");
 
 let room = null;
-let targetWord = "";
+let targetWordLenght = 0;
 const maxAttempts = 6;
-let currentAttempt = 0;
+let life = 6;
 let currentGuess = "";
 let gameMode = null;
+let roomName;
 
 //Fonction pour démarrer le jeu (Solo ou Multi)
 function startGame(mode) {
@@ -17,8 +18,8 @@ function startGame(mode) {
     if (mode === "multi") {
         socket.emit("joinGame");
     } else {
-        targetWord = getRandomWord().toUpperCase();
-        createGrid(targetWord.length);
+        targetWordLenght = getRandomWord().toUpperCase();
+        createGrid(targetWordLenght);
     }
 }
 
@@ -37,8 +38,8 @@ socket.on("startGame", (data) => {
     }
     
     room = data.room;
-    targetWord = data.word.toUpperCase();
-    createGrid(targetWord.length);
+    targetWordLenght = data.word.toUpperCase();
+    createGrid(targetWordLenght);
 });
 
 //Gestion des mises à jour pour l'adversaire
@@ -58,120 +59,19 @@ function getRandomWord() {
     return words[Math.floor(Math.random() * words.length)];
 }
 
-//Gestion des entrées clavier physique
-document.addEventListener("keydown", (event) => {
-    if (gameMode === null) return;
-    const key = event.key.toUpperCase();
-    
-    if (key === "ENTER") {
-        event.preventDefault();
-        if (currentGuess.length === targetWord.length) {
-            checkWord();
-            if (gameMode === "multi") {
-                socket.emit("guessWord", { room, guess: currentGuess });
-            }
-        }
-    } else if (key === "BACKSPACE" && currentGuess.length > 0) {
-        currentGuess = currentGuess.slice(0, -1);
-        updateGrid();
-    } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWord.length) {
-        currentGuess += key;
-        updateGrid();
-    }
-});
-
-//Gestion du clavier virtuel
-document.querySelectorAll(".keyboard button").forEach(button => {
-    button.addEventListener("click", () => {
-        if (gameMode === null) return;
-        const key = button.dataset.key;
-        
-        if (key === "Backspace" && currentGuess.length > 0) {
-            currentGuess = currentGuess.slice(0, -1);
-        } else if (key === "Enter" && currentGuess.length === targetWord.length) {
-            checkWord();
-            if (gameMode === "multi") {
-                socket.emit("guessWord", { room, guess: currentGuess });
-            }
-        } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWord.length) {
-            currentGuess += key;
-        }
-        
-        updateGrid();
-    });
-});
-
-//Création de la grille de jeu
-function createGrid(wordLength) {
-    const gridContainer = document.getElementById("grid");
-    gridContainer.innerHTML = "";
-
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const row = document.createElement("div");
-        row.classList.add("row");
-
-        for (let i = 0; i < wordLength; i++) {
-            const cell = document.createElement("div");
-            cell.classList.add("cell");
-            cell.id = `cell-${attempt}-${i}`;
-            row.appendChild(cell);
-        }
-
-        gridContainer.appendChild(row);
-    }
-}
-
 //Mise à jour de la grille
 function updateGrid() {
-    for (let i = 0; i < targetWord.length; i++) {
-        const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
+    for (let i = targetWordLenght - 1; i >= 0; i--) {
+        const cell = document.getElementById(`cell-${life - 1}-${i}`);
         if (cell) {
             cell.textContent = currentGuess[i] || "";
         }
     }
 }
 
-//Vérification du mot et mise à jour des couleurs
-function checkWord() {
-    let correctLetters = 0;
-
-    for (let i = 0; i < targetWord.length; i++) {
-        const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
-        const letter = currentGuess[i];
-
-        if (letter === targetWord[i]) {
-            cell.style.backgroundColor = "green";
-            correctLetters++;
-        } else if (targetWord.includes(letter)) {
-            cell.style.backgroundColor = "orange";
-        } else {
-            cell.style.backgroundColor = "grey";
-        }
-    }
-    
-    if (correctLetters === targetWord.length) {
-        if (gameMode === "multi") {
-            socket.emit("gameOver", { room, winner: socket.id, correctWord: targetWord });
-        }
-        alert("Bravo, vous avez trouvé le mot !");
-        showEndScreen();
-        return;
-    }
-
-    currentAttempt++;
-    currentGuess = "";
-    if (currentAttempt >= maxAttempts) {
-        if (gameMode === "multi") {
-            socket.emit("gameOver", { room, winner: "opponent", correctWord: targetWord });
-        }
-        alert(`Dommage ! Le mot était : ${targetWord}`);
-        showEndScreen();
-    }
-}
-
 //Fonction pour réinitialiser la partie
 function resetGame() {
-    currentAttempt = 0;
+    life = 0;
     currentGuess = "";
     document.getElementById("grid").innerHTML = "";
     document.getElementById("endScreen").style.display = "none";
@@ -192,4 +92,189 @@ document.getElementById("menuButton").addEventListener("click", () => {
     document.getElementById("modeSelection").style.display = "block";
     document.getElementById("gameContainer").style.display = "none";
     document.getElementById("endScreen").style.display = "none";
+});
+
+//Gestion du clavier virtuel
+
+function addVirtualKeyboardEvent() {
+    document.querySelectorAll(".keyboard button").forEach(button => {
+        button.disabled = false;
+    });
+}
+
+function blockVirtualKeyboardEvent() {
+    document.querySelectorAll(".keyboard button").forEach(button => {
+        button.disabled = true;
+    });
+}
+
+document.querySelectorAll(".keyboard button").forEach(button => {
+    button.addEventListener("click", () => {
+        const key = button.dataset.key;
+        if (key === "Backspace" && currentGuess.length > 0) {
+            currentGuess = currentGuess.slice(0, -1);
+        } else if (key === "Enter" && currentGuess.length === targetWordLenght) {
+            socket.emit("guessWord", { name: roomName, wordGuessed: currentGuess });
+            currentGuess = "";
+        } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWordLenght) {
+            currentGuess += key;
+        }
+        
+        updateGrid();
+    });
+});
+
+socket.on("chooseWords", (msg) => {
+    // afficher aux joueurs de taper un mot mour l'autre
+});
+
+// Ajout des événements clavier
+function addKeyboardEvent() {
+    document.addEventListener("keydown", keyboardEventHandler);
+}
+
+// Suppression des événements clavier
+function removeKeyboardEvent() {
+    document.removeEventListener("keydown", keyboardEventHandler);
+}
+
+//Gestion des entrées clavier physique
+function keyboardEventHandler(event) {
+    const key = event.key.toUpperCase();
+    
+    if (key === "ENTER") {
+        event.preventDefault();
+        if (currentGuess.length === targetWordLenght) {
+            socket.emit("guessWord", { name: roomName, wordGuessed: currentGuess });
+            currentGuess = "";
+        }
+    } else if (key === "BACKSPACE" && currentGuess.length > 0) {
+        currentGuess = currentGuess.slice(0, -1);
+        updateGrid();
+    } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWordLenght) {
+        currentGuess += key;
+        updateGrid();
+    }
+}
+
+function addChooseWordEvent() {
+    document.addEventListener("keydown", chooseWordEventHandler);
+}
+
+function removeChooseWordEvent() {
+    document.removeEventListener("keydown", chooseWordEventHandler);
+}
+
+function chooseWordEventHandler(event) {
+    if (!event.key) return;
+        if (event.key.toUpperCase() === "ENTER") {
+            const word = document.getElementById("choosenWord").value;
+            if (word.length < 1) {
+                // afficher un message pour dire trop petit
+                alert("mot trop petit");
+            } else {
+                socket.emit("wordChoosen", ({name: roomName, word: word.toUpperCase()}));
+                hideChoosenWordDisplay();
+                removeChooseWordEvent();
+            }     
+        }
+}
+
+function hideChoosenWordDisplay() {
+    const word = document.getElementById("choosenWord");
+    word.style = "display: none";
+}
+
+//Création de la grille de jeu
+function createGrid(wordLength) {
+    const gridContainer = document.getElementById("grid");
+    gridContainer.innerHTML = "";
+
+    for (let attempt = maxAttempts - 1; attempt >= 0; attempt--) {
+        const row = document.createElement("div");
+        row.classList.add("row");
+
+        for (let i = 0; i < wordLength; i++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            cell.id = `cell-${attempt}-${i}`;
+            row.appendChild(cell);
+        }
+
+        gridContainer.appendChild(row);
+    }
+}
+
+// affichage après avoir envoyé et reçu son mot
+socket.on("startGuessing", (word) => {
+    document.getElementById("gameContainer").style = "display: block";
+    addKeyboardEvent();
+    console.log(word.length / 2);
+    targetWordLenght = word.length / 2;
+    createGrid(word.length / 2); // on divise par 2 car word c'est '_ _ _ '
+});
+
+socket.on("guessResult", ({result, remainingLife}) => {
+    console.log(remainingLife);
+    life = remainingLife;
+    let i = 0;
+    for ([letter, color] of result) {
+        // on change les couleurs des boutons du claviers
+        document.querySelectorAll(`button[data-key="${letter}"]`).forEach(button => {
+            button.style.backgroundColor = color;
+        });
+        // on change les couleurs dans le guess
+        const cell = document.getElementById(`cell-${remainingLife}-${i}`);
+        cell.style.backgroundColor = color;
+        i += 1;
+    }
+    updateGrid();
+});
+
+socket.on("stopGuessing", (msg) => {
+    blockVirtualKeyboardEvent();
+    removeKeyboardEvent();
+    alert(msg);
+})
+
+socket.on("victory", (msg) => {
+    showChoosenWordDisplay();
+    alert(msg);
+    addChooseWordEvent();
+});
+
+socket.on("defeat", (msg) => {
+    showChoosenWordDisplay();
+    alert(msg);
+    addChooseWordEvent();
+});
+
+socket.on("even", (msg) => {
+    showChoosenWordDisplay();
+    alert(msg);
+    addChooseWordEvent();
+});
+
+function showChoosenWordDisplay() {
+    const word = document.getElementById("choosenWord");
+    word.style = "display: block";
+    word.value = "";
+    word.focus();
+}
+
+// Initialisation du jeu
+document.addEventListener("DOMContentLoaded", () => {
+    roomName = localStorage.getItem("name");
+    if (roomName) {
+        // mode multi
+        socket.emit("joinRoom", (roomName));
+        localStorage.removeItem("name");
+        addChooseWordEvent();
+    } else {
+        // mode solo
+        hideChoosenWordDisplay();
+        socket.emit("getRandomWord");
+    }
+    //replayButton();
+    console.log("Jeu prêt");
 });
