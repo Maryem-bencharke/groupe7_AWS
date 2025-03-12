@@ -7,11 +7,50 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://groupe7-aws.onrender.com/socket.io/socket.io.js"></script>
     <script src="games.js" defer></script>
+    <script type="module">
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+
+        const firebaseConfig = {
+            // Votre configuration Firebase ici
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userRef);
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    document.getElementById("userBilan").innerText = `Bilan: ${userData.bilan}`;
+                    document.getElementById("userRanking").innerText = `Classement: ${userData.ranking}`;
+                }
+            }
+        });
+    </script>
+    <style>
+        #userStats {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            text-align: right;
+        }
+    </style>
 </head>
 <body>
     <header>
         <h1>Games</h1>
     </header>
+
+    <div id="userStats">
+        <p id="userBilan">Bilan: 0-0</p>
+        <p id="userRanking">Classement: N/A</p>
+    </div>
 
     <main class="games-container">
         <div class="game-card pendu">
@@ -31,14 +70,15 @@
         <div class="game-card bomb">
             <img src="https://th.bing.com/th/id/R.100f9db196ee5cdca3bafe332a0f06ae?rik=zbpTk%2bReftA1nQ&pid=ImgRaw&r=0" alt="Bomb">
             <h2>Bomb Game</h2>
-            <p>Enchaînez des mots avec une syllabe donné.</p>
+            <p>Enchaînez des mots avec une syllabe donnée.</p>
             <button onclick="location.href='bombGame.html'">Jouer</button>
         </div>
     </main>
+
     <table>
         <tr>
             <td>
-                <input id="roomName" class="textArea" placeholder="Saisissez un nom"></input>
+                <input id="roomName" class="textArea" placeholder="Saisissez un nom">
             </td>
             <td>
                 <select class="textArea" id="gameSelect">
@@ -48,10 +88,11 @@
                 </select>
             </td>
             <td>
-                <button id="createRoom" >Créer une salle</button>
+                <button id="createRoom">Créer une salle</button>
             </td>
         </tr>
     </table>
+
     <table id="roomsList"></table>
 </body>
 </html>
