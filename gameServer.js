@@ -40,10 +40,10 @@ io.on("connection", (socket) => {
     socket.on("joinRoom", (name) => {
         console.log("room : " + name + " connecter avec : " + socket.id);
         publicRooms[name].players.push(socket.id);
-        if (!publicRooms[name].life) {
-            publicRooms[name].life = {};
-        }
-        publicRooms[name].life[socket.id] = 6;
+        //if (!publicRooms[name].life) {
+        //    publicRooms[name].life = {};
+        //}
+        //publicRooms[name].life[socket.id] = 6;
         socket.join(name);
         if (publicRooms[name].players.length === 2) {
             io.to(name).emit("chooseWords", "Choisissez un mot pour l'adversaire");
@@ -55,6 +55,10 @@ io.on("connection", (socket) => {
             publicRooms[name].words = {};
         }
         publicRooms[name].words[socket.id] = word;
+        if (!publicRooms[name].life) {
+            publicRooms[name].life = {};
+        }
+        publicRooms[name].life[socket.id] = 6;
 
         if (Object.keys(publicRooms[name].words).length === 2) {
             const players = Object.keys(publicRooms[name].words);

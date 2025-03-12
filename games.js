@@ -22,7 +22,7 @@ socket.on("roomList", (rooms) => {
                     case "wordle":
                         window.location.href = 'wordle.html';
                         break;
-                    case "bomb":
+                    case "bombGame":
                         window.location.href = 'bombGame.html';
                         break;
                 }
