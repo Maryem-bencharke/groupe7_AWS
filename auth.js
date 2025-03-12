@@ -4,6 +4,7 @@ import {
     signInWithEmailAndPassword 
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 
 const db = getFirestore();
 
@@ -21,19 +22,26 @@ document.addEventListener("DOMContentLoaded", function() {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
+                // Ajouter le champ bilan et classement
                 await setDoc(doc(db, "users", user.uid), {
                     username: username,
                     email: email,
-                    createdAt: new Date()
+                    bilan: "0-0",
+                    ranking: 0
                 });
 
-                alert("Compte créé avec succès !");
-                window.location.href = "login.html";
+                console.log("Compte créé avec succès");
             } catch (error) {
-                console.error("Erreur d'inscription :", error);
-                alert("Erreur : " + error.message);
+                if (error.code === 'auth/email-already-in-use') {
+                    alert("Erreur : L'adresse e-mail est déjà utilisée.");
+                } else {
+                    console.error("Erreur lors de la création du compte:", error);
+                    alert("Erreur lors de la création du compte: " + error.message);
+                }
             }
         });
+    } else {
+        console.error("signup-form non trouvé");
     }
 
     const loginForm = document.getElementById("login-form");
@@ -53,5 +61,62 @@ document.addEventListener("DOMContentLoaded", function() {
                 alert("Erreur : " + error.message);
             }
         });
+    } else {
+        console.error("login-form non trouvé");
     }
 });
+
+// Fonction pour mettre à jour les victoires et les défaites
+async function updateBilan(userId, isVictory) {
+    const userRef = doc(db, "users", userId);
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+        let [victories, defeats] = userDoc.data().bilan.split('-').map(Number);
+
+        if (isVictory) {
+            victories += 1;
+        } else {
+            defeats += 1;
+        }
+
+        const newBilan = `${victories}-${defeats}`;
+        await updateDoc(userRef, {
+            bilan: newBilan
+        });
+        console.log("Bilan mis à jour avec succès");
+    } else {
+        console.error("Utilisateur non trouvé");
+    }
+}
+
+// Fonction pour mettre à jour le classement de tous les utilisateurs
+async function updateAllRankings() {
+    const usersRef = collection(db, "users");
+    const usersSnapshot = await getDocs(usersRef);
+    const users = [];
+
+    usersSnapshot.forEach(doc => {
+        const data = doc.data();
+        const [victories, defeats] = data.bilan.split('-').map(Number);
+        users.push({ id: doc.id, victories, defeats });
+    });
+
+    // Trier les utilisateurs par victoires (descendant) puis par défaites (ascendant)
+    users.sort((a, b) => {
+        if (a.victories === b.victories) {
+            return a.defeats - b.defeats;
+        }
+        return b.victories - a.victories;
+    });
+
+    // Mettre à jour le classement de chaque utilisateur
+    for (let i = 0; i < users.length; i++) {
+        const userRef = doc(db, "users", users[i].id);
+        await updateDoc(userRef, {
+            ranking: i + 1
+        });
+    }
+
+    console.log("Classements mis à jour avec succès");
+}
