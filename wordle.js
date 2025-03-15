@@ -1,63 +1,9 @@
 const socket = io("http://127.0.0.1:3000");
 
-let room = null;
 let targetWordLenght = 0;
-const maxAttempts = 6;
 let life = 6;
 let currentGuess = "";
-let gameMode = null;
 let roomName;
-
-//Fonction pour démarrer le jeu (Solo ou Multi)
-function startGame(mode) {
-    gameMode = mode;
-    document.getElementById("modeSelection").style.display = "none";
-    document.getElementById("gameContainer").style.display = "block";
-    resetGame();
-
-    if (mode === "multi") {
-        socket.emit("joinGame");
-    } else {
-        targetWordLenght = getRandomWord().toUpperCase();
-        createGrid(targetWordLenght);
-    }
-}
-
-//Gestion de l'attente d'un joueur
-socket.on("waiting", (message) => {
-    if (gameMode === "multi") {
-        alert(message);
-    }
-});
-
-//Lancement de la partie en mode multijoueur
-socket.on("startGame", (data) => {
-    if (!data.word) {
-        console.error("Erreur: le mot n'a pas été défini !");
-        return;
-    }
-    
-    room = data.room;
-    targetWordLenght = data.word.toUpperCase();
-    createGrid(targetWordLenght);
-});
-
-//Gestion des mises à jour pour l'adversaire
-socket.on("updateGame", (data) => {
-    console.log(`L'adversaire a proposé : ${data.guess}`);
-});
-
-//in de la partie
-socket.on("gameOver", (data) => {
-    alert(data.winner === socket.id ? "Vous avez gagné !" : `Vous avez perdu. Le mot était : ${data.correctWord}`);
-    showEndScreen();
-});
-
-//Générer un mot aléatoire pour le mode solo
-function getRandomWord() {
-    const words = ["APPLE", "BANANA", "CHERRY", "ORANGE", "MELON"];
-    return words[Math.floor(Math.random() * words.length)];
-}
 
 //Mise à jour de la grille
 function updateGrid() {
@@ -69,33 +15,7 @@ function updateGrid() {
     }
 }
 
-//Fonction pour réinitialiser la partie
-function resetGame() {
-    life = 0;
-    currentGuess = "";
-    document.getElementById("grid").innerHTML = "";
-    document.getElementById("endScreen").style.display = "none";
-}
-
-//Afficher l'écran de fin avec option rejouer/menu
-function showEndScreen() {
-    document.getElementById("endScreen").style.display = "block";
-}
-
-//Rejouer une partie
-document.getElementById("replayButton").addEventListener("click", () => {
-    startGame(gameMode);
-});
-
-//Retour au menu principal
-document.getElementById("menuButton").addEventListener("click", () => {
-    document.getElementById("modeSelection").style.display = "block";
-    document.getElementById("gameContainer").style.display = "none";
-    document.getElementById("endScreen").style.display = "none";
-});
-
 //Gestion du clavier virtuel
-
 function addVirtualKeyboardEvent() {
     document.querySelectorAll(".keyboard button").forEach(button => {
         button.disabled = false;
@@ -190,7 +110,7 @@ function createGrid(wordLength) {
     const gridContainer = document.getElementById("grid");
     gridContainer.innerHTML = "";
 
-    for (let attempt = maxAttempts - 1; attempt >= 0; attempt--) {
+    for (let attempt = life - 1; attempt >= 0; attempt--) {
         const row = document.createElement("div");
         row.classList.add("row");
 
@@ -205,23 +125,29 @@ function createGrid(wordLength) {
     }
 }
 
+function resetKeyboardColors() {
+    document.querySelectorAll(`button[data-key]`).forEach(button => {
+        button.style.backgroundColor = "grey";
+    });
+}
+
 // affichage après avoir envoyé et reçu son mot
 socket.on("startGuessing", (word) => {
     document.getElementById("gameContainer").style = "display: block";
     addKeyboardEvent();
-    console.log(word.length / 2);
     targetWordLenght = word.length / 2;
     createGrid(word.length / 2); // on divise par 2 car word c'est '_ _ _ '
 });
 
 socket.on("guessResult", ({result, remainingLife}) => {
-    console.log(remainingLife);
     life = remainingLife;
     let i = 0;
     for ([letter, color] of result) {
         // on change les couleurs des boutons du claviers
         document.querySelectorAll(`button[data-key="${letter}"]`).forEach(button => {
-            button.style.backgroundColor = color;
+            if (button.style.backgroundColor != "green") {
+                button.style.backgroundColor = color;   
+            }
         });
         // on change les couleurs dans le guess
         const cell = document.getElementById(`cell-${remainingLife}-${i}`);
@@ -237,22 +163,14 @@ socket.on("stopGuessing", (msg) => {
     alert(msg);
 })
 
-socket.on("victory", (msg) => {
+socket.on("gameResult", (msg) => {
+    life = 6;
+    resetKeyboardColors();
     showChoosenWordDisplay();
     alert(msg);
     addChooseWordEvent();
-});
-
-socket.on("defeat", (msg) => {
-    showChoosenWordDisplay();
-    alert(msg);
-    addChooseWordEvent();
-});
-
-socket.on("even", (msg) => {
-    showChoosenWordDisplay();
-    alert(msg);
-    addChooseWordEvent();
+    document.getElementById("grid").innerHTML = ""; // efface la grid
+    document.getElementById("gameContainer").style.display = "none";
 });
 
 function showChoosenWordDisplay() {

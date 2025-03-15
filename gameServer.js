@@ -166,18 +166,18 @@ io.on("connection", (socket) => {
             }
             io.to(socket.id).emit("guessResult", ({result, remainingLife}));
             if (Object.keys(publicRooms[name].win).length === 2) {
-                const players = Object.keys(publicRooms[name].win);
-                const player1Life = publicRooms[name].win[players[0]];
-                const player2Life = publicRooms[name].win[players[1]];
+                const players = Object.keys(publicRooms[name].life);
+                const player1Life = publicRooms[name].life[players[0]];
+                const player2Life = publicRooms[name].life[players[1]];
                 if (player1Life > player2Life) {
-                    io.to(players[0]).emit("victory", "Vous avez gagné avec moins de tentatives que l'adversaire");
-                    io.to(players[1]).emit("defeat", "Vous avez perdu");
+                    io.to(players[0]).emit("gameResult", "Vous avez gagné avec moins de tentatives que l'adversaire");
+                    io.to(players[1]).emit("gameResult", "Vous avez perdu");
                 } else if (player1Life < player2Life) {
-                    io.to(players[1]).emit("victory", "Vous avez gagné avec moins de tentatives que l'adversaire");
-                    io.to(players[0]).emit("defeat", "Vous avez perdu");
+                    io.to(players[1]).emit("gameResult", "Vous avez gagné avec moins de tentatives que l'adversaire");
+                    io.to(players[0]).emit("gameResult", "Vous avez perdu");
                 } else {
-                    io.to(players[0]).emit("even", "Égalité, vous avez eu le même score que l'adverdaire");
-                    io.to(players[1]).emit("even", "Égalité, vous avez eu le même score que l'adverdaire");
+                    io.to(players[0]).emit("gameResult", "Égalité, vous avez eu le même score que l'adverdaire");
+                    io.to(players[1]).emit("gameResult", "Égalité, vous avez eu le même score que l'adverdaire");
                 }
                 publicRooms[name].words = {};
                 publicRooms[name].win = {};
@@ -246,7 +246,7 @@ function guessWord(wordGuessed, word, remainingLife) {
         } else if (word.includes(letter)) {
             result[i] = [letter, "orange"];
         } else {
-            result[i] = [letter, "grey"];
+            result[i] = [letter, "black"];
         }
     }
     remainingLife -= 1;
