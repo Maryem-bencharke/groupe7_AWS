@@ -33,14 +33,16 @@ document.querySelectorAll(".keyboard button").forEach(button => {
         const key = button.dataset.key;
         if (key === "Backspace" && currentGuess.length > 0) {
             currentGuess = currentGuess.slice(0, -1);
+            updateGrid();
         } else if (key === "Enter" && currentGuess.length === targetWordLenght) {
             socket.emit("guessWord", { name: roomName, wordGuessed: currentGuess });
             currentGuess = "";
         } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWordLenght) {
             currentGuess += key;
+            updateGrid();
         }
         
-        updateGrid();
+        
     });
 });
 
@@ -131,10 +133,24 @@ function resetKeyboardColors() {
     });
 }
 
+function hideEndBanner() {
+    document.getElementById("endBanner").style.display = "none";
+}
+
+function replayButton() {
+    let replay = document.getElementById("buttonReplay");
+    replay.addEventListener("click", () => {
+        addKeyboardEvent();
+        hideEndBanner();
+        socket.emit("getRandomWord");
+    });
+}
+
 // affichage après avoir envoyé et reçu son mot
 socket.on("startGuessing", (word) => {
     document.getElementById("gameContainer").style = "display: block";
     addKeyboardEvent();
+    addVirtualKeyboardEvent();
     targetWordLenght = word.length / 2;
     createGrid(word.length / 2); // on divise par 2 car word c'est '_ _ _ '
 });
@@ -173,6 +189,16 @@ socket.on("gameResult", (msg) => {
     document.getElementById("gameContainer").style.display = "none";
 });
 
+socket.on("soloGameResult", (msg) => {
+    life = 6;
+    resetKeyboardColors();
+    blockVirtualKeyboardEvent();
+    removeKeyboardEvent();
+    document.getElementById("grid").innerHTML = ""; // efface la grid
+    document.getElementById("endBanner").style.display = "block";
+    document.getElementById("victoryBanner").innerText = "Victoire";
+});
+
 function showChoosenWordDisplay() {
     const word = document.getElementById("choosenWord");
     word.style = "display: block";
@@ -193,6 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
         hideChoosenWordDisplay();
         socket.emit("getRandomWord");
     }
-    //replayButton();
+    replayButton();
     console.log("Jeu prêt");
 });

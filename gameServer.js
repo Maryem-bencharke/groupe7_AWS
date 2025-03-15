@@ -113,10 +113,14 @@ io.on("connection", (socket) => {
     });
 
     socket.on("getRandomWord", () => {
+        if (!privateRooms[socket.id]) {
+            privateRooms[socket.id] = {}; 
+        }
+        privateRooms[socket.id].life = 6;
         const word = getRandomWordTest();
-        privateRooms[socket.id] = word;
+        privateRooms[socket.id].word = word;
         io.to(socket.id).emit("startGuessing", "_ ".repeat(word.length));
-    })
+    });
 
     socket.on("disconnect", () => {
         console.log(`Un joueur s'est déconnecté : ${socket.id}`);
@@ -185,7 +189,15 @@ io.on("connection", (socket) => {
             }
         } else {
             // mode solo
-            ({result, remainingLife, win} = guessWord(wordGuessed, privateRooms[socket.id], privateRooms[socket.id].life[socket.id]));
+            ({result, remainingLife, win} = guessWord(wordGuessed, privateRooms[socket.id].word, privateRooms[socket.id].life));
+            io.to(socket.id).emit("guessResult", ({result, remainingLife}));
+            if (win == 2) {
+                privateRooms[socket.id].life = remainingLife;
+            } else if (win == 1) {
+                io.to(socket.id).emit("soloGameResult", "Victoire");
+            } else {
+                io.to(socket.id).emit("soloGameResult", "Défaite");
+            }
         }
     });
 
