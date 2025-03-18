@@ -16,12 +16,10 @@ const io = socketIo(server, {
 });
 
 let wordsNumber = 4000;
-let waitingPlayer = null;
 let publicRooms = {};
 let privateRooms = {};
-let penduPlayers = new Set();
-let wordlePlayers = new Set();
-let bombPlayers = new Set();
+let gameTimer = {};
+
 
 io.on("connection", (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
@@ -32,6 +30,7 @@ io.on("connection", (socket) => {
         publicRooms[name] = {
             players: [],
             game: game,
+            activePlayers: [],
         };
         socket.join(name);
         io.emit("roomList", publicRooms);        
@@ -201,6 +200,25 @@ io.on("connection", (socket) => {
         }
     });
 
+
+    // pour bombGame
+
+    socket.on("joinBombRoom", (name) => {
+        console.log("room : " + name + " connecter avec : " + socket.id);
+        publicRooms[name].players.push(socket.id);
+        socket.join(name);
+    })
+
+    socket.on("joinBombGame", (name) => {
+        publicRooms[name].activePlayers.push(socket.id);
+        socket.join(name + "_active");
+        socket.emit("loadJoiningPlayer"); // affiche sur l'écran le joueur qui rentre
+        if (publicRooms[name].activePlayers.length === 2) {
+            io.to(name).emit("waitingToLaunch");
+            timer(name);
+        }
+    });
+
 });
 
 function getRandomWordTest() {
@@ -270,6 +288,19 @@ function guessWord(wordGuessed, word, remainingLife) {
         win = 2; // cas neutre
     }
     return {result, remainingLife, win};
+}
+
+function timer(name) {
+    let timeLeft = 10;
+    gameTimer[name] = setInterval(() => {
+        io.to(name).emit("updateTimer", timeLeft);
+        if (timeLeft <= 0) {
+            clearInterval(gameTimer[name]);
+            delete gameTimer[name];
+            io.to(name).emit("startGame");
+        }
+        timeLeft -= 1;
+    }, 1000)
 }
 
 server.listen(3000, () => console.log("Serveur multijoueur démarré sur http://127.0.0.1:3000"));

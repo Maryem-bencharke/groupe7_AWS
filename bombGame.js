@@ -5,28 +5,70 @@ let syllables = ["NS", "ALO", "ES", "TR", "CON", "PO", "AIE", "NT", "IS", "TO", 
 let currentSyllable;
 let life = 3;
 let timer;
+let joinTimer;
 let currentStreak = 0;
 let maxStreak = 0;
+let roomName;
+
+//
+// Création des interfaces et gestions des boutons
+//
 
 // permet au bouton rejouer de rejoindre la partie en cours
 function setButtonJoinGame() {
     const join = document.getElementById("joinButton");
     join.addEventListener("click", () => {
-        socket.emit("joinBombGame");
+        socket.emit("joinBombGame", (roomName));
+        hideJoinButton();
     });
-    console.log("test button");
-    hideJoinButton();
+    
 }
 
 function hideJoinButton() {
     const join = document.getElementById("joinButton");
-    join.display = "none";
+    join.style.display = "none";
 }
 
 function showJoinButton() {
     const join = document.getElementById("joinButton");
-    join.display = "block";
+    join.style.display = "block";
 }
+
+function hideTextArea() {
+    const textArea = document.getElementById("textArea");
+    textArea.style.display = "none";
+}
+
+function showTextArea() {
+    const textArea = document.getElementById("textArea");
+    textArea.style.display = "block";
+}
+
+function eraseTextArea() {
+    document.getElementById("textArea").value = "";
+}
+
+//
+// Fonctions gérant l'affichage sur le jeu
+//
+
+
+socket.on("loadJoiningPlayer", () => {
+    // affichage sur l'écran des joueurs
+});
+
+socket.on("updateTimer", (timeLeft) => {
+    // affiche un temps restant avant que la partie se lance avec les joueurs actuels
+    const timer = document.getElementById("remainingTime");
+    timer.innerText = `Temps restant avant lancement automatique ${timeLeft}s`;
+});
+
+
+//
+// Gestion des communications client/serveur
+//
+
+
 
 // permet de créer l'alphabet bonus permettant de regagner une vie
 function createBonusLetters(alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
@@ -57,7 +99,7 @@ function checkDefeat(life) {
         document.getElementById("endBanner").style.display = "block";
         let text = document.getElementById("victoryBanner");
         text.innerText = "Défaite";
-        document.getElementById("textArea").display = "none";
+        hideTextArea();
         if (currentStreak > maxStreak) {
             maxStreak = currentStreak;
         }
@@ -71,10 +113,6 @@ function checkDefeat(life) {
 
 function reloadSyllableDisplay(syllable) {
     document.getElementById("syllableDisplay").innerText = syllable;
-}
-
-function eraseTextArea() {
-    document.getElementById("textArea").value = "";
 }
 
 function startOrResetTimer() {
@@ -154,7 +192,6 @@ document.addEventListener("keydown", (event) => {
     if (key === "ENTER") {
         const text = document.getElementById("textArea").value.toUpperCase();
         const syllable = document.getElementById("syllableDisplay").innerText;
-        console.log(removeAccents(text));
         guess(removeAccents(text), syllable);
     }
 });
