@@ -1,3 +1,5 @@
+const socket = io("http://127.0.0.1:3000");
+
 let usedWords = [];
 let syllables = ["NS", "ALO", "ES", "TR", "CON", "PO", "AIE", "NT", "IS", "TO", "ER", "EN", "ONI", "ONS", "UR", "MI", "SIO", "NAU", "RIS", "SSE", "ASS", "TS", "SUR", "LAS", "HE", "GO", "SSA", "GN", "ANC", "EZ", "ON"]
 let currentSyllable;
@@ -5,6 +7,31 @@ let life = 3;
 let timer;
 let currentStreak = 0;
 let maxStreak = 0;
+
+// permet au bouton rejouer de rejoindre la partie en cours
+function setButtonJoinGame() {
+    const join = document.getElementById("joinButton");
+    join.addEventListener("click", () => {
+        socket.emit("joinBombGame");
+    });
+    console.log("test button");
+    hideJoinButton();
+}
+
+function hideJoinButton() {
+    const join = document.getElementById("joinButton");
+    join.display = "none";
+}
+
+function showJoinButton() {
+    const join = document.getElementById("joinButton");
+    join.display = "block";
+}
+
+// permet de créer l'alphabet bonus permettant de regagner une vie
+function createBonusLetters(alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+    //
+}
 
 async function guess(word, syllable) {
     // si le mot à la syllabe et que le mot existe et que le mot est pas deja tape
@@ -138,5 +165,17 @@ document.addEventListener("DOMContentLoaded", () => {
     startOrResetTimer();
     replayButton();
     loadScore();
+
+    setButtonJoinGame();
+    roomName = localStorage.getItem("name");
+    if (roomName) {
+        // mode multi
+        socket.emit("joinBombRoom", (roomName));
+    } else {
+        // mode solo
+        socket.emit("getRandomSyllable");
+    }
+    
+
     //document.getElementById("textArea").focus();
 });
