@@ -5,6 +5,7 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const { text } = require("stream/consumers");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -14,6 +15,26 @@ const io = socketIo(server, {
         methods: ["GET", "POST"]
     }
 });
+
+
+// Sert les fichiers statiques (html/css/js) depuis 'public'
+app.use(express.static(path.join(__dirname, "public")));
+
+// Route principale : renvoie l'index.html
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ta logique socket.io existante ici...
+io.on("connection", (socket) => {
+    console.log(`Un joueur s'est connecté : ${socket.id}`);
+    
+    // ta logique socket.io inchangée...
+});
+
+// démarrage serveur
+const port = process.env.PORT || 3000;
+server.listen(port, () => console.log(`Serveur démarré sur le port ${port}`));
 
 let wordsNumber = 4000;
 let publicRooms = {};
