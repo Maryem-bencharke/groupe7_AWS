@@ -1,4 +1,4 @@
-const socket = io("http://127.0.0.1:3000");
+const socket = io('https://groupe7-aws.onrender.com');
 
 let usedWords = [];
 let syllables = ["NS", "ALO", "ES", "TR", "CON", "PO", "AIE", "NT", "IS", "TO", "ER", "EN", "ONI", "ONS", "UR", "MI", "SIO", "NAU", "RIS", "SSE", "ASS", "TS", "SUR", "LAS", "HE", "GO", "SSA", "GN", "ANC", "EZ", "ON"]
