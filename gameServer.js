@@ -9,12 +9,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Servir les fichiers statiques
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));  // sert directement depuis la racine
 
-// Route pour la page d'accueil
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));  // charge directement index.html depuis racine
 });
 
 // Gérer les connexions Socket.io
