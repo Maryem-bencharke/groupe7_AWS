@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accueil - Jeux de Mots</title>
     <link rel="stylesheet" href="index.css"> 
+</head>
 <body>
     <div class="container">
         <h1>Bienvenue sur Jeux de Mots !</h1>
@@ -15,5 +16,15 @@
             <button class="guest" onclick="window.location.href='games.html'">Jouer en invité</button>
         </div>
     </div>
+
+    <!-- Charger Socket.io depuis ton serveur Render -->
+    <script src="https://groupe7-aws.onrender.com/socket.io/socket.io.js"></script>
+
+    <!-- Tes fichiers JS (après Socket.io) -->
+    <script src="pendu.js"></script>
+    <script src="wordle.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="bombGame.js"></script>    
 </body>
 </html>
