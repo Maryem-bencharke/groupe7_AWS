@@ -1,40 +1,39 @@
 //import { collection, query, where, getDocs} from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 //import { db } from "./firebase-config.js";
-
-const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
-const { text } = require("stream/consumers");
-const path = require("path");
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const socketIo = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+const io = socketIo(server);
+
+// Servir les fichiers statiques
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Route pour la page d'accueil
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-
-// Sert les fichiers statiques (html/css/js) depuis 'public'
-app.use(express.static(path.join(__dirname, "public")));
-
-// Route principale : renvoie l'index.html
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+// Gérer les connexions Socket.io
+io.on('connection', (socket) => {
+    console.log('Nouvelle connexion établie');
+    // Logique de gestion des sockets
 });
 
-// ta logique socket.io existante ici...
-io.on("connection", (socket) => {
-    console.log(`Un joueur s'est connecté : ${socket.id}`);
-    
-    // ta logique socket.io inchangée...
+// Gérer les erreurs 404
+app.use((req, res, next) => {
+    res.status(404).send('Page non trouvée');
 });
 
-// démarrage serveur
-const port = process.env.PORT || 3000;
-server.listen(port, () => console.log(`Serveur démarré sur le port ${port}`));
+// Démarrer le serveur
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Serveur démarré sur le port ${PORT}`);
+});
+
 
 let wordsNumber = 4000;
 let publicRooms = {};
