@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Games</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="http://127.0.0.1:3000/socket.io/socket.io.js" defer></script>
+    <script src="games.js" defer></script>
 </head>
 <body>
     <header>
@@ -25,6 +27,31 @@
             <p>Trouvez le mot caché en 6 essais.</p>
             <button onclick="location.href='wordle.html'">Jouer</button>
         </div>
+
+        <div class="game-card bomb">
+            <img src="https://th.bing.com/th/id/R.100f9db196ee5cdca3bafe332a0f06ae?rik=zbpTk%2bReftA1nQ&pid=ImgRaw&r=0" alt="Bomb">
+            <h2>Bomb Game</h2>
+            <p>Enchaînez des mots avec une syllabe donné.</p>
+            <button onclick="location.href='bombGame.html'">Jouer</button>
+        </div>
     </main>
+    <table>
+        <tr>
+            <td>
+                <input id="roomName" class="textArea" placeholder="Saisissez un nom"></input>
+            </td>
+            <td>
+                <select class="textArea" id="gameSelect">
+                    <option value="pendu">Pendu</option>
+                    <option value="wordle">Wordle</option>
+                    <option value="bombGame">Bomb Game</option>
+                </select>
+            </td>
+            <td>
+                <button id="createRoom" >Créer une salle</button>
+            </td>
+        </tr>
+    </table>
+    <table id="roomsList"></table>
 </body>
 </html>

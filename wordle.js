@@ -1,100 +1,118 @@
-const socket = io("http://127.0.0.1:3000"); // Connexion au serveur Socket.io
+const socket = io("http://127.0.0.1:3000");
 
-let room = null;
-let targetWord = "";
-const maxAttempts = 6;
-let currentAttempt = 0;
+let targetWordLenght = 0;
+let life = 6;
 let currentGuess = "";
+let roomName;
 
-// Connexion au serveur et attente d'un adversaire
-socket.on("waiting", (message) => {
-    alert(message);
-});
-
-socket.on("startGame", (data) => {
-    if (!data.word) {
-        console.error("Erreur: le mot n'a pas été défini !");
-        return;
+//Mise à jour de la grille
+function updateGrid() {
+    for (let i = targetWordLenght - 1; i >= 0; i--) {
+        const cell = document.getElementById(`cell-${life - 1}-${i}`);
+        if (cell) {
+            cell.textContent = currentGuess[i] || "";
+        }
     }
+}
 
-    alert(`🎮 Partie trouvée ! Devinez un mot de ${data.wordLength} lettres.`);
-    room = data.room;
-    targetWord = data.word.toUpperCase();  // Définir le mot cible
-    createGrid(targetWord.length);
+//Gestion du clavier virtuel
+function addVirtualKeyboardEvent() {
+    document.querySelectorAll(".keyboard button").forEach(button => {
+        button.disabled = false;
+    });
+}
+
+function blockVirtualKeyboardEvent() {
+    document.querySelectorAll(".keyboard button").forEach(button => {
+        button.disabled = true;
+    });
+}
+
+document.querySelectorAll(".keyboard button").forEach(button => {
+    button.addEventListener("click", () => {
+        const key = button.dataset.key;
+        if (key === "Backspace" && currentGuess.length > 0) {
+            currentGuess = currentGuess.slice(0, -1);
+            updateGrid();
+        } else if (key === "Enter" && currentGuess.length === targetWordLenght) {
+            socket.emit("guessWord", { name: roomName, wordGuessed: currentGuess });
+            currentGuess = "";
+        } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWordLenght) {
+            currentGuess += key;
+            updateGrid();
+        }
+        
+        
+    });
 });
 
-// Mise à jour du jeu lorsqu'un adversaire joue
-socket.on("updateGame", (data) => {
-    console.log(`📝 L'adversaire a proposé : ${data.guess}`);
+socket.on("chooseWords", (msg) => {
+    // afficher aux joueurs de taper un mot mour l'autre
 });
 
-// Fin de la partie
-socket.on("gameOver", async (data) => {
-    const user = auth.currentUser;
-    if (user) {
-        const isWinner = data.winner === socket.id;
-        await updatePlayerStats(user.uid, isWinner);
-        console.log("✅ Statistiques mises à jour !");
-    }
+// Ajout des événements clavier
+function addKeyboardEvent() {
+    document.addEventListener("keydown", keyboardEventHandler);
+}
 
-    if (data.winner === socket.id) {
-        victory();
-    } else {
-        defeat(data.correctWord);
-    }
-});
+// Suppression des événements clavier
+function removeKeyboardEvent() {
+    document.removeEventListener("keydown", keyboardEventHandler);
+}
 
-// Écouteur pour le clavier physique
-document.addEventListener("keydown", (event) => {
+//Gestion des entrées clavier physique
+function keyboardEventHandler(event) {
     const key = event.key.toUpperCase();
-
+    
     if (key === "ENTER") {
         event.preventDefault();
-        if (currentGuess.length === targetWord.length) {
-            checkWord();
-            socket.emit("guessWord", { room, guess: currentGuess });
+        if (currentGuess.length === targetWordLenght) {
+            socket.emit("guessWord", { name: roomName, wordGuessed: currentGuess });
+            currentGuess = "";
         }
     } else if (key === "BACKSPACE" && currentGuess.length > 0) {
         currentGuess = currentGuess.slice(0, -1);
         updateGrid();
-    } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWord.length) {
+    } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWordLenght) {
         currentGuess += key;
         updateGrid();
     }
-});
-
-// Écouteur pour le clavier virtuel
-document.querySelectorAll(".keyboard button").forEach(button => {
-    button.addEventListener("click", () => {
-        const key = button.dataset.key;
-
-        if (key === "Backspace" && currentGuess.length > 0) {
-            currentGuess = currentGuess.slice(0, -1);
-        } else if (key === "Enter" && currentGuess.length === targetWord.length) {
-            checkWord();
-            socket.emit("guessWord", { room, guess: currentGuess });
-        } else if (/^[A-Z]$/.test(key) && currentGuess.length < targetWord.length) {
-            currentGuess += key;
-        }
-
-        updateGrid();
-    });
-});
-
-//Mise à jour de la grille affichée
-function updateGrid() {
-    for (let i = 0; i < targetWord.length; i++) {
-        const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
-        cell.textContent = currentGuess[i] || "";
-    }
 }
 
-//Création dynamique de la grille de jeu
-function createGrid(wordLength) {
-    const gridContainer = document.querySelector(".grid");
-    gridContainer.innerHTML = ""; // Nettoie la grille existante
+function addChooseWordEvent() {
+    document.addEventListener("keydown", chooseWordEventHandler);
+}
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+function removeChooseWordEvent() {
+    document.removeEventListener("keydown", chooseWordEventHandler);
+}
+
+function chooseWordEventHandler(event) {
+    if (!event.key) return;
+        if (event.key.toUpperCase() === "ENTER") {
+            const word = document.getElementById("choosenWord").value;
+            if (word.length < 1) {
+                // afficher un message pour dire trop petit
+                alert("mot trop petit");
+            } else {
+                socket.emit("wordChoosen", ({name: roomName, word: word.toUpperCase()}));
+                hideChoosenWordDisplay();
+                removeChooseWordEvent();
+            }     
+        }
+}
+
+function hideChoosenWordDisplay() {
+    const word = document.getElementById("choosenWord");
+    word.style = "display: none";
+}
+
+//Création de la grille de jeu
+function createGrid(wordLength) {
+    const gridContainer = document.getElementById("grid");
+    gridContainer.innerHTML = "";
+
+    for (let attempt = life - 1; attempt >= 0; attempt--) {
         const row = document.createElement("div");
         row.classList.add("row");
 
@@ -109,63 +127,98 @@ function createGrid(wordLength) {
     }
 }
 
-//Vérification et affichage des couleurs des lettres
-function checkWord() {
-    if (!room) {
-        console.error("Erreur: la room n'a pas été définie !");
-        return;
-    }
-
-    if (currentGuess.length !== targetWord.length) return;
-
-    let correctLetters = 0;
-
-    for (let i = 0; i < targetWord.length; i++) {
-        const cell = document.getElementById(`cell-${currentAttempt}-${i}`);
-        const letter = currentGuess[i];
-
-        if (letter === targetWord[i]) {
-            cell.style.backgroundColor = "green";  
-            correctLetters++;
-        } else if (targetWord.includes(letter)) {
-            cell.style.backgroundColor = "orange";  
-        } else {
-            cell.style.backgroundColor = "grey";  
-        }
-    }
-
-    if (correctLetters === targetWord.length) {
-        socket.emit("gameOver", { room, winner: socket.id, correctWord: targetWord });
-        victory();
-        return;
-    }
-
-    currentAttempt++;
-    currentGuess = "";
-
-    if (currentAttempt >= maxAttempts) {
-        socket.emit("gameOver", { room, winner: "opponent", correctWord: targetWord });
-        defeat(targetWord);
-    }
+function resetKeyboardColors() {
+    document.querySelectorAll(`button[data-key]`).forEach(button => {
+        button.style.backgroundColor = "grey";
+    });
 }
 
-// Fonction Victoire
-function victory() {
-    document.getElementById("endBanner").style.display = "block";
-    document.getElementById("victoryBanner").innerText = "🏆 Victoire !";
-    blockVirtualKeyboard();
+function hideEndBanner() {
+    document.getElementById("endBanner").style.display = "none";
+}
+
+function replayButton() {
+    let replay = document.getElementById("buttonReplay");
+    replay.addEventListener("click", () => {
+        addKeyboardEvent();
+        hideEndBanner();
+        socket.emit("getRandomWord");
+    });
+}
+
+// affichage après avoir envoyé et reçu son mot
+socket.on("startGuessing", (word) => {
+    document.getElementById("gameContainer").style = "display: block";
+    addKeyboardEvent();
+    addVirtualKeyboardEvent();
+    targetWordLenght = word.length / 2;
+    createGrid(word.length / 2); // on divise par 2 car word c'est '_ _ _ '
+});
+
+socket.on("guessResult", ({result, remainingLife}) => {
+    life = remainingLife;
+    let i = 0;
+    for ([letter, color] of result) {
+        // on change les couleurs des boutons du claviers
+        document.querySelectorAll(`button[data-key="${letter}"]`).forEach(button => {
+            if (button.style.backgroundColor != "green") {
+                button.style.backgroundColor = color;   
+            }
+        });
+        // on change les couleurs dans le guess
+        const cell = document.getElementById(`cell-${remainingLife}-${i}`);
+        cell.style.backgroundColor = color;
+        i += 1;
+    }
+    updateGrid();
+});
+
+socket.on("stopGuessing", (msg) => {
+    blockVirtualKeyboardEvent();
     removeKeyboardEvent();
-}
+    alert(msg);
+})
 
-// Fonction Défaite
-function defeat(correctWord) {
-    document.getElementById("endBanner").style.display = "block";
-    document.getElementById("victoryBanner").innerText = `😢 Défaite ! Le mot était : ${correctWord}`;
-    blockVirtualKeyboard();
+socket.on("gameResult", (msg) => {
+    life = 6;
+    resetKeyboardColors();
+    showChoosenWordDisplay();
+    alert(msg);
+    addChooseWordEvent();
+    document.getElementById("grid").innerHTML = ""; // efface la grid
+    document.getElementById("gameContainer").style.display = "none";
+});
+
+socket.on("soloGameResult", (msg) => {
+    life = 6;
+    resetKeyboardColors();
+    blockVirtualKeyboardEvent();
     removeKeyboardEvent();
+    document.getElementById("grid").innerHTML = ""; // efface la grid
+    document.getElementById("endBanner").style.display = "block";
+    document.getElementById("victoryBanner").innerText = "Victoire";
+});
+
+function showChoosenWordDisplay() {
+    const word = document.getElementById("choosenWord");
+    word.style = "display: block";
+    word.value = "";
+    word.focus();
 }
 
-// Informer le serveur qu'on veut rejoindre une partie
+// Initialisation du jeu
 document.addEventListener("DOMContentLoaded", () => {
-    socket.emit("joinGame");
+    roomName = localStorage.getItem("name");
+    if (roomName) {
+        // mode multi
+        socket.emit("joinRoom", (roomName));
+        localStorage.removeItem("name");
+        addChooseWordEvent();
+    } else {
+        // mode solo
+        hideChoosenWordDisplay();
+        socket.emit("getRandomWord");
+    }
+    replayButton();
+    console.log("Jeu prêt");
 });

@@ -5,11 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jeu du Pendu</title>
     <link rel="stylesheet" href="pendu.css">
-    <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script> <!-- Ajout de Socket.io -->
-    <script src="pendu.js" defer></script> <!-- Suppression du type module -->
+    <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
+    <script type="module" src="pendu.js" defer></script>
 </head>
 <body>
-    <div class="banner">Jeu du Pendu</div>
+    <div class="banner">Jeu du Pendu</div>  
+
+    <div id="gameContainer">
+        <div class="hangman-container">
+            <div class="hangman-drawing">
+                <canvas id="hangmanCanvas" width="200" height="150"></canvas>
+            </div>
+            <div class="word-display" id="word-display"></div>
+            <div class="letter-grid" id="keyboard"></div>
+        </div>
+    </div>
+
     <table class="endBanner" id="endBanner">
         <tr>
             <td colspan="2">
@@ -25,12 +36,8 @@
             </td>
         </tr>
     </table>
-    <div class="hangman-container">
-        <div class="hangman-drawing">
-            <canvas id="hangmanCanvas" width="200" height="150"></canvas>
-        </div>
-        <div class="word-display" id="word-display"></div>
-        <div class="letter-grid" id="keyboard"></div>
-    </div>
+    
+    <input id="choosenWord" class="textArea" placeholder="Saisissez un mot pour l'adversaire"></input>
+
 </body>
 </html>

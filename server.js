@@ -11,52 +11,65 @@ const io = socketIo(server, {
     }
 });
 
-let waitingPlayer = null; // Stocke un joueur en attente
-let rooms = {}; // Stocke les parties en cours
+let waitingPlayer = null;
+let rooms = {};
+let players = new Set();
 
 io.on("connection", (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
 
-    // Vérification pour éviter les connexions fantômes
-    if (waitingPlayer === null) {
-        waitingPlayer = socket;
-        socket.emit("waiting", "En attente d'un adversaire...");
-    } else {
-        // Créer une salle avec les 2 joueurs
-        const room = `room-${Date.now()}`;
-        const word = getRandomWord();  // On génère un mot aléatoire
-        rooms[room] = {
-            players: [waitingPlayer.id, socket.id],
-            word: word,
-            guesses: { [waitingPlayer.id]: "", [socket.id]: "" }
-        };
+    socket.on("joinGame", () => {
+        console.log(`Un joueur a rejoint une partie : ${socket.id}`);
+        players.add(socket.id);
 
-        waitingPlayer.join(room);
-        socket.join(room);
-        io.to(room).emit("startGame", { room, wordLength: word.length, word });
-
-        console.log(`Salle créée : ${room} avec ${waitingPlayer.id} et ${socket.id}`);
-        waitingPlayer = null; // Réinitialiser la file d’attente
-    }
-
-    // Gestion des tentatives de mots (Wordle)
-    socket.on("guessWord", ({ room, guess }) => {
-        if (rooms[room]) {
-            const correctWord = rooms[room].word;
-            rooms[room].guesses[socket.id] = guess;
-
-            if (guess === correctWord) {
-                io.to(room).emit("gameOver", { winner: socket.id, correctWord });
-                delete rooms[room];
-            } else {
-                io.to(room).emit("updateGame", { playerId: socket.id, guess });
+        if (waitingPlayer === null) {
+            waitingPlayer = socket;
+            socket.emit("waiting", "En attente d'un adversaire...");
+        } else {
+            if (!waitingPlayer.connected) {
+                console.log(`Suppression d'un joueur déconnecté`);
+                waitingPlayer = socket;
+                socket.emit("waiting", "En attente d'un adversaire...");
+                return;
             }
+
+            const room = `room-${Date.now()}`;
+            const word = getRandomWord();
+
+            rooms[room] = {
+                players: [waitingPlayer.id, socket.id],
+                word: word,
+                lives: { [waitingPlayer.id]: 6, [socket.id]: 6 }
+            };
+
+            waitingPlayer.join(room);
+            socket.join(room);
+            io.to(room).emit("startGame", { room, wordLength: word.length, word });
+
+            console.log(`Salle créée : ${room} avec ${waitingPlayer.id} et ${socket.id}`);
+            waitingPlayer = null;
         }
     });
 
-    // Gestion de la déconnexion d’un joueur
+    socket.on("guessLetter", ({ room, letter }) => {
+        if (rooms[room]) {
+            io.to(room).emit("opponentGuess", { letter });
+        }
+    });
+
+    //GESTION IMMÉDIATE DE LA FIN DE PARTIE
+    socket.on("gameOver", ({ room, winner, correctWord }) => {
+        if (rooms[room]) {
+            io.to(room).emit("gameOver", { winner, correctWord });
+            console.log(`Fin de partie dans ${room} : gagnant ${winner}, mot correct ${correctWord}`);
+            delete rooms[room];
+        }
+    });
+
     socket.on("disconnect", () => {
         console.log(`Un joueur s'est déconnecté : ${socket.id}`);
+        players.delete(socket.id);
+
         Object.keys(rooms).forEach(room => {
             if (rooms[room].players.includes(socket.id)) {
                 io.to(room).emit("gameOver", { winner: "Déconnexion", correctWord: rooms[room].word });
@@ -66,10 +79,9 @@ io.on("connection", (socket) => {
     });
 });
 
-// Fonction pour récupérer un mot aléatoire (simple)
 function getRandomWord() {
     const words = ["APPLE", "BANANA", "CHERRY", "ORANGE", "MELON"];
     return words[Math.floor(Math.random() * words.length)];
 }
 
-server.listen(3000, () => console.log("🚀 Serveur multijoueur démarré sur http://127.0.0.1:3000"));
+server.listen(3000, () => console.log("Serveur multijoueur démarré sur http://127.0.0.1:3000"));

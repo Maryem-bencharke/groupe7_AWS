@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bomb Game</title>
     <link rel="stylesheet" href="bombGame.css">
+    <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
     <script type="module" src="bombGame.js" defer></script>
 </head>
 <body>
@@ -26,5 +27,25 @@
             </td>
         </tr>
     </table>
+    <table class="scoreBoard">
+        <tr>
+            <td colspan="2">
+                <div>Score :</div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="maxStreak">Maximum : </div>
+            </td>
+        <tr>
+            <td>
+                <div id="currentStreak">Score actuel : </div>
+            </td>
+        </tr>
+        </tr>
+    </table>
+    <p class="timer" id="timer">Temps restant : </p>
+    <button id="joinButton" class="joinButton">Rejoindre</button>
+    <div id="remainingTime" class="timer"></div>
 </body>
 </html>

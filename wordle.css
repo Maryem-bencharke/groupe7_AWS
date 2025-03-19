@@ -1,7 +1,7 @@
 body {
     font-family: Arial, sans-serif;
     background-color: rgb(244,241,222);
-    color: white;
+    color: black;
     margin: 0;
     padding: 0;
     display: flex;
@@ -38,7 +38,7 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px
+    gap: 30px;
 }
 
 .grid {
@@ -91,4 +91,51 @@ button {
 
 button:hover {
     background-color: #565758;
+}
+
+#modeSelection {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#modeSelection button {
+    margin: 10px;
+    padding: 15px;
+    font-size: 18px;
+}
+
+.endBanner {
+    display: none;
+    color: white;
+    background-color: white;
+    position: fixed;
+    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 15px 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 35px rgb(0, 0, 0);
+    z-index: 1000;
+}
+
+.victoryBanner {
+    color: white;
+    background-color: #3d405b;
+    padding: 20px 80px;
+    font-size: 26px;
+    border-radius: 15px;
+    width: 100px;
+    z-index: 1000;
+}
+
+.buttonEndGame {
+    padding: 10px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #3d405b;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    width: 130px;
 }
