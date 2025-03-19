@@ -69,6 +69,12 @@ socket.on("updateTimer", (timeLeft) => {
 //
 
 
+socket.on("startTurn", () => {
+    showTextArea();
+    startOrResetTimer();
+
+})
+
 
 // permet de créer l'alphabet bonus permettant de regagner une vie
 function createBonusLetters(alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
@@ -77,17 +83,21 @@ function createBonusLetters(alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
 
 async function guess(word, syllable) {
     // si le mot à la syllabe et que le mot existe et que le mot est pas deja tape
-    if (word.includes(syllable) && !usedWords.includes(word) && await checkWord(word)) {
-        usedWords.push(word);
-        currentStreak += 1;
-        currentSyllable = getRandomSyllable();
-        reloadSyllableDisplay(currentSyllable);
-        showStreak();
+    //if (word.includes(syllable) && !usedWords.includes(word) && await checkWord(word)) {
+        //usedWords.push(word);
+        //currentStreak += 1;
+        //currentSyllable = getRandomSyllable();
+        //reloadSyllableDisplay(currentSyllable);
+        //showStreak();
         eraseTextArea();
-        startOrResetTimer();
-    } else {
-        eraseTextArea();
-    }
+        //startOrResetTimer();
+    //} else {
+    //    eraseTextArea();
+   // }
+
+   // peut être vérifier en local si le mot est valide avant de faire la requete pour vérifier
+    socket.emit("guessBombWord", (word, roomName));
+
 }
 
 function getRandomSyllable() {

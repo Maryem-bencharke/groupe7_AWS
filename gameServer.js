@@ -31,6 +31,8 @@ io.on("connection", (socket) => {
             players: [],
             game: game,
             activePlayers: [],
+            usedWords: [],
+            currentSyllable: "",
         };
         socket.join(name);
         io.emit("roomList", publicRooms);        
@@ -219,6 +221,12 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("guessBombWord", async (word, name) => {
+        if (word.includes(publicRooms[name].currentSyllable) && ! publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
+            // faire passer le tour au suivant
+        }
+    })
+
 });
 
 function getRandomWordTest() {
@@ -297,7 +305,7 @@ function timer(name) {
         if (timeLeft <= 0) {
             clearInterval(gameTimer[name]);
             delete gameTimer[name];
-            io.to(name).emit("startGame");
+            io.to(publicRooms[name].activePlayers[0]).emit("startTurn");
         }
         timeLeft -= 1;
     }, 1000)
