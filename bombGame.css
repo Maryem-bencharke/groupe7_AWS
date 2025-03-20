@@ -41,6 +41,7 @@ body {
     outline: none;
     color: #fff;
     font-size: 20px;
+    display: none;
 }
 
 .endBanner {
@@ -93,4 +94,8 @@ body {
     font-size: 20px;
     display: block;
     cursor: pointer;
+}
+
+.scoreBoard {
+    display: none;
 }

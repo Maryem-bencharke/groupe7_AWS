@@ -1,14 +1,14 @@
 const socket = io("http://127.0.0.1:3000");
 
 let usedWords = [];
-let syllables = ["NS", "ALO", "ES", "TR", "CON", "PO", "AIE", "NT", "IS", "TO", "ER", "EN", "ONI", "ONS", "UR", "MI", "SIO", "NAU", "RIS", "SSE", "ASS", "TS", "SUR", "LAS", "HE", "GO", "SSA", "GN", "ANC", "EZ", "ON"]
 let currentSyllable;
 let life = 3;
 let timer;
-let joinTimer;
+let bombTimer;
 let currentStreak = 0;
 let maxStreak = 0;
 let roomName;
+let currentPlayerTurn;
 
 //
 // Création des interfaces et gestions des boutons
@@ -63,16 +63,34 @@ socket.on("updateTimer", (timeLeft) => {
     timer.innerText = `Temps restant avant lancement automatique ${timeLeft}s`;
 });
 
+socket.on("refresh", (syllable, currentTurn) => {
+    reloadSyllableDisplay(syllable);
+    currentPlayerTurn = currentTurn;
+});
+
+socket.on("validate", () => {
+    eraseTextArea();
+    hideTextArea();
+    clearInterval(bombTimer);
+});
+
+socket.on("explosion", () => {
+    console.log("effacement");
+    eraseTextArea();
+    hideTextArea();
+})
 
 //
 // Gestion des communications client/serveur
 //
 
 
-socket.on("startTurn", () => {
+socket.on("startTurn", (bombGameMinTimer) => {
     showTextArea();
-    startOrResetTimer();
 
+
+    //socket.emit("explosion", ({name: roomName, currentTurn: currentPlayerTurn}));
+            
 })
 
 
@@ -81,27 +99,10 @@ function createBonusLetters(alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
     //
 }
 
-async function guess(word, syllable) {
-    // si le mot à la syllabe et que le mot existe et que le mot est pas deja tape
-    //if (word.includes(syllable) && !usedWords.includes(word) && await checkWord(word)) {
-        //usedWords.push(word);
-        //currentStreak += 1;
-        //currentSyllable = getRandomSyllable();
-        //reloadSyllableDisplay(currentSyllable);
-        //showStreak();
-        eraseTextArea();
-        //startOrResetTimer();
-    //} else {
-    //    eraseTextArea();
-   // }
-
+function guess(word) {
    // peut être vérifier en local si le mot est valide avant de faire la requete pour vérifier
-    socket.emit("guessBombWord", (word, roomName));
+    socket.emit("guessBombWord", (word, roomName, currentTurn));
 
-}
-
-function getRandomSyllable() {
-    return syllables[~~(Math.random() * syllables.length)];
 }
 
 function checkDefeat(life) {
@@ -170,17 +171,6 @@ function replayButton() {
     });
 }
 
-async function checkWord(word) {
-    const url = `https://api.datamuse.com/words?sp=${word}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data.length > 0 && data[0].word.toLowerCase() === word.toLowerCase()) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
 function loadScore() {
     document.getElementById("maxStreak").innerText = "Maximum : " + maxStreak;
     document.getElementById("currentStreak").innerText = "Score actuel : " + currentStreak;
@@ -200,18 +190,18 @@ function removeAccents(str) {
 document.addEventListener("keydown", (event) => {
     const key = event.key.toUpperCase();
     if (key === "ENTER") {
-        const text = document.getElementById("textArea").value.toUpperCase();
-        const syllable = document.getElementById("syllableDisplay").innerText;
-        guess(removeAccents(text), syllable);
+        let text = document.getElementById("textArea").value.toUpperCase();
+        text = removeAccents(text);
+        socket.emit("guessBombWord", ({word: text, name: roomName}));
     }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    currentSyllable = getRandomSyllable();
-    reloadSyllableDisplay(currentSyllable);
-    startOrResetTimer();
-    replayButton();
-    loadScore();
+    //currentSyllable = getRandomSyllable();
+    //reloadSyllableDisplay(currentSyllable);
+    //startOrResetTimer();
+    //replayButton();
+    //loadScore();
 
     setButtonJoinGame();
     roomName = localStorage.getItem("name");

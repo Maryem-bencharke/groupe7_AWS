@@ -18,7 +18,6 @@ const io = socketIo(server, {
 let wordsNumber = 4000;
 let publicRooms = {};
 let privateRooms = {};
-let gameTimer = {};
 
 
 io.on("connection", (socket) => {
@@ -33,6 +32,7 @@ io.on("connection", (socket) => {
             activePlayers: [],
             usedWords: [],
             currentSyllable: "",
+            currentTurn: 0,
         };
         socket.join(name);
         io.emit("roomList", publicRooms);        
@@ -205,27 +205,123 @@ io.on("connection", (socket) => {
 
     // pour bombGame
 
+    let syllables = ["NS", "ALO", "ES", "TR", "CON", "PO", "AIE", "NT", "IS", "TO", "ER", "EN", "ONI", "ONS", "UR", "MI", "SIO", "NAU", "RIS", "SSE", "ASS", "TS", "SUR", "LAS", "HE", "GO", "SSA", "GN", "ANC", "EZ", "ON"];
+    let bombGameStartLife = 3;
+    let bombGameMinTimer = 5.0;
+    let bombGameMaxTimer = 15.0;
+    let gameTimer = {};
+
+
+    function getRandomSyllable() {
+        return syllables[~~(Math.random() * syllables.length)];
+    }
+
+    function setRandomSyllable(name) {
+        let randomSyllable = getRandomSyllable();
+        publicRooms[name].currentSyllable = randomSyllable;
+        console.log("syllable assigné : " + publicRooms[name].currentSyllable);
+    }
+    
+    async function checkWord(word) {
+        // solution temporaire en attendant indexedDB ou autre
+        const url = `https://api.datamuse.com/words?sp=${word}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.length > 0 && data[0].word.toLowerCase() === word.toLowerCase()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     socket.on("joinBombRoom", (name) => {
         console.log("room : " + name + " connecter avec : " + socket.id);
         publicRooms[name].players.push(socket.id);
         socket.join(name);
-    })
+    });
 
     socket.on("joinBombGame", (name) => {
+        if (!publicRooms[name].life) {
+            publicRooms[name].life = {};
+        }
+        publicRooms[name].life[socket.id] = bombGameStartLife;
+        if (!publicRooms[name].bombTime) {
+            publicRooms[name].bombTime = bombGameMaxTimer;
+        }
         publicRooms[name].activePlayers.push(socket.id);
         socket.join(name + "_active");
         socket.emit("loadJoiningPlayer"); // affiche sur l'écran le joueur qui rentre
+
         if (publicRooms[name].activePlayers.length === 2) {
             io.to(name).emit("waitingToLaunch");
-            timer(name);
+
+            let timeLeft = 6;
+            //setRandomSyllable(name);
+            gameTimer[name] = setInterval(() => {
+                io.to(name).emit("updateTimer", timeLeft);
+                if (timeLeft <= 0) {
+                    clearInterval(gameTimer[name]);
+                    delete gameTimer[name];
+                    publicRooms[name].currentTurn = Math.floor(Math.random() * publicRooms[name].activePlayers.length);
+                    startGameTimer(name);
+                    nextTurn(name);                    
+                    return;
+                }
+                timeLeft -= 1;
+            }, 1000);
+        }
+
+    });
+
+    socket.on("guessBombWord", async ({word, name}) => {
+        if (word.includes(publicRooms[name].currentSyllable) && !publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
+            // faire passer le tour au suivant
+            io.to(socket.id).emit("validate");
+            publicRooms[name].usedWords.push(word);
+            nextTurn(name);
+            // afficher le mot taper sur l'écran de tt le monde
         }
     });
 
-    socket.on("guessBombWord", async (word, name) => {
-        if (word.includes(publicRooms[name].currentSyllable) && ! publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
-            // faire passer le tour au suivant
+    function nextTurn(name) {
+        publicRooms[name].currentTurn = (publicRooms[name].currentTurn + 1) % publicRooms[name].activePlayers.length;
+        setRandomSyllable(name);
+        console.log(publicRooms[name].currentSyllable);
+        io.to(name).emit("refresh", publicRooms[name].currentSyllable, publicRooms[name].currentTurn);
+        io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("startTurn", bombGameMinTimer);
+        // temps minimum pour répondre
+        if (publicRooms[name].bombTime < bombGameMinTimer) {
+            publicRooms[name].bombTime = bombGameMinTimer;
         }
-    })
+    }
+
+    function startGameTimer(name) {
+        gameTimer[name] = setInterval(() => {
+            console.log("temps de la bombe : " + publicRooms[name].bombTime);
+            if (publicRooms[name].bombTime <= 0) {
+                publicRooms[name].bombTime = bombGameMaxTimer;
+                // faire perdre une vie
+                publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] -= 1;
+                console.log("vies restante : " + publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]]);
+                if (publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] < 1) {
+                    publicRooms[name].activePlayers = publicRooms[name].activePlayers.filter(id => id !== publicRooms[name].activePlayers[publicRooms[name].currentTurn]);
+                    // actualiser la perte de vie pour tout le monde
+                    io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("explosion");
+                }
+                if (publicRooms[name].activePlayers.length < 2) {
+                    // fin de la partie
+                    console.log("plus assez de personnes")
+                    clearInterval(gameTimer[name]);
+                    delete gameTimer[name];
+                    // peut être mettre le timer à 0 pour la bombe
+                    return;
+                }
+                nextTurn(name);
+                return;
+            }
+            publicRooms[name].bombTime -= 1;
+        }, 1000);
+    }
 
 });
 
@@ -296,19 +392,6 @@ function guessWord(wordGuessed, word, remainingLife) {
         win = 2; // cas neutre
     }
     return {result, remainingLife, win};
-}
-
-function timer(name) {
-    let timeLeft = 10;
-    gameTimer[name] = setInterval(() => {
-        io.to(name).emit("updateTimer", timeLeft);
-        if (timeLeft <= 0) {
-            clearInterval(gameTimer[name]);
-            delete gameTimer[name];
-            io.to(publicRooms[name].activePlayers[0]).emit("startTurn");
-        }
-        timeLeft -= 1;
-    }, 1000)
 }
 
 server.listen(3000, () => console.log("Serveur multijoueur démarré sur http://127.0.0.1:3000"));
