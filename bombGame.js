@@ -4,7 +4,6 @@ let usedWords = [];
 let currentSyllable;
 let life = 3;
 let timer;
-let bombTimer;
 let currentStreak = 0;
 let maxStreak = 0;
 let roomName;
@@ -48,13 +47,29 @@ function eraseTextArea() {
     document.getElementById("textArea").value = "";
 }
 
+function addLobbyMember(name) {
+    const table = document.getElementById("lobbyMembers");
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.innerText = name;
+    tr.appendChild(td);
+    table.appendChild(tr);
+}
+
 //
 // Fonctions gérant l'affichage sur le jeu
 //
 
+socket.on("loadPlayers", (players) => {
+    for (let player of players) {
+        console.log(player + "a aaaaaaaaaaaaaa")
+        addLobbyMember(player);
+    }
+});
 
-socket.on("loadJoiningPlayer", () => {
+socket.on("loadJoiningPlayer", (name) => {
     // affichage sur l'écran des joueurs
+    addLobbyMember(name);
 });
 
 socket.on("updateTimer", (timeLeft) => {
@@ -68,24 +83,42 @@ socket.on("refresh", (syllable, currentTurn) => {
     currentPlayerTurn = currentTurn;
 });
 
-socket.on("validate", () => {
-    eraseTextArea();
-    hideTextArea();
-    clearInterval(bombTimer);
+socket.on("validate", (mode) => {
+    if (mode === "multi") {
+        hideTextArea();
+    } else {
+        currentStreak += 1;
+        showStreak();
+    }
+    
 });
 
-socket.on("explosion", () => {
-    console.log("effacement");
+socket.on("explosion", (mode) => {
     eraseTextArea();
-    hideTextArea();
-})
+    if (mode === "multi") {
+        hideTextArea();
+    } else {
+        if (maxStreak > currentStreak) {
+            maxStreak = currentStreak;
+        }
+        currentStreak = 0;
+        showStreak();
+        loadScore();
+    }
+});
+
+socket.on("defeat", () => {
+    // afficher la bannière de défaite et rejouer
+    document.getElementById("endBanner").style.display = "block";
+    document.getElementById("victoryBanner").innerText = "plus longue série : " + maxStreak;    
+});
 
 //
 // Gestion des communications client/serveur
 //
 
 
-socket.on("startTurn", (bombGameMinTimer) => {
+socket.on("startTurn", () => {
     showTextArea();
 
 
@@ -101,25 +134,8 @@ function createBonusLetters(alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
 
 function guess(word) {
    // peut être vérifier en local si le mot est valide avant de faire la requete pour vérifier
-    socket.emit("guessBombWord", (word, roomName, currentTurn));
+    socket.emit("guessBombWord", (word, roomName));
 
-}
-
-function checkDefeat(life) {
-    if (life < 1) {
-        document.getElementById("endBanner").style.display = "block";
-        let text = document.getElementById("victoryBanner");
-        text.innerText = "Défaite";
-        hideTextArea();
-        if (currentStreak > maxStreak) {
-            maxStreak = currentStreak;
-        }
-        currentStreak = 0;
-        loadScore();
-        return true;
-    } else {
-        return false;
-    }
 }
 
 function reloadSyllableDisplay(syllable) {
@@ -161,13 +177,8 @@ function hideEndBanner() {
 function replayButton() {
     let replay = document.getElementById("buttonReplay");
     replay.addEventListener("click", () => {
-        currentSyllable = getRandomSyllable();
-        reloadSyllableDisplay(currentSyllable);
-        life = 3;
-        usedWords = [];
         hideEndBanner();
-        startOrResetTimer();
-        document.getElementById("textArea").focus();
+        // à compléter
     });
 }
 
@@ -193,6 +204,7 @@ document.addEventListener("keydown", (event) => {
         let text = document.getElementById("textArea").value.toUpperCase();
         text = removeAccents(text);
         socket.emit("guessBombWord", ({word: text, name: roomName}));
+        eraseTextArea();
     }
 });
 
@@ -208,9 +220,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (roomName) {
         // mode multi
         socket.emit("joinBombRoom", (roomName));
+        localStorage.removeItem("name");
     } else {
         // mode solo
-        socket.emit("getRandomSyllable");
+        socket.emit("joinBombSolo", (roomName));
+        hideJoinButton();
+        document.getElementById("lobbyMembers").style.display = "none";
+        replayButton();
+        document.getElementById("scoreBoard").style.display = "block";
+        loadScore();
+        showStreak();
     }
     
 

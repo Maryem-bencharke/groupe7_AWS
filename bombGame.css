@@ -99,3 +99,10 @@ body {
 .scoreBoard {
     display: none;
 }
+
+.lobbyMembers {
+    position: fixed;
+    left: 0%;
+    bottom: 50%;
+    transform: translateY(-50%);
+}

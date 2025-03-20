@@ -5,6 +5,7 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const { text } = require("stream/consumers");
+const { clearInterval } = require("timers");
 
 const app = express();
 const server = http.createServer(app);
@@ -218,8 +219,14 @@ io.on("connection", (socket) => {
 
     function setRandomSyllable(name) {
         let randomSyllable = getRandomSyllable();
-        publicRooms[name].currentSyllable = randomSyllable;
-        console.log("syllable assigné : " + publicRooms[name].currentSyllable);
+        if (name) {
+            publicRooms[name].currentSyllable = randomSyllable;
+            console.log("syllable assigné : " + publicRooms[name].currentSyllable);
+        } else {
+            // mode solo
+            privateRooms[socket.id].currentSyllable = randomSyllable;
+        }
+
     }
     
     async function checkWord(word) {
@@ -238,6 +245,8 @@ io.on("connection", (socket) => {
         console.log("room : " + name + " connecter avec : " + socket.id);
         publicRooms[name].players.push(socket.id);
         socket.join(name);
+        io.to(socket.id).emit("loadPlayers", publicRooms[name].players);  // récupère tous les joueurs de la salle
+        socket.broadcast.to(name).emit("loadJoiningPlayer", socket.id); // affiche sur l'écran le joueur qui rentre
     });
 
     socket.on("joinBombGame", (name) => {
@@ -250,7 +259,6 @@ io.on("connection", (socket) => {
         }
         publicRooms[name].activePlayers.push(socket.id);
         socket.join(name + "_active");
-        socket.emit("loadJoiningPlayer"); // affiche sur l'écran le joueur qui rentre
 
         if (publicRooms[name].activePlayers.length === 2) {
             io.to(name).emit("waitingToLaunch");
@@ -274,54 +282,112 @@ io.on("connection", (socket) => {
     });
 
     socket.on("guessBombWord", async ({word, name}) => {
-        if (word.includes(publicRooms[name].currentSyllable) && !publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
-            // faire passer le tour au suivant
-            io.to(socket.id).emit("validate");
-            publicRooms[name].usedWords.push(word);
-            nextTurn(name);
-            // afficher le mot taper sur l'écran de tt le monde
+        if (name) {
+            if (word.includes(publicRooms[name].currentSyllable) && !publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
+                // faire passer le tour au suivant
+                io.to(socket.id).emit("validate", "multi");
+                publicRooms[name].usedWords.push(word);
+                
+                // afficher le mot taper sur l'écran de tt le monde
+            }
+        } else {
+            // mode solo
+            console.log("mode solo " + privateRooms[socket.id].usedWords);
+            if (word.includes(privateRooms[socket.id].currentSyllable) && !privateRooms[socket.id].usedWords.includes(word) && await checkWord(word)) {
+                socket.emit("validate", "solo");
+                privateRooms[socket.id].usedWords.push(word);
+            }
         }
+        nextTurn(name);
     });
 
     function nextTurn(name) {
-        publicRooms[name].currentTurn = (publicRooms[name].currentTurn + 1) % publicRooms[name].activePlayers.length;
         setRandomSyllable(name);
-        console.log(publicRooms[name].currentSyllable);
-        io.to(name).emit("refresh", publicRooms[name].currentSyllable, publicRooms[name].currentTurn);
-        io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("startTurn", bombGameMinTimer);
-        // temps minimum pour répondre
-        if (publicRooms[name].bombTime < bombGameMinTimer) {
-            publicRooms[name].bombTime = bombGameMinTimer;
+        if (name) {
+            publicRooms[name].currentTurn = (publicRooms[name].currentTurn + 1) % publicRooms[name].activePlayers.length;
+            console.log(publicRooms[name].currentSyllable);
+            io.to(name).emit("refresh", publicRooms[name].currentSyllable, publicRooms[name].currentTurn);
+            io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("startTurn");
+            // temps minimum pour répondre
+            if (publicRooms[name].bombTime < bombGameMinTimer) {
+                publicRooms[name].bombTime = bombGameMinTimer;
+            }
+        } else {
+            // mode solo
+            socket.emit("refresh", privateRooms[socket.id].currentSyllable, 0);
+            socket.emit("startTurn");
+            if (privateRooms[socket.id].bombTime < bombGameMinTimer) {
+                privateRooms[socket.id].bombTime = bombGameMinTimer;
+            }
         }
+        
     }
 
     function startGameTimer(name) {
-        gameTimer[name] = setInterval(() => {
-            console.log("temps de la bombe : " + publicRooms[name].bombTime);
-            if (publicRooms[name].bombTime <= 0) {
-                publicRooms[name].bombTime = bombGameMaxTimer;
-                // faire perdre une vie
-                publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] -= 1;
-                console.log("vies restante : " + publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]]);
-                if (publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] < 1) {
-                    publicRooms[name].activePlayers = publicRooms[name].activePlayers.filter(id => id !== publicRooms[name].activePlayers[publicRooms[name].currentTurn]);
-                    // actualiser la perte de vie pour tout le monde
-                    io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("explosion");
-                }
-                if (publicRooms[name].activePlayers.length < 2) {
-                    // fin de la partie
-                    console.log("plus assez de personnes")
-                    clearInterval(gameTimer[name]);
-                    delete gameTimer[name];
-                    // peut être mettre le timer à 0 pour la bombe
+        if (name) {
+            gameTimer[name] = setInterval(() => {
+                console.log("temps de la bombe : " + publicRooms[name].bombTime);
+                if (publicRooms[name].bombTime <= 0) {
+                    io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("explosion", "multi");
+                    publicRooms[name].bombTime = bombGameMaxTimer;
+                    // faire perdre une vie
+                    publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] -= 1;
+                    console.log("vies restante : " + publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]]);
+                    if (publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] < 1) {
+                        publicRooms[name].activePlayers = publicRooms[name].activePlayers.filter(id => id !== publicRooms[name].activePlayers[publicRooms[name].currentTurn]);
+                        publicRooms[name].currentTurn = publicRooms[name].currentTurn - 1;
+                        // actualiser la perte de vie pour tout le monde
+                        
+                    }
+                    if (publicRooms[name].activePlayers.length < 2) {
+                        // fin de la partie
+                        console.log("plus assez de personnes")
+                        clearInterval(gameTimer[name]);
+                        delete gameTimer[name];
+                        // peut être mettre le timer à 0 pour la bombe
+                        return;
+                    }
+                    nextTurn(name);
                     return;
                 }
-                nextTurn(name);
-                return;
-            }
-            publicRooms[name].bombTime -= 1;
-        }, 1000);
+                publicRooms[name].bombTime -= 1;
+            }, 1000);
+        } else {
+            // mode solo
+            gameTimer[socket.id] = setInterval(() => {
+                console.log("temps de la bombe : " + privateRooms[socket.id].bombTime);
+                if (privateRooms[socket.id].bombTime <= 0) {
+                    socket.emit("explosion", "solo");
+                    privateRooms[socket.id].bombTime = bombGameMaxTimer;
+                    privateRooms[socket.id].life -= 1;
+                    console.log("vies restante : " + privateRooms[socket.id].life);
+                    if (privateRooms[socket.id].life < 1) {
+                        socket.emit("defeat");
+                        // éfacer les attributs de la room ?
+                        clearInterval(gameTimer[socket.id]);
+                        delete gameTimer[socket.id];
+                        return;
+                    }
+                    nextTurn(name);
+                    return;
+                }
+                privateRooms[socket.id].bombTime -= 0.5;
+            }, 500);
+        }
+        
     }
+
+    socket.on("joinBombSolo", (name) => {
+        privateRooms[socket.id] = {
+            life: bombGameStartLife,
+            usedWords: [],
+            bombTime: bombGameMaxTimer,
+            currentSyllable: "",
+        };
+        socket.join(socket.id);
+        startGameTimer(name);
+        nextTurn(name);
+    });
 
 });
 
