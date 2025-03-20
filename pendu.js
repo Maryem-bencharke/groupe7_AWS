@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 const socket = io('https://groupe7-aws.onrender.com');
-=======
-import { updateBilan, updateAllRankings } from './auth.js';
-const socket = io("http://127.0.0.1:3000"); // Connexion au serveur
->>>>>>> 48f028d (update classement)
 
 let life = 6;
 let wordToGuess = "";
@@ -176,30 +171,18 @@ function gameResult() {
 }
 
 // Mode solo : affichage du message de victoire ou de défaite avec option de rejouer ou retourner au menu
-async function victory(userId, isOnlineGame) {
+function victory() {
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "Victoire";
     blockVirtualKeyboard();
     removeKeyboardEvent();
-
-    if (isOnlineGame) {
-        await updateBilan(userId, true);
-        await updateAllRankings();
-        console.log("Victoire enregistrée et classement mis à jour");
-    }
 }
 
-async function defeat(userId, isOnlineGame) {
+function defeat() {
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "Défaite";
     blockVirtualKeyboard();
     removeKeyboardEvent();
-
-    if (isOnlineGame) {
-        await updateBilan(userId, false);
-        await updateAllRankings();
-        console.log("Défaite enregistrée et classement mis à jour");
-    }
 }
 
 // Efface l'ancien pendu
