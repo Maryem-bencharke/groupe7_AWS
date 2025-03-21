@@ -1,25 +1,47 @@
-//import { collection, query, where, getDocs} from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
-//import { db } from "./firebase-config.js";
-
-const express = require("express");
-const http = require("http");
-const socketIo = require("socket.io");
-const { text } = require("stream/consumers");
-const { clearInterval } = require("timers");
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const socketIo = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+const io = socketIo(server);
+
+app.use(express.static(__dirname));  // sert directement depuis la racine
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));  // charge directement index.html depuis racine
 });
+
+// Gérer les connexions Socket.io
+io.on('connection', (socket) => {
+    console.log('Nouvelle connexion établie');
+    // Logique de gestion des sockets
+});
+
+// Gérer les erreurs 404
+app.use((req, res, next) => {
+    res.status(404).send('Page non trouvée');
+});
+
+// Démarrer le serveur
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Serveur démarré sur le port ${PORT}`);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('Unhandled Rejection:', err);
+}); 
 
 let wordsNumber = 4000;
 let publicRooms = {};
 let privateRooms = {};
-
+let gameTimer = {};
 
 io.on("connection", (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
@@ -469,4 +491,3 @@ function guessWord(wordGuessed, word, remainingLife) {
     return {result, remainingLife, win};
 }
 
-server.listen(3000, () => console.log("Serveur multijoueur démarré sur http://127.0.0.1:3000"));
