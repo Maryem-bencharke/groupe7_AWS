@@ -12,24 +12,15 @@ let bombGameRoomName;
 // permet au bouton rejouer de rejoindre la partie en cours
 function setButtonJoinGame() {
     const join = document.getElementById("joinButton");
-<<<<<<< HEAD
-    if (join) {
-        join.addEventListener("click", () => {
-            socket.emit("joinBombGame", bombGameRoomName);
-            hideJoinButton();
-        });
-    }
-=======
     join.addEventListener("click", () => {
-        if (roomName) {
-            socket.emit("joinBombGame", (roomName));
+        if (bombGameRoomName) {
+            socket.emit("joinBombGame", (bombGameRoomName));
         } else {
-            socket.emit("joinBombSolo", (roomName));
+            socket.emit("joinBombSolo", (bombGameRoomName));
         }   
         hideJoinButton();
     });
     
->>>>>>> ethan
 }
 
 
@@ -246,18 +237,10 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.removeItem("name");
     } else {
         // mode solo
-<<<<<<< HEAD
-        socket.emit("joinBombSolo", (bombGameRoomName));
-        hideJoinButton();
-=======
->>>>>>> ethan
         document.getElementById("lobbyMembers").style.display = "none";
         replayButton();
         document.getElementById("scoreBoard").style.display = "block";
         loadScore();
         showStreak();
     }
-    
-
-    //document.getElementById("textArea").focus();
 });
