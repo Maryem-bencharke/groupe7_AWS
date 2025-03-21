@@ -38,6 +38,7 @@
         </div>
     </main>
 
+    <div id="logoutContainer"></div>
     <table>
         <tr>
             <td>
@@ -51,13 +52,31 @@
                 </select>
             </td>
             <td>
+                <input id="password" class="textArea" placeholder="Entrez un mot de passe (optionnel)"></input>
+            </td>
+            <td>
+                <input id="password" class="textArea" placeholder="Entrez un mot de passe (optionnel)"></input>
+            </td>
+            <td>
                 <button id="createRoom">Créer une salle</button>
-                <div id="logoutContainer"></div>
             </td>
         </tr>
     </table>
 
     <table id="roomsList"></table>
+    <table id="passwordTable" class="passwordTable">
+        <tr>
+            <td>
+                <input id="inputPassword" placeholder="Saisissez le mot de pass"></input>
+            </td>
+            <td>
+                <button id="buttonPassword">Valider</button>
+            </td>
+            <td>
+                <button id="closePasswordTable" class="close-button">X</button>
+            </td>
+        </tr>
+    </table>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {

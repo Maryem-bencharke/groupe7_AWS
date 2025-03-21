@@ -48,7 +48,7 @@ io.on("connection", (socket) => {
 
     socket.emit("roomList", publicRooms);
 
-    socket.on("createRoom", ({name, game}) => {
+    socket.on("createRoom", ({name, game, password}) => {
         publicRooms[name] = {
             players: [],
             game: game,
@@ -56,9 +56,18 @@ io.on("connection", (socket) => {
             usedWords: [],
             currentSyllable: "",
             currentTurn: 0,
+            password: password,
         };
         socket.join(name);
-        io.emit("roomList", publicRooms);        
+        io.emit("roomList", publicRooms, password);        
+    });
+
+    socket.on("getPassword", (password, name) => {
+        if (publicRooms[name].password === password) {
+            socket.emit("passwordResponse", true);
+        } else {
+            socket.emit("passwordResponse", false);
+        }
     });
 
     socket.on("joinRoom", (name) => {
