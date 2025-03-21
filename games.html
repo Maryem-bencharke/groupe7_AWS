@@ -7,13 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://groupe7-aws.onrender.com/socket.io/socket.io.js"></script>
     <script src="games.js" defer></script>
-    <button onclick="logoutUser()">Déconnexion</button>
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="auth.js"></script>
-
-</body>
-</html>
-
 </head>
 <body>
     <header>
@@ -38,14 +33,15 @@
         <div class="game-card bomb">
             <img src="https://th.bing.com/th/id/R.100f9db196ee5cdca3bafe332a0f06ae?rik=zbpTk%2bReftA1nQ&pid=ImgRaw&r=0" alt="Bomb">
             <h2>Bomb Game</h2>
-            <p>Enchaînez des mots avec une syllabe donné.</p>
+            <p>Enchaînez des mots avec une syllabe donnée.</p>
             <button onclick="location.href='bombGame.html'">Jouer</button>
         </div>
     </main>
+
     <table>
         <tr>
             <td>
-                <input id="roomName" class="textArea" placeholder="Saisissez un nom"></input>
+                <input id="roomName" class="textArea" placeholder="Saisissez un nom">
             </td>
             <td>
                 <select class="textArea" id="gameSelect">
@@ -55,13 +51,23 @@
                 </select>
             </td>
             <td>
-                <button id="createRoom" >Créer une salle</button>
-                <button onclick="logoutUser()">Déconnexion</button>
-
+                <button id="createRoom">Créer une salle</button>
+                <div id="logoutContainer"></div>
             </td>
         </tr>
     </table>
+
     <table id="roomsList"></table>
-    
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            if (isLoggedIn === 'true') {
+                document.getElementById('logoutContainer').innerHTML = `
+                    <button onclick="logoutUser()">Déconnexion</button>
+                `;
+            }
+        });
+    </script>
 </body>
 </html>

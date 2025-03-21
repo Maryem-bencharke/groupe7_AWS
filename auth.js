@@ -5,6 +5,7 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
 const db = getFirestore();
 
@@ -12,7 +13,7 @@ const db = getFirestore();
 function logoutUser() {
     signOut(auth).then(() => {
         alert("Vous êtes maintenant déconnecté !");
-        window.location.href = "login.html";
+        window.location.href = "games.html";
     }).catch((error) => {
         console.error("Erreur lors de la déconnexion :", error);
         alert("Erreur lors de la déconnexion : " + error.message);
@@ -70,4 +71,17 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
+
+    // Ajoute ceci à la fin de ton fichier auth.js (juste avant la fin)
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // L'utilisateur est connecté
+        localStorage.setItem('isLoggedIn', 'true');
+    } else {
+        // Pas connecté (invité)
+        localStorage.setItem('isLoggedIn', 'false');
+    }
+});
+
 });
