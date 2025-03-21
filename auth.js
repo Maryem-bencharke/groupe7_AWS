@@ -1,12 +1,28 @@
 import { auth } from "./firebase-config.js";
 import { 
     createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword 
+    signInWithEmailAndPassword,
+    signOut
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 
 const db = getFirestore();
 
+// Fonction pour déconnecter l'utilisateur
+function logoutUser() {
+    signOut(auth).then(() => {
+        alert("Vous êtes maintenant déconnecté !");
+        window.location.href = "login.html";
+    }).catch((error) => {
+        console.error("Erreur lors de la déconnexion :", error);
+        alert("Erreur lors de la déconnexion : " + error.message);
+    });
+}
+
+// Rendre la fonction logoutUser accessible globalement
+window.logoutUser = logoutUser;
+
+// Gestion des formulaires d'inscription et connexion
 document.addEventListener("DOMContentLoaded", function() {
     const signupForm = document.getElementById("signup-form");
     if (signupForm) {

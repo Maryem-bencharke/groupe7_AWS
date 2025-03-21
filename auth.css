@@ -64,3 +64,18 @@ a {
 a:hover {
     text-decoration: underline;
 }
+
+.logout-button {
+    padding: 10px 20px;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #dc3545; /* couleur rouge */
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #a71d2a; /* rouge foncé au survol */
+}
