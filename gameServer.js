@@ -81,7 +81,7 @@ io.on("connection", (socket) => {
         }
         } else {
             // mode solo
-            guessLetter(letter, privateRooms[socket.id], socket.id);
+            guessLetter(letter, privateRooms[socket.id].word, socket.id);
         }
     });
 
@@ -207,7 +207,7 @@ io.on("connection", (socket) => {
     // pour bombGame
 
     let syllables = ["NS", "ALO", "ES", "TR", "CON", "PO", "AIE", "NT", "IS", "TO", "ER", "EN", "ONI", "ONS", "UR", "MI", "SIO", "NAU", "RIS", "SSE", "ASS", "TS", "SUR", "LAS", "HE", "GO", "SSA", "GN", "ANC", "EZ", "ON"];
-    let bombGameStartLife = 3;
+    let bombGameStartLife = 2;
     let bombGameMinTimer = 5.0;
     let bombGameMaxTimer = 15.0;
     let gameTimer = {};
@@ -243,28 +243,32 @@ io.on("connection", (socket) => {
 
     socket.on("joinBombRoom", (name) => {
         console.log("room : " + name + " connecter avec : " + socket.id);
-        publicRooms[name].players.push(socket.id);
-        socket.join(name);
-        io.to(socket.id).emit("loadPlayers", publicRooms[name].players);  // récupère tous les joueurs de la salle
-        socket.broadcast.to(name).emit("loadJoiningPlayer", socket.id); // affiche sur l'écran le joueur qui rentre
-    });
-
-    socket.on("joinBombGame", (name) => {
         if (!publicRooms[name].life) {
             publicRooms[name].life = {};
         }
         publicRooms[name].life[socket.id] = bombGameStartLife;
+
+        publicRooms[name].players.push(socket.id);
+        socket.join(name);
+        io.to(socket.id).emit("loadPlayers", publicRooms[name].players, publicRooms[name].players.length);  // récupère tous les joueurs de la salle
+        socket.broadcast.to(name).emit("loadJoiningPlayer", socket.id, publicRooms[name].players.length - 1); // affiche sur l'écran le joueur qui rentre
+    });
+
+    socket.on("joinBombGame", (name) => {
+        
         if (!publicRooms[name].bombTime) {
             publicRooms[name].bombTime = bombGameMaxTimer;
         }
         publicRooms[name].activePlayers.push(socket.id);
         socket.join(name + "_active");
 
+        
+        io.to(name).emit("loadParticipatingPlayer", socket.id, bombGameStartLife, publicRooms[name].players.length);
+
         if (publicRooms[name].activePlayers.length === 2) {
             io.to(name).emit("waitingToLaunch");
 
             let timeLeft = 6;
-            //setRandomSyllable(name);
             gameTimer[name] = setInterval(() => {
                 io.to(name).emit("updateTimer", timeLeft);
                 if (timeLeft <= 0) {
@@ -287,7 +291,7 @@ io.on("connection", (socket) => {
                 // faire passer le tour au suivant
                 io.to(socket.id).emit("validate", "multi");
                 publicRooms[name].usedWords.push(word);
-                
+                nextTurn(name);
                 // afficher le mot taper sur l'écran de tt le monde
             }
         } else {
@@ -296,9 +300,9 @@ io.on("connection", (socket) => {
             if (word.includes(privateRooms[socket.id].currentSyllable) && !privateRooms[socket.id].usedWords.includes(word) && await checkWord(word)) {
                 socket.emit("validate", "solo");
                 privateRooms[socket.id].usedWords.push(word);
+                nextTurn(name);
             }
         }
-        nextTurn(name);
     });
 
     function nextTurn(name) {
@@ -329,11 +333,13 @@ io.on("connection", (socket) => {
                 console.log("temps de la bombe : " + publicRooms[name].bombTime);
                 if (publicRooms[name].bombTime <= 0) {
                     io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("explosion", "multi");
+                    io.to(name).emit("displayExplosion", "multi", publicRooms[name].currentTurn);
                     publicRooms[name].bombTime = bombGameMaxTimer;
                     // faire perdre une vie
                     publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] -= 1;
                     console.log("vies restante : " + publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]]);
                     if (publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] < 1) {
+                        io.to(name).emit("displaylimination", "multi", publicRooms[name].currentTurn);
                         publicRooms[name].activePlayers = publicRooms[name].activePlayers.filter(id => id !== publicRooms[name].activePlayers[publicRooms[name].currentTurn]);
                         publicRooms[name].currentTurn = publicRooms[name].currentTurn - 1;
                         // actualiser la perte de vie pour tout le monde
@@ -344,6 +350,9 @@ io.on("connection", (socket) => {
                         console.log("plus assez de personnes")
                         clearInterval(gameTimer[name]);
                         delete gameTimer[name];
+                        io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
+                        publicRooms[name].activePlayers = [];
+                        
                         // peut être mettre le timer à 0 pour la bombe
                         return;
                     }

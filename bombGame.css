@@ -106,3 +106,15 @@ body {
     bottom: 50%;
     transform: translateY(-50%);
 }
+
+.player {
+    color: gray;
+}
+
+.player.activePlayer {
+    color: green;
+}
+
+.player.activePlayer.eliminated {
+    color: red;
+}

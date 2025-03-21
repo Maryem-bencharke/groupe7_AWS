@@ -196,7 +196,7 @@ socket.on("soloGameResult", (msg) => {
     removeKeyboardEvent();
     document.getElementById("grid").innerHTML = ""; // efface la grid
     document.getElementById("endBanner").style.display = "block";
-    document.getElementById("victoryBanner").innerText = "Victoire";
+    document.getElementById("victoryBanner").innerText = msg;
 });
 
 function showChoosenWordDisplay() {

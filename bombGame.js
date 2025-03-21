@@ -1,13 +1,9 @@
 const socket = io("http://127.0.0.1:3000");
 
-let usedWords = [];
-let currentSyllable;
-let life = 3;
-let timer;
 let currentStreak = 0;
 let maxStreak = 0;
 let roomName;
-let currentPlayerTurn;
+//let currentPlayerTurn;
 
 //
 // Création des interfaces et gestions des boutons
@@ -41,15 +37,18 @@ function hideTextArea() {
 function showTextArea() {
     const textArea = document.getElementById("textArea");
     textArea.style.display = "block";
+    textArea.focus();
 }
 
 function eraseTextArea() {
     document.getElementById("textArea").value = "";
 }
 
-function addLobbyMember(name) {
+function addLobbyMember(name, number) {
     const table = document.getElementById("lobbyMembers");
     const tr = document.createElement("tr");
+    tr.classList.add("player");
+    tr.id = "player_" + number;
     const td = document.createElement("td");
     td.innerText = name;
     tr.appendChild(td);
@@ -60,27 +59,52 @@ function addLobbyMember(name) {
 // Fonctions gérant l'affichage sur le jeu
 //
 
-socket.on("loadPlayers", (players) => {
-    for (let player of players) {
-        console.log(player + "a aaaaaaaaaaaaaa")
-        addLobbyMember(player);
+socket.on("loadPlayers", (players, number) => {
+    for (let i = 0; i < number; i++) {
+        addLobbyMember(players[i], i);
     }
 });
 
-socket.on("loadJoiningPlayer", (name) => {
+socket.on("loadJoiningPlayer", (name, number) => {
     // affichage sur l'écran des joueurs
-    addLobbyMember(name);
+    addLobbyMember(name, number);
+});
+
+// affiche sur le coté les joueurs qui jouent
+socket.on("loadParticipatingPlayer", (name, life, number) => {
+    const trList = document.getElementsByClassName("player");
+    for (let i = 0; i < number; i++) {
+        if (trList[i].children[0].innerText === name) {
+            trList[i].classList.add("activePlayer", "activePlayer_" + i);
+            trList[i].id = "activePlayer" + i;
+            const tdLife = document.createElement("td");
+            tdLife.innerText = life;
+            tdLife.classList.add("life", "life_" + i);
+            tdLife.id = "life_" + i;
+            const tdWord = document.createElement("td");
+            tdWord.innerText = "";
+            tdWord.classList.add("word", "word_" + i);
+            tdWord.id = "word_" + i;
+            trList[i].appendChild(tdLife);
+            trList[i].appendChild(tdWord);
+        }
+    }
 });
 
 socket.on("updateTimer", (timeLeft) => {
     // affiche un temps restant avant que la partie se lance avec les joueurs actuels
     const timer = document.getElementById("remainingTime");
-    timer.innerText = `Temps restant avant lancement automatique ${timeLeft}s`;
+    if (timeLeft > 0) {
+        timer.innerText = `Temps restant avant lancement automatique ${timeLeft}s`;
+    } else {
+        timer.style.display = "none";
+    }
+    
 });
 
 socket.on("refresh", (syllable, currentTurn) => {
     reloadSyllableDisplay(syllable);
-    currentPlayerTurn = currentTurn;
+    //currentPlayerTurn = currentTurn;
 });
 
 socket.on("validate", (mode) => {
@@ -98,7 +122,7 @@ socket.on("explosion", (mode) => {
     if (mode === "multi") {
         hideTextArea();
     } else {
-        if (maxStreak > currentStreak) {
+        if (maxStreak < currentStreak) {
             maxStreak = currentStreak;
         }
         currentStreak = 0;
@@ -107,10 +131,30 @@ socket.on("explosion", (mode) => {
     }
 });
 
+socket.on("displayExplosion", (mode, turn) => {
+    if (mode === "multi") {
+        let life = document.getElementById("life_" + turn);
+        life.innerText = parseInt(life.innerText) - 1;
+    }
+});
+
+socket.on("displayElimination", (turn) => {
+    document.getElementById("player_" + turn).classList.add("eliminated");
+});
+
 socket.on("defeat", () => {
     // afficher la bannière de défaite et rejouer
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "plus longue série : " + maxStreak;    
+});
+
+socket.on("joinNextGame", (winner) => {
+    showJoinButton();
+    hideTextArea();
+    reloadSyllableDisplay("Gagnant : " + winner)
+    const timer = document.getElementById("remainingTime");
+    timer.innerText = "";
+    timer.style.display = "block";
 });
 
 //
@@ -120,10 +164,6 @@ socket.on("defeat", () => {
 
 socket.on("startTurn", () => {
     showTextArea();
-
-
-    //socket.emit("explosion", ({name: roomName, currentTurn: currentPlayerTurn}));
-            
 })
 
 
@@ -142,34 +182,6 @@ function reloadSyllableDisplay(syllable) {
     document.getElementById("syllableDisplay").innerText = syllable;
 }
 
-function startOrResetTimer() {
-    if (timer) {
-        clearInterval(timer);
-    }
-    let timeLeft = 5.1;
-    let timerDisplay = document.getElementById("timer");
-    timer = setInterval(() => {
-        timeLeft -= 0.10;
-        timerDisplay.innerText = timeLeft.toFixed(1) + "s";
-        if (timeLeft <= 0.05) {
-            clearInterval(timer);
-            guessTimeout();
-        }
-    }, 100);
-}
-
-function guessTimeout() {
-    life -= 1;
-    if (checkDefeat(life)) {
-        clearTimeout(timer);
-    } else {
-        currentSyllable = getRandomSyllable();
-        reloadSyllableDisplay(currentSyllable);
-        eraseTextArea();
-        startOrResetTimer();
-    }
-}
-
 function hideEndBanner() {
     document.getElementById("endBanner").style.display = "none";
 }
@@ -178,7 +190,7 @@ function replayButton() {
     let replay = document.getElementById("buttonReplay");
     replay.addEventListener("click", () => {
         hideEndBanner();
-        // à compléter
+        socket.emit("joinBombSolo", roomName);
     });
 }
 
@@ -209,12 +221,6 @@ document.addEventListener("keydown", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    //currentSyllable = getRandomSyllable();
-    //reloadSyllableDisplay(currentSyllable);
-    //startOrResetTimer();
-    //replayButton();
-    //loadScore();
-
     setButtonJoinGame();
     roomName = localStorage.getItem("name");
     if (roomName) {
