@@ -1,14 +1,14 @@
 var socket = io('https://groupe7-aws.onrender.com');
 
 let targetWordLenght = 0;
-let life = 6;
+let wordleLife  = 6;
 let currentGuess = "";
 let roomName;
 
 //Mise à jour de la grille
 function updateGrid() {
     for (let i = targetWordLenght - 1; i >= 0; i--) {
-        const cell = document.getElementById(`cell-${life - 1}-${i}`);
+        const cell = document.getElementById(`cell-${wordleLife  - 1}-${i}`);
         if (cell) {
             cell.textContent = currentGuess[i] || "";
         }
@@ -112,7 +112,7 @@ function createGrid(wordLength) {
     const gridContainer = document.getElementById("grid");
     gridContainer.innerHTML = "";
 
-    for (let attempt = life - 1; attempt >= 0; attempt--) {
+    for (let attempt = wordleLife  - 1; attempt >= 0; attempt--) {
         const row = document.createElement("div");
         row.classList.add("row");
 
@@ -156,7 +156,7 @@ socket.on("startGuessing", (word) => {
 });
 
 socket.on("guessResult", ({result, remainingLife}) => {
-    life = remainingLife;
+    wordleLife  = remainingLife;
     let i = 0;
     for ([letter, color] of result) {
         // on change les couleurs des boutons du claviers
@@ -180,7 +180,7 @@ socket.on("stopGuessing", (msg) => {
 })
 
 socket.on("gameResult", (msg) => {
-    life = 6;
+    wordleLife  = 6;
     resetKeyboardColors();
     showChoosenWordDisplay();
     alert(msg);
@@ -190,7 +190,7 @@ socket.on("gameResult", (msg) => {
 });
 
 socket.on("soloGameResult", (msg) => {
-    life = 6;
+    wordleLife  = 6;
     resetKeyboardColors();
     blockVirtualKeyboardEvent();
     removeKeyboardEvent();

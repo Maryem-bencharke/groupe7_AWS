@@ -12,12 +12,14 @@ let bombGameRoomName;
 // permet au bouton rejouer de rejoindre la partie en cours
 function setButtonJoinGame() {
     const join = document.getElementById("joinButton");
-    join.addEventListener("click", () => {
-        socket.emit("joinBombGame", (bombGameRoomName));
-        hideJoinButton();
-    });
-    
+    if (join) {
+        join.addEventListener("click", () => {
+            socket.emit("joinBombGame", bombGameRoomName);
+            hideJoinButton();
+        });
+    }
 }
+
 
 function hideJoinButton() {
     const join = document.getElementById("joinButton");
@@ -188,11 +190,14 @@ function hideEndBanner() {
 
 function replayButton() {
     let replay = document.getElementById("buttonReplay");
-    replay.addEventListener("click", () => {
-        hideEndBanner();
-        socket.emit("joinBombSolo", bombGameRoomName);
-    });
+    if (replay) {
+        replay.addEventListener("click", () => {
+            hideEndBanner();
+            socket.emit("joinBombSolo", bombGameRoomName);
+        });
+    }
 }
+
 
 function loadScore() {
     document.getElementById("maxStreak").innerText = "Maximum : " + maxStreak;
