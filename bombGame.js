@@ -13,7 +13,11 @@ let roomName;
 function setButtonJoinGame() {
     const join = document.getElementById("joinButton");
     join.addEventListener("click", () => {
-        socket.emit("joinBombGame", (roomName));
+        if (roomName) {
+            socket.emit("joinBombGame", (roomName));
+        } else {
+            socket.emit("joinBombSolo", (roomName));
+        }   
         hideJoinButton();
     });
     
@@ -229,8 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.removeItem("name");
     } else {
         // mode solo
-        socket.emit("joinBombSolo", (roomName));
-        hideJoinButton();
         document.getElementById("lobbyMembers").style.display = "none";
         replayButton();
         document.getElementById("scoreBoard").style.display = "block";
