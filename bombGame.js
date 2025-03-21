@@ -2,7 +2,7 @@ var socket = io('https://groupe7-aws.onrender.com');
 
 let currentStreak = 0;
 let maxStreak = 0;
-let roomName;
+let bombGameRoomName;
 //let currentPlayerTurn;
 
 //
@@ -13,7 +13,7 @@ let roomName;
 function setButtonJoinGame() {
     const join = document.getElementById("joinButton");
     join.addEventListener("click", () => {
-        socket.emit("joinBombGame", (roomName));
+        socket.emit("joinBombGame", (bombGameRoomName));
         hideJoinButton();
     });
     
@@ -174,7 +174,7 @@ function createBonusLetters(alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
 
 function guess(word) {
    // peut être vérifier en local si le mot est valide avant de faire la requete pour vérifier
-    socket.emit("guessBombWord", (word, roomName));
+    socket.emit("guessBombWord", (word, bombGameRoomName));
 
 }
 
@@ -190,7 +190,7 @@ function replayButton() {
     let replay = document.getElementById("buttonReplay");
     replay.addEventListener("click", () => {
         hideEndBanner();
-        socket.emit("joinBombSolo", roomName);
+        socket.emit("joinBombSolo", bombGameRoomName);
     });
 }
 
@@ -215,21 +215,21 @@ document.addEventListener("keydown", (event) => {
     if (key === "ENTER") {
         let text = document.getElementById("textArea").value.toUpperCase();
         text = removeAccents(text);
-        socket.emit("guessBombWord", ({word: text, name: roomName}));
+        socket.emit("guessBombWord", ({word: text, name: bombGameRoomName}));
         eraseTextArea();
     }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
     setButtonJoinGame();
-    roomName = localStorage.getItem("name");
-    if (roomName) {
+    bombGameRoomName = localStorage.getItem("name");
+    if (bombGameRoomName) {
         // mode multi
-        socket.emit("joinBombRoom", (roomName));
+        socket.emit("joinBombRoom", (bombGameRoomName));
         localStorage.removeItem("name");
     } else {
         // mode solo
-        socket.emit("joinBombSolo", (roomName));
+        socket.emit("joinBombSolo", (bombGameRoomName));
         hideJoinButton();
         document.getElementById("lobbyMembers").style.display = "none";
         replayButton();

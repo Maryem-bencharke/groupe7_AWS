@@ -57,7 +57,8 @@ function chooseWordEventHandler(event) {
 // affichage après avoir envoyé et reçu son mot
 socket.on("startGuessing", (word) => {
     clearHangman();
-    document.getElementById("word-display").innerText = word;
+    const display = document.getElementById("word-display");
+    if(display) display.innerText = word;
     createVirtualKeyboard();
     addKeyboardEvent();
 });
@@ -195,15 +196,18 @@ function clearHangman() {
 
 function replayButton() {
     let replay = document.getElementById("buttonReplay");
-    replay.addEventListener("click", () => {
-        createVirtualKeyboard();
-        addKeyboardEvent();
-        hideEndBanner();
-        life = 6;
-        lettersTyped = [];
-        socket.emit("getRandomWord");
-    });
+    if(replay){
+      replay.addEventListener("click", () => {
+          createVirtualKeyboard();
+          addKeyboardEvent();
+          hideEndBanner();
+          life = 6;
+          lettersTyped = [];
+          socket.emit("getRandomWord");
+      });
+    }
 }
+
 
 function hideEndBanner() {
     document.getElementById("endBanner").style.display = "none";
