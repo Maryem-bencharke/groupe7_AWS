@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://groupe7-aws.onrender.com/socket.io/socket.io.js"></script>
     <script src="games.js" defer></script>
+    <button onclick="logoutUser()">Déconnexion</button>
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="auth.js"></script>
+
+</body>
+</html>
+
 </head>
 <body>
     <header>
@@ -55,5 +62,6 @@
         </tr>
     </table>
     <table id="roomsList"></table>
+    
 </body>
 </html>
