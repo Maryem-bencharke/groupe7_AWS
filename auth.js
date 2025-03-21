@@ -13,7 +13,7 @@ const db = getFirestore();
 function logoutUser() {
     signOut(auth).then(() => {
         alert("Vous êtes maintenant déconnecté !");
-        window.location.href = "games.html";
+        window.location.href = "index.html";
     }).catch((error) => {
         console.error("Erreur lors de la déconnexion :", error);
         alert("Erreur lors de la déconnexion : " + error.message);
