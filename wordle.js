@@ -1,4 +1,4 @@
-const socket = io('https://groupe7-aws.onrender.com');
+var socket = io('https://groupe7-aws.onrender.com');
 
 let targetWordLenght = 0;
 let life = 6;

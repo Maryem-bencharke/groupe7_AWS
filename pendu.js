@@ -1,4 +1,4 @@
-const socket = io('https://groupe7-aws.onrender.com');
+var socket = io('https://groupe7-aws.onrender.com');
 
 let life = 6;
 let wordToGuess = "";
@@ -161,7 +161,7 @@ function createVirtualKeyboard() {
 
 function hideChoosenWordDisplay() {
     const word = document.getElementById("choosenWord");
-    word.style = "display: none";
+    if(word) word.style.display = "none";
 }
 
 function gameResult() {
@@ -241,10 +241,13 @@ function drawHangman(step) {
 
 function showChoosenWordDisplay() {
     const word = document.getElementById("choosenWord");
-    word.style = "display: block";
-    word.value = "";
-    word.focus();
+    if(word){
+      word.style.display = "block";
+      word.value = "";
+      word.focus();
+    }
 }
+
 
 // Initialisation du jeu
 document.addEventListener("DOMContentLoaded", () => {
