@@ -159,6 +159,8 @@ io.on("connection", (socket) => {
         console.log(`Un joueur s'est déconnecté : ${socket.id}`);
         if (privateRooms[socket.id]) {
             delete privateRooms[socket.id];
+            clearInterval(gameTimer[socket.id]);
+            delete gameTimer[socket.id];
         } else {
             Object.keys(publicRooms).forEach(room => {
                 if (publicRooms[room] && publicRooms[room].players.includes(socket.id)) {
@@ -167,6 +169,7 @@ io.on("connection", (socket) => {
                         delete publicRooms[room];
                     } else {
                         io.to(room).emit("victory", "L'adversaire s'est déconnecté.");
+                        io.to(room).emit("disconnected", socket.id);
                     }
                 }
             });
@@ -476,17 +479,26 @@ function correctLetterGuessed(letterGuessed, word) {
 
 //Vérification du mot et mise à jour des couleurs
 function guessWord(wordGuessed, word, remainingLife) {
-    const result = [];
+    const result = new Array(word.length).fill(null);
+    const wordArray = word.split("");
     let win = 0;
     for (let i = 0; i < word.length; i++) {
-        const letter = wordGuessed[i];
-        if (letter === word[i]) {
-            result[i] = [letter, "green"];
+        if (wordGuessed[i] === wordArray[i]) {
+            result[i] = [wordGuessed[i], "green"];
+            wordArray[i] = "_";
             win += 1;
-        } else if (word.includes(letter)) {
-            result[i] = [letter, "orange"];
-        } else {
-            result[i] = [letter, "black"];
+        }
+    }
+    for (let i = 0; i < word.length; i++) {
+        if (!result[i]) {
+            const letter = wordGuessed[i];
+            const index = wordArray.indexOf(letter);
+            if (index !== -1) {
+                result[i] = [letter, "orange"];
+                wordArray[index] = "_";
+            } else {
+                result[i] = [letter, "black"];
+            }
         }
     }
     remainingLife -= 1;

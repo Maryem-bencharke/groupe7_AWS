@@ -3,6 +3,7 @@ var socket = io('https://groupe7-aws.onrender.com');
 let currentStreak = 0;
 let maxStreak = 0;
 let bombGameRoomName;
+let currentSyllable = "";
 //let currentPlayerTurn;
 
 //
@@ -17,7 +18,8 @@ function setButtonJoinGame() {
             socket.emit("joinBombGame", (bombGameRoomName));
         } else {
             socket.emit("joinBombSolo", (bombGameRoomName));
-        }   
+        }
+        createBonusLetters();
         hideJoinButton();
     });
     
@@ -162,6 +164,15 @@ socket.on("joinNextGame", (winner) => {
     timer.style.display = "block";
 });
 
+socket.on("disconnected", (player) => {
+    const table = document.getElementById("lobbyMembers");
+    Array.from(table.children).forEach(tr => {
+        if (tr.innerText === player) {
+            tr.remove();
+        }
+    });
+});
+
 //
 // Gestion des communications client/serveur
 //
@@ -173,8 +184,24 @@ socket.on("startTurn", () => {
 
 
 // permet de créer l'alphabet bonus permettant de regagner une vie
-function createBonusLetters(alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-    //
+function createBonusLetters(alphabet = "ABCDEFGHIJLMNOPQRSTUV") {
+    const table = document.getElementById("bonusLetters");
+    table.innerHTML = "";
+    const tr1 = document.createElement("tr");
+    const tr2 = document.createElement("tr");
+    for (let i = 0; i < alphabet.length; i++) {
+        const td = document.createElement("td");
+        td.classList.add("unguessed");
+        td.id = alphabet[i];
+        td.innerText = alphabet[i];
+        if (i < Math.ceil(alphabet.length / 2)) {
+            tr1.appendChild(td);
+        } else {
+            tr2.appendChild(td);
+        }
+    }
+    table.appendChild(tr1);
+    table.appendChild(tr2);
 }
 
 function guess(word) {
@@ -185,6 +212,7 @@ function guess(word) {
 
 function reloadSyllableDisplay(syllable) {
     document.getElementById("syllableDisplay").innerText = syllable;
+    currentSyllable = syllable;
 }
 
 function hideEndBanner() {

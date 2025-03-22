@@ -118,3 +118,9 @@ body {
 .player.activePlayer.eliminated {
     color: red;
 }
+
+.unguessed {
+    padding: 5px;
+    border-radius: 15px;
+    background-color: yellow;
+}
