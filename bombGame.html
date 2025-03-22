@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bomb Game</title>
+    <link rel="stylesheet" href="bombGame.css">
+    <script src="https://groupe7-aws.onrender.com/socket.io/socket.io.js"></script>
+    <script type="module" src="bombGame.js" defer></script>
+</head>
+<body>
+    <div class="banner">Bomb Game</div>
+    <div class="syllable" id="syllableDisplay"></div>
+    <input type="text"  id="textArea" maxlength="30" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="textArea">
+    <table class="endBanner" id="endBanner">
+        <tr>
+            <td colspan="2">
+                <div class="victoryBanner" id="victoryBanner"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button class="buttonEndGame" id="buttonReplay">Rejouer</button>
+            </td>
+            <td>
+                <button class="buttonEndGame" onclick="location.href='games.html'">Menu principal</button>
+            </td>
+        </tr>
+    </table>
+    <table class="scoreBoard">
+        <tr>
+            <td colspan="2">
+                <div>Score :</div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div id="maxStreak">Maximum : </div>
+            </td>
+        <tr>
+            <td>
+                <div id="currentStreak">Score actuel : </div>
+            </td>
+        </tr>
+        </tr>
+    </table>
+    <p class="timer" id="timer">Temps restant : </p>
+    <button id="joinButton" class="joinButton">Rejoindre</button>
+    <div id="remainingTime" class="timer"></div>
+</body>
+</html>

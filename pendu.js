@@ -1,90 +1,215 @@
+const socket = io('https://groupe7-aws.onrender.com');
+
 let life = 6;
 let wordToGuess = "";
 let lettersTyped = [];
-let keyboardEventHandler = (event) => {
-    event.preventDefault();
-    guess(event.key.toUpperCase());
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+let gameMode = null;
+let roomName;
+
+socket.on("chooseWords", (msg) => {
+    // afficher aux joueurs de taper un mot mour l'autre
+});
+
+// Ajout des événements clavier
+function addKeyboardEvent() {
+    document.addEventListener("keydown", keyboardEventHandler);
 }
 
-function guess(letterGuessed) {
-    if (!lettersTyped.includes(letterGuessed)) {
-        lettersTyped.push(letterGuessed);
-        document.getElementById(letterGuessed).disabled = true;
-        if (wordToGuess.includes(letterGuessed)) {
-            let display = document.getElementById("word-display");
-            let text = display.innerText.split(" ");
-            for (let index in wordToGuess) {
-                if (wordToGuess[index] === letterGuessed) {
-                    text[index] = letterGuessed;
-                }
-            }
-            text = text.join(" ");
-            display.innerText = text;
-            if (!text.includes("_")) {
-                // Victoire
-                victory();
-                console.log("victoire");
-            }
-        } else {
-            life -= 1;
-            // affichage dans le canvas du pendu
-            drawHangman(life);
-            if (life < 1) {
-                // Défaite
-                defeat();
-                console.log("défaite");
-            }
+// Suppression des événements clavier
+function removeKeyboardEvent() {
+    document.removeEventListener("keydown", keyboardEventHandler);
+}
+
+// Gestion des entrées clavier physiques
+function keyboardEventHandler(event) {
+    let letter = event.key.toUpperCase();
+    if (alphabet.includes(letter) && !lettersTyped.includes(letter)) {
+        if (!lettersTyped.includes(letter)) {
+            guess(letter);
         }
     }
 }
 
+function addChooseWordEvent() {
+    document.addEventListener("keydown", chooseWordEventHandler);
+}
+
+function removeChooseWordEvent() {
+    document.removeEventListener("keydown", chooseWordEventHandler);
+}
+
+function chooseWordEventHandler(event) {
+    if (!event.key) return;
+        if (event.key.toUpperCase() === "ENTER") {
+            const word = document.getElementById("choosenWord").value;
+            if (word.length < 1) {
+                // afficher un message pour dire trop petit
+                alert("mot trop petit");
+            } else {
+                socket.emit("wordChoosen", ({name: roomName, word: word.toUpperCase()}));
+                hideChoosenWordDisplay();
+                removeChooseWordEvent();
+            }     
+        }
+}
+
+// affichage après avoir envoyé et reçu son mot
+socket.on("startGuessing", (word) => {
+    clearHangman();
+    document.getElementById("word-display").innerText = word;
+    createVirtualKeyboard();
+    addKeyboardEvent();
+});
+
+function guess(letterGuessed) {
+    lettersTyped.push(letterGuessed);
+    document.getElementById(letterGuessed).disabled = true;
+    socket.emit("guessLetter", {name: roomName, letter: letterGuessed});
+}
+
+socket.on("correctGuess", (word) => {
+    updateWordDisplay(word);
+});
+
+socket.on("incorrectGuess", () => {
+    life -= 1;
+    if (life >= 0) drawHangman(life);
+    if (life === 0) {
+        if (roomName) {
+            gameResult()
+        } else {
+            defeat();
+        }
+    }
+})
+
+// Mise à jour de l'affichage du mot caché
+function updateWordDisplay(word) {
+    let display = document.getElementById("word-display");
+    let text = display.innerText.split(" ");
+    for (let index in word) {
+        if (word[index] != "_") {
+            text[index] = word[index];
+        }
+    }
+    display.innerText = text.join(" ");
+    if (!text.includes("_")) {
+        if (roomName) {
+            gameResult();
+        } else {
+            victory();
+        }
+        
+    }
+}
+
+socket.on("victory", (msg) => {
+    showChoosenWordDisplay();
+    clearHangman();
+    document.getElementById("word-display").innerText = "";
+    alert(msg);
+    addChooseWordEvent();
+    life = 6;
+    lettersTyped = [];
+});
+
+socket.on("defeat", (msg) => {
+    showChoosenWordDisplay();
+    clearHangman();
+    document.getElementById("word-display").innerText = "";
+    alert(msg);
+    addChooseWordEvent();
+    life = 6;
+    lettersTyped = [];
+});
+
+socket.on("even", (msg) => {
+    showChoosenWordDisplay();
+    clearHangman();
+    document.getElementById("word-display").innerText = "";
+    alert(msg);
+    addChooseWordEvent();
+    life = 6;
+    lettersTyped = [];
+});
+
+// Empêcher le message "Attente d'un adversaire" si c'est le mode solo
+socket.on("waiting", (message) => {
+    if (gameMode === "multi") {
+        alert(message);
+    }
+});
+
+// Création du clavier virtuel
 function createVirtualKeyboard() {
-    let Virtualkeyboard = document.getElementById('keyboard');
-    let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    let keyboard = document.getElementById("keyboard");
+    keyboard.innerHTML = ""; 
     for (let letter of alphabet) {
         let button = document.createElement("button");
         button.innerText = letter;
         button.id = letter;
         button.classList.add("letter");
-        button.onclick = function () {guess(letter)};
-        Virtualkeyboard.appendChild(button);
-    }   
+        button.onclick = function () {
+            if (!lettersTyped.includes(letter)) {
+                guess(letter);
+            }
+        };
+        keyboard.appendChild(button);
+    }
 }
 
-function addKeyboardEvent() {
-    document.addEventListener("keydown", keyboardEventHandler);
+function hideChoosenWordDisplay() {
+    const word = document.getElementById("choosenWord");
+    word.style = "display: none";
 }
 
-function removeKeyboardEvent() {
-    document.removeEventListener("keydown", keyboardEventHandler);
+function gameResult() {
+    blockVirtualKeyboard();
+    removeKeyboardEvent();
+    socket.emit("gameResult", ({name: roomName, life: life}));
 }
 
-function initWord() {
-    // il faudra prendre un mot aléatoire depuis la base de donnée
-    wordToGuess = "BONJOUR".toUpperCase();
-    document.getElementById("word-display").innerText = "_ ".repeat(wordToGuess.length);
-}
-
+// Mode solo : affichage du message de victoire ou de défaite avec option de rejouer ou retourner au menu
 function victory() {
     document.getElementById("endBanner").style.display = "block";
-    let text = document.getElementById("victoryBanner");
-    text.innerText = "Victoire";
+    document.getElementById("victoryBanner").innerText = "Victoire";
     blockVirtualKeyboard();
     removeKeyboardEvent();
 }
 
 function defeat() {
     document.getElementById("endBanner").style.display = "block";
-    let text = document.getElementById("victoryBanner");
-    text.innerText = "Défaite";
+    document.getElementById("victoryBanner").innerText = "Défaite";
     blockVirtualKeyboard();
     removeKeyboardEvent();
+}
+
+// Efface l'ancien pendu
+function clearHangman() {
+    const canvas = document.getElementById("hangmanCanvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function replayButton() {
+    let replay = document.getElementById("buttonReplay");
+    replay.addEventListener("click", () => {
+        createVirtualKeyboard();
+        addKeyboardEvent();
+        hideEndBanner();
+        life = 6;
+        lettersTyped = [];
+        socket.emit("getRandomWord");
+    });
 }
 
 function hideEndBanner() {
     document.getElementById("endBanner").style.display = "none";
 }
 
+// Désactivation du clavier après la fin du jeu
 function blockVirtualKeyboard() {
     let buttons = document.getElementsByClassName("letter");
     for (let button of buttons) {
@@ -92,52 +217,48 @@ function blockVirtualKeyboard() {
     }
 }
 
-function activateVirtualKeyboard() {
-    let buttons = document.getElementsByClassName("letter");
-    for (let button of buttons) {
-        button.disabled = false;
-    }
-}
-
+// Dessiner le pendu
 function drawHangman(step) {
     const canvas = document.getElementById("hangmanCanvas");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 3;
+
     switch (step) {
-        case 5 : // tête
-            break;
-        case 4 : // corps
-            break;
-        case 3 : // bras gauche
-            break;
-        case 2 : // bras droit
-            break;
-        case 1 : // jambe gauche
-            break;
-        case 0 : // jambe droite + X_X
+        case 5: ctx.beginPath(); ctx.arc(100, 30, 15, 0, Math.PI * 2); ctx.stroke(); break;
+        case 4: ctx.beginPath(); ctx.moveTo(100, 45); ctx.lineTo(100, 100); ctx.stroke(); break;
+        case 3: ctx.beginPath(); ctx.moveTo(100, 60); ctx.lineTo(75, 80); ctx.stroke(); break;
+        case 2: ctx.beginPath(); ctx.moveTo(100, 60); ctx.lineTo(125, 80); ctx.stroke(); break;
+        case 1: ctx.beginPath(); ctx.moveTo(100, 100); ctx.lineTo(75, 130); ctx.stroke(); break;
+        case 0: ctx.beginPath(); ctx.moveTo(100, 100); ctx.lineTo(125, 130); ctx.stroke();
+            ctx.fillText("X   X", 90, 25);
+            ctx.fillText("  -  ", 90, 35);
             break;
     }
-
 }
 
-function clearHangman() {
-    const canvas = document.getElementById("hangmanCanvas");
-    // remettre à 0 le canvas
+function showChoosenWordDisplay() {
+    const word = document.getElementById("choosenWord");
+    word.style = "display: block";
+    word.value = "";
+    word.focus();
 }
 
-function replayButton() {
-    let replay = document.getElementById("buttonReplay");
-    replay.addEventListener("click", () => {
-        initWord();
-        activateVirtualKeyboard();
-        addKeyboardEvent();
-        hideEndBanner();
-        life = 6;
-        lettersTyped = [];
-    });
-}
-
+// Initialisation du jeu
 document.addEventListener("DOMContentLoaded", () => {
-    initWord();
-    createVirtualKeyboard();
-    addKeyboardEvent();
+    roomName = localStorage.getItem("name");
+    if (roomName) {
+        // mode multi
+        socket.emit("joinRoom", (roomName));
+        localStorage.removeItem("name");
+        addChooseWordEvent();
+    } else {
+        // mode solo
+        hideChoosenWordDisplay();
+        socket.emit("getRandomWord");
+    }
     replayButton();
-  });
+    console.log("Jeu prêt");
+});

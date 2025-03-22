@@ -1,0 +1,16 @@
+{
+  "name": "groupe7_aws",
+  "version": "1.0.0",
+  "main": "gameServer.js",
+  "scripts": {
+    "start": "node gameServer.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}

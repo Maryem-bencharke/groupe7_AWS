@@ -1,9 +1,8 @@
+import { readFile } from 'fs/promises';
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
-import wordsData from "./words_clean.json" assert { type: "json" };
 
-
-// 1️⃣ Configurer Firebase
+// Configuration Firebase (remplace par la tienne)
 const firebaseConfig = {
     apiKey: "AIzaSyBKbXwyGm8tf5neHTZqYW8AkvwqjpxUaGs",
     authDomain: "jeu-de-mots-9815d.firebaseapp.com",
@@ -17,23 +16,39 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Fonction pour importer les mots
-const importWords = async () => {
-  for (const wordObj of wordsData.words) {
-    const { word, id, length } = wordObj;
-    
-    try {
-      // Ajouter chaque mot avec son propre nom comme ID
-      await setDoc(doc(db, "words", word), {
-        word,
-        id,
-        length
-      });
-      console.log(`Ajouté : ${word}`);
-    } catch (error) {
-      console.error(`Erreur avec ${word} :`, error);
-    }
+// Lire le fichier JSON manuellement
+const loadWords = async () => {
+  try {
+    const data = await readFile('./words_clean.json', 'utf-8');
+    return JSON.parse(data).words;
+  } catch (error) {
+    console.error("Erreur lors de la lecture du fichier JSON :", error);
+    return [];
   }
 };
+
+// Importer les mots dans Firebase
+const importWords = async () => {
+    const wordsData = await loadWords();
+    console.log("Données chargées :", wordsData); // Vérification
+  
+    for (const wordObj of wordsData) {
+      if (!wordObj.mot || !wordObj.ID || !wordObj.length) {
+        console.error("Donnée invalide :", wordObj);
+        continue; // Passe au suivant si l'objet est incomplet
+      }
+  
+      const { mot: word, ID: id, length } = wordObj;
+      console.log(`Ajout du mot : ${word}`);
+  
+      try {
+        await setDoc(doc(db, "words", id.toString()), { word, id, length });
+        console.log(`Ajouté : ${word}`);
+      } catch (error) {
+        console.error(`Erreur avec ${word} :`, error);
+      }
+    }
+  };
+  
 
 importWords();
