@@ -67,7 +67,7 @@ function checkWord() {
     }
 
     if (currentGuess === targetWord) {
-        setTimeout(() => alert("Bravo, vous avez trouvé le mot !"), 100);
+        setTimeout(() => alert("Bravo, vous avez trouvé le mot !"), 200);
         return;
     }
 
