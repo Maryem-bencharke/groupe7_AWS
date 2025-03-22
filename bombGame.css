@@ -96,6 +96,24 @@ body {
     cursor: pointer;
 }
 
+.quitButton {
+    position: fixed;
+    bottom: 90px;  /* Juste au-dessus du bouton rejoindre */
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    border: none;
+    border-radius: 15px;
+    background-color: #d9534f; /* Rouge pour indiquer le danger */
+    font-size: 18px;
+    color: white;
+    padding: 10px 20px;
+    cursor: pointer;
+    display: none;
+}
+
+
+
 .scoreBoard {
     display: none;
 }
