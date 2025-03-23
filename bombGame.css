@@ -170,3 +170,29 @@ body {
     font-size: 20px;
     font-weight: bold;
 }
+
+/* Ajout des nouvelles règles CSS */
+#playersDisplay, #remainingTime {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.lobbyMembers {
+    clear: both;
+    text-align: left;
+    position: relative;
+    z-index: 2;
+    margin-top: 50px; /* Espace pour éviter le chevauchement */
+}
+
+.player-card {
+    background-color: #fff;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: inline-block;
+    border-radius: 5px;
+}

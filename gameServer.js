@@ -87,17 +87,30 @@ io.on("connection", (socket) => {
         }
     });
 
+    // socket.on("joinRoom", (name) => {
+    //     console.log("room : " + name + " connecter avec : " + socket.id);
+    //     publicRooms[name].players.push(socket.id);
+    //     //if (!publicRooms[name].life) {
+    //     //    publicRooms[name].life = {};
+    //     //}
+    //     //publicRooms[name].life[socket.id] = 6;
+    //     socket.join(name);
+    //     if (publicRooms[name].players.length === 2) {
+    //         io.to(name).emit("chooseWords", "Choisissez un mot pour l'adversaire");
+    //     }
+    // });
     socket.on("joinRoom", (name) => {
-        console.log("room : " + name + " connecter avec : " + socket.id);
-        publicRooms[name].players.push(socket.id);
-        //if (!publicRooms[name].life) {
-        //    publicRooms[name].life = {};
-        //}
-        //publicRooms[name].life[socket.id] = 6;
-        socket.join(name);
-        if (publicRooms[name].players.length === 2) {
-            io.to(name).emit("chooseWords", "Choisissez un mot pour l'adversaire");
+        if (!publicRooms[name]) {
+            publicRooms[name] = { players: [] };
         }
+        publicRooms[name].players.push({ id: socket.id, name: socket.username });
+        socket.join(name);
+
+        // Émettre clairement vers le joueur actuel
+        io.to(socket.id).emit("loadPlayers", publicRooms[name].players);
+
+        // Informer les autres joueurs
+        socket.broadcast.to(name).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
     });
 
     socket.on("wordChoosen", ({name, word}) => {

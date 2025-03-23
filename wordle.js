@@ -227,6 +227,16 @@ function goBackToGames() {
     window.location.href = "games.html";
 }
 
+socket.on("loadPlayers", (players) => {
+    players.forEach(player => {
+        addLobbyMember(player.name, player.id);
+    });
+});
+
+socket.on("loadJoiningPlayer", ({ id, name }) => {
+    addLobbyMember(name, id);
+});
+
 function addLobbyMember(name, id) {
     const lobbyList = document.getElementById("lobbyList");
     if (lobbyList) {
@@ -239,6 +249,8 @@ function addLobbyMember(name, id) {
         console.error("Erreur : lobbyList introuvable !");
     }
 }
+
+
 
 
 

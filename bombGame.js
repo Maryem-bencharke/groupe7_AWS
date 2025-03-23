@@ -181,16 +181,29 @@ socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
 //     if (tdWord) tdWord.innerText = word;
 // });
 socket.on("updateCurrentWord", ({playerId, word}) => {
-    let wordDisplay = document.getElementById(`word-${playerId}`);
+    let wordDisplay = document.getElementById(`word_${playerId}`);
     if (!wordDisplay) {
-        // Crée l'élément s'il n'existe pas encore
+        // Si l'élément n'existe pas, on le crée immédiatement
         const playersDisplay = document.getElementById('playersDisplay');
+        if (!playersDisplay) {
+            console.error("playersDisplay non trouvé dans HTML !");
+            return;
+        }
+
+        const playerCard = document.createElement('div');
+        playerCard.id = `player_${playerId}`;
+        playerCard.classList.add('player-card');
+
         wordDisplay = document.createElement('div');
-        wordDisplay.id = `word-${playerId}`;
-        playersDisplay.appendChild(wordDisplay);
+        wordDisplay.id = `word_${playerId}`;
+        wordDisplay.classList.add('player-word');
+
+        playerCard.appendChild(wordDisplay);
+        playersDisplay.appendChild(playerCard);
     }
     wordDisplay.innerText = word;
 });
+
 
 // socket.on("updateTimer", (timeLeft) => {
 //     // affiche un temps restant avant que la partie se lance avec les joueurs actuels
@@ -205,15 +218,13 @@ socket.on("updateCurrentWord", ({playerId, word}) => {
 
 socket.on("updateTimer", (timeLeft) => {
     const timer = document.getElementById("remainingTime");
-    if (timer) {
-        if (timeLeft > 0) {
-            timer.style.display = "block";
-            timer.innerText = `Temps restant avant lancement automatique : ${timeLeft}s`;
-        } else {
-            timer.style.display = "none";
-        }
+    if (!timer) {
+        console.warn("Erreur : l'élément 'remainingTime' n'existe pas dans ton HTML !");
+        return;
     }
+    timer.innerText = `Temps restant : ${timeLeft}s`;
 });
+
 
 // socket.on("refresh", (syllable, currentTurn) => {
 //     reloadSyllableDisplay(syllable);
