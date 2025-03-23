@@ -281,3 +281,15 @@ function goBackToGames() {
     }, 500); 
 }
 
+function addLobbyMember(name, id) {
+    const table = document.getElementById("lobbyMembers");
+    const tr = document.createElement("tr");
+    tr.classList.add("player");
+    tr.id = "player_" + id;
+    const td = document.createElement("td");
+    td.innerText = name; 
+    tr.appendChild(td);
+    table.appendChild(tr);
+}
+
+

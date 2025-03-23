@@ -52,16 +52,28 @@ function eraseTextArea() {
     document.getElementById("textArea").value = "";
 }
 
-function addLobbyMember(name, number) {
+// function addLobbyMember(name, number) {
+//     const table = document.getElementById("lobbyMembers");
+//     const tr = document.createElement("tr");
+//     tr.classList.add("player");
+//     tr.id = "player_" + number;
+//     const td = document.createElement("td");
+//     td.innerText = name;
+//     tr.appendChild(td);
+//     table.appendChild(tr);
+// }
+
+function addLobbyMember(name, id) {
     const table = document.getElementById("lobbyMembers");
     const tr = document.createElement("tr");
     tr.classList.add("player");
-    tr.id = "player_" + number;
+    tr.id = "player_" + id; // utilise l'id clairement
     const td = document.createElement("td");
     td.innerText = name;
     tr.appendChild(td);
     table.appendChild(tr);
 }
+
 
 //
 // Fonctions gérant l'affichage sur le jeu
@@ -79,12 +91,16 @@ function addLobbyMember(name, number) {
 // });
 
 // Chargement des joueurs avec pseudo clairement affichés
+// socket.on("loadPlayers", (players) => {
+//     players.forEach((player, index) => {
+//         addLobbyMember(player.name, player.id || index);
+//     });
+// });
 socket.on("loadPlayers", (players) => {
-    players.forEach((player, index) => {
-        addLobbyMember(player.name, player.id || index);
+    players.forEach(player => {
+        addLobbyMember(player.name, player.id);
     });
 });
-
 // Lorsqu'un nouveau joueur rejoint, l'afficher clairement :
 socket.on("loadJoiningPlayer", ({ id, name }) => {
     addLobbyMember(name, id);
