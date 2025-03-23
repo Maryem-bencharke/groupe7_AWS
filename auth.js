@@ -56,11 +56,21 @@ document.addEventListener("DOMContentLoaded", function () {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        const username = userDoc.exists() ? userDoc.data().username : `Guest${Math.floor(Math.random() * 10000)}`;
+        // const userDoc = await getDoc(doc(db, "users", user.uid));
+        // const username = userDoc.exists() ? userDoc.data().username : `Guest${Math.floor(Math.random() * 10000)}`;
 
-        // ENVOI DU PSEUDO VERS LE SERVEUR
-        socket.emit("setUsername", username);
+        // // ENVOI DU PSEUDO VERS LE SERVEUR
+        // socket.emit("setUsername", username);
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+            const username = userDoc.data().username;
+            localStorage.setItem('username', username); // 🔥 C'EST ÇA QUI MANQUAIT !
+            socket.emit('setUsername', username);
+        } else {
+            const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
+            localStorage.setItem('username', guestName);
+            socket.emit('setUsername', guestName);
+        }
 
         alert("Connexion réussie !");
         window.location.href = "games.html";
@@ -71,31 +81,28 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   onAuthStateChanged(auth, async (user) => {
+    let username = "";
+
     if (user) {
-        // Récupérer pseudo depuis Firestore
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
-        let username = "";
 
         if (docSnap.exists()) {
             username = docSnap.data().username;
         } else {
             username = `Guest${Math.floor(Math.random() * 10000)}`;
         }
-
-        // Stocker dans localStorage pour les autres jeux
-        localStorage.setItem("username", username);
-
-        // Émet la socket SEULEMENT si elle est déjà connectée
-        if (window.socket) {
-            window.socket.emit("setUsername", username);
-        }
     } else {
-        const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
-        localStorage.setItem("username", guestName);
-        if (window.socket) {
-            window.socket.emit("setUsername", guestName);
-        }
+        username = `Guest${Math.floor(Math.random() * 10000)}`;
+    }
+
+    // Stockage global
+    window.username = username;
+    localStorage.setItem("username", username);
+
+    // Si socket est déjà ouvert, on émet immédiatement
+    if (window.socket) {
+        window.socket.emit("setUsername", username);
     }
 });
 });

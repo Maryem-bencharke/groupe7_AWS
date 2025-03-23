@@ -58,13 +58,23 @@ io.on("connection", (socket) => {
     // });
     socket.username = `Guest${Math.floor(Math.random() * 10000)}`;
 
+    // socket.on("setUsername", (username) => {
+    //   if (username) {
+    //     socket.username = username;
+    //     console.log("Pseudo défini :", username);
+    //   }
+    // });
     socket.on("setUsername", (username) => {
-      if (username) {
-        socket.username = username;
-        console.log("Pseudo défini :", username);
-      }
+        if (username && username.startsWith("Guest")) {
+            // Si déjà défini, ne pas écraser avec un Guest
+            if (!socket.username) {
+                socket.username = username;
+            }
+        } else {
+            socket.username = username;
+        }
     });
-
+    
     
     // Émettre l'info du joueur connecté aux autres joueurs dans les lobbys :
     socket.emit('playerConnected', socket.username);
@@ -294,10 +304,12 @@ io.on("connection", (socket) => {
         }
     }
     socket.on("setUsername", (username) => {
-        if (!socket.username) {
+        // ne pas écraser un pseudo déjà défini
+        if (!socket.username || socket.username.startsWith("Guest")) {
             socket.username = username;
         }
     });
+    
     
 
     // socket.on("joinBombRoom", (name) => {
@@ -351,7 +363,11 @@ io.on("connection", (socket) => {
             publicRooms[name].life = {};
         }
         publicRooms[name].life[socket.id] = bombGameStartLife;
-    
+
+        if (!publicRooms[name].players.find(p => p.id === socket.id)) {
+            publicRooms[name].players.push({ id: socket.id, name: socket.username });
+        }
+        
         // Ajoute l'utilisateur avec son pseudo ou guestXXXX
         publicRooms[name].players.push({ id: socket.id, name: socket.username });
         

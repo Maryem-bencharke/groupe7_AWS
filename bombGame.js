@@ -5,12 +5,27 @@ let maxStreak = 0;
 let bombGameRoomName;
 let currentSyllable = "";
 let roomName;
-window.socket = io('https://groupe7-aws.onrender.com');
 
+function waitForUsername(callback) {
+    const check = () => {
+        const storedUsername = localStorage.getItem("username");
+        if (storedUsername) {
+            callback(storedUsername);
+        } else {
+            setTimeout(check, 100); // Attend que Firebase ait rempli le username
+        }
+    };
+    check();
+}
+
+// waitForUsername((username) => {
+//     socket.emit("setUsername", username);
+// });
 document.addEventListener("DOMContentLoaded", () => {
     const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
-    window.socket.emit("setUsername", username);
+    socket.emit("setUsername", username);
 });
+
 
 // permet au bouton rejouer de rejoindre la partie en cours
 function setButtonJoinGame() {
