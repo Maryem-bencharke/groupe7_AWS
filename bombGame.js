@@ -1,6 +1,5 @@
 const socket = io('https://groupe7-aws.onrender.com');
 
-
 let currentStreak = 0;
 let maxStreak = 0;
 let bombGameRoomName;

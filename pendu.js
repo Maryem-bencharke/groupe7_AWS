@@ -293,22 +293,19 @@ socket.on("loadPlayers", (players) => {
     });
 });
 
-socket.on("loadJoiningPlayer", ({ id, name }) => {
-    addLobbyMember(name, id);
-});
+
 
 function addLobbyMember(name, id) {
     const lobbyList = document.getElementById("lobbyList");
-    if (lobbyList) {
+    if (lobbyList && !document.getElementById(`player_${id}`)) {
         const li = document.createElement("li");
         li.classList.add("player");
         li.id = `player_${id}`;
         li.innerText = name;
         lobbyList.appendChild(li);
-    } else {
-        console.error("Erreur : lobbyList introuvable !");
     }
 }
+
 
 socket.on("gameOver", ({ winnerName }) => {
     document.getElementById('winnerDisplay').innerText = `Gagnant : ${winnerName}`;
