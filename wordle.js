@@ -9,7 +9,7 @@ let currentGuess = "";
 const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
 socket.emit('setUsername', username);
 
-const roomName = sessionStorage.getItem("roomName");
+let roomName = sessionStorage.getItem("roomName");
 socket.emit("joinRoom", roomName);
 
 //Mise à jour de la grille
