@@ -51,19 +51,9 @@ let gameTimer = {};
 
 io.on("connection", (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
-    // // Gérer le pseudo ou générer un guestXXXXX
-    // socket.on('setUsername', (username) => {
-    //     socket.username = username || `Guest${Math.floor(Math.random() * 10000)}`;
-    //     console.log(`Pseudo défini : ${socket.username}`); // Pour déboguer précisément
-    // });
+
     socket.username = `Guest${Math.floor(Math.random() * 10000)}`;
 
-    // socket.on("setUsername", (username) => {
-    //   if (username) {
-    //     socket.username = username;
-    //     console.log("Pseudo défini :", username);
-    //   }
-    // });
     socket.on("setUsername", (username) => {
         if (username && username.startsWith("Guest")) {
             // Si déjà défini, ne pas écraser avec un Guest
@@ -77,7 +67,7 @@ io.on("connection", (socket) => {
     
     
     // Émettre l'info du joueur connecté aux autres joueurs dans les lobbys :
-    socket.emit('playerConnected', socket.username);
+    //socket.emit('playerConnected', socket.username);
     socket.emit("roomList", publicRooms);
 
     socket.on("createRoom", ({name, game, password}) => {
@@ -103,12 +93,12 @@ io.on("connection", (socket) => {
     });
 
     socket.on("joinRoom", (roomName) => {
-        if (!publicRooms[roomName]) publicRooms[roomName] = { players: [] };
+        console.log("room : " + roomName + " connecter avec : " + socket.id);
         publicRooms[roomName].players.push({ id: socket.id, name: socket.username });
     
         socket.join(roomName);
         io.to(socket.id).emit("loadPlayers", publicRooms[roomName].players);
-        socket.broadcast.to(roomName).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
+        socket.broadcast.to(roomName).emit("loadJoiningPlayer", socket.username, publicRooms[roomName].players.length - 1);
       });
     
 
@@ -192,10 +182,11 @@ io.on("connection", (socket) => {
             delete gameTimer[socket.id];
         } else {
             Object.keys(publicRooms).forEach(room => {
-                if (publicRooms[room] && publicRooms[room].players.includes(socket.id)) {
-                    publicRooms[room].players = publicRooms[room].players.filter(id => id !== socket.id);
+                if (publicRooms[room] && publicRooms[room].players.some(({ id }) => id === socket.id)) {
+                    publicRooms[room].players = publicRooms[room].players.filter(player => player.id !== socket.id);
                     if (publicRooms[room].players.length === 0) {
                         delete publicRooms[room];
+                        io.emit("roomList", publicRooms);
                     } else {
                         io.to(room).emit("victory", "L'adversaire s'est déconnecté.");
                         io.to(room).emit("disconnected", socket.id);
@@ -274,6 +265,7 @@ io.on("connection", (socket) => {
     let bombGameMinTimer = 5.0;
     let bombGameMaxTimer = 15.0;
     let gameTimer = {};
+    let bonusLetterAlphabet = "ABCDEFGHIJLMNOPQRSTUV";
 
 
     function getRandomSyllable() {
@@ -303,59 +295,14 @@ io.on("connection", (socket) => {
             return false;
         }
     }
+
     socket.on("setUsername", (username) => {
         // ne pas écraser un pseudo déjà défini
         if (!socket.username || socket.username.startsWith("Guest")) {
             socket.username = username;
         }
     });
-    
-    
 
-    // socket.on("joinBombRoom", (name) => {
-    //     console.log("room : " + name + " connecter avec : " + socket.id);
-    //     if (!publicRooms[name].life) {
-    //         publicRooms[name].life = {};
-    //     }
-    //     publicRooms[name].life[socket.id] = bombGameStartLife;
-
-    //     publicRooms[name].players.push(socket.id);
-    //     socket.join(name);
-    //     io.to(socket.id).emit("loadPlayers", publicRooms[name].players, publicRooms[name].players.length);  // récupère tous les joueurs de la salle
-    //     socket.broadcast.to(name).emit("loadJoiningPlayer", socket.id, publicRooms[name].players.length - 1); // affiche sur l'écran le joueur qui rentre
-    // });
-
-
-    // socket.on("joinBombGame", (name) => {
-        
-    //     if (!publicRooms[name].bombTime) {
-    //         publicRooms[name].bombTime = bombGameMaxTimer;
-    //     }
-    //     publicRooms[name].activePlayers.push(socket.id);
-    //     socket.join(name + "_active");
-
-        
-    //     io.to(name).emit("loadParticipatingPlayer", socket.id, bombGameStartLife, publicRooms[name].players.length);
-
-    //     if (publicRooms[name].activePlayers.length === 2) {
-    //         io.to(name).emit("waitingToLaunch");
-
-    //         let timeLeft = 6;
-    //         gameTimer[name] = setInterval(() => {
-    //             io.to(name).emit("updateTimer", timeLeft);
-    //             if (timeLeft <= 0) {
-    //                 clearInterval(gameTimer[name]);
-    //                 delete gameTimer[name];
-    //                 publicRooms[name].currentTurn = Math.floor(Math.random() * publicRooms[name].activePlayers.length);
-    //                 startGameTimer(name);
-    //                 nextTurn(name);                    
-    //                 return;
-    //             }
-    //             timeLeft -= 1;
-    //         }, 1000);
-    //     }
-
-    // });
     socket.on("joinBombRoom", (name) => {
         console.log("room : " + name + " connecté avec : " + socket.id);
     
@@ -390,16 +337,24 @@ io.on("connection", (socket) => {
     
         publicRooms[name].activePlayers.push(socket.id);
         socket.join(name + "_active");
-    
         // Récupère clairement le joueur avec son pseudo
         let player = publicRooms[name].players.find(p => p.id === socket.id);
-    
+        if (!publicRooms[name].activePlayers.life) {
+            publicRooms[name].activePlayers.life = bombGameStartLife;
+        }
+        publicRooms[name].activePlayers.life = bombGameStartLife;
+        
+        if (!publicRooms[name].activePlayers.bonusLetters) {
+            publicRooms[name].activePlayers.bonusLetters = bonusLetterAlphabet;
+        }
+        publicRooms[name].activePlayers.bonusLetters = bonusLetterAlphabet;
+        
         io.to(name).emit("loadParticipatingPlayer", {
             id: socket.id,
             name: player.name,
             life: bombGameStartLife
         });
-    
+
         if (publicRooms[name].activePlayers.length === 2) {
             io.to(name).emit("waitingToLaunch");
     
@@ -418,34 +373,13 @@ io.on("connection", (socket) => {
                 timeLeft -= 1;
             }, 1000);
         }
-    });
-    
 
-    // socket.on("guessBombWord", async ({word, name}) => {
-    //     if (name) {
-    //         if (word.includes(publicRooms[name].currentSyllable) && !publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
-    //             // faire passer le tour au suivant
-    //             io.to(socket.id).emit("validate", "multi");
-    //             publicRooms[name].usedWords.push(word);
-    //             nextTurn(name);
-    //             // afficher le mot taper sur l'écran de tt le monde
-    //         }
-    //     } else {
-    //         // mode solo
-    //         console.log("mode solo " + privateRooms[socket.id].usedWords);
-    //         if (word.includes(privateRooms[socket.id].currentSyllable) && !privateRooms[socket.id].usedWords.includes(word) && await checkWord(word)) {
-    //             socket.emit("validate", "solo");
-    //             privateRooms[socket.id].usedWords.push(word);
-    //             nextTurn(name);
-    //         }
-    //     }
-    // });
-    socket.on("guessBombWord", async ({ word, name }) => {
+    });
+
+    socket.on("guessBombWord", async (word, name) => {
         if (name) {
-            if (word.includes(publicRooms[name].currentSyllable) && 
-                !publicRooms[name].usedWords.includes(word) && 
-                await checkWord(word)) {
-    
+            if (!publicRooms[name].usedWords.includes(word)) {
+                // faire passer le tour au suivant
                 io.to(socket.id).emit("validate", "multi");
                 publicRooms[name].usedWords.push(word);
     
@@ -455,14 +389,14 @@ io.on("connection", (socket) => {
                 nextTurn(name);
             }
         } else {
-            // Mode solo
-            if (word.includes(privateRooms[socket.id].currentSyllable) && 
-                !privateRooms[socket.id].usedWords.includes(word) && 
-                await checkWord(word)) {
-    
-                socket.emit("validate", "solo");
+            // mode solo
+            if (!privateRooms[socket.id].usedWords.includes(word)) {
                 privateRooms[socket.id].usedWords.push(word);
-                nextTurn(null); // Bien préciser null ici pour solo
+                checkBonusLetters(word, privateRooms[socket.id]);
+                //nextTurn(null); // Bien préciser null ici pour solo
+                nextTurn(name);
+                console.log(privateRooms[socket.id].bonusLetters + " aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+                socket.emit("validate", "solo", privateRooms[socket.id].bonusLetters);
             }
         }
     });
@@ -491,6 +425,8 @@ io.on("connection", (socket) => {
                     io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
                 }
                 publicRooms[name].activePlayers = [];
+                console.log(privateRooms[socket.id].bonusLetters + " aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+                socket.emit("validate", "solo", privateRooms[socket.id].bonusLetters);
             }
         }
     });
@@ -534,7 +470,7 @@ io.on("connection", (socket) => {
                 console.log("temps de la bombe : " + publicRooms[name].bombTime);
                 if (publicRooms[name].bombTime <= 0) {
                     io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("explosion", "multi");
-                    io.to(name).emit("displayExplosion", "multi", publicRooms[name].currentTurn);
+                    io.to(name).emit("displayExplosion", "multi", publicRooms[name].activePlayers[publicRooms[name].currentTurn]);
                     publicRooms[name].bombTime = bombGameMaxTimer;
                     // faire perdre une vie
                     publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] -= 1;
@@ -597,11 +533,25 @@ io.on("connection", (socket) => {
             usedWords: [],
             bombTime: bombGameMaxTimer,
             currentSyllable: "",
+            progressScore: 0,
+            level: 0,
+            bonusLetters: bonusLetterAlphabet,
         };
         socket.join(socket.id);
         startGameTimer(name);
         nextTurn(name);
     });
+
+    function checkBonusLetters(word, player) {
+        word = new Set(word);
+        const remainingLetters = player.bonusLetters.split("").filter(letter => !word.has(letter));
+        if (remainingLetters.length === 0) {
+            player.bonusLetters = bonusLetterAlphabet;
+            player.life += 1;
+        } else {
+            player.bonusLetters = remainingLetters.join("");
+        }
+    }
 
 });
 

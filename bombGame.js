@@ -1,9 +1,10 @@
-const socket = io('https://groupe7-aws.onrender.com');
+var socket = io('https://groupe7-aws.onrender.com');
 
 let currentStreak = 0;
 let maxStreak = 0;
 let bombGameRoomName;
 let currentSyllable = "";
+let db;
 let roomName;
 
 function waitForUsername(callback) {
@@ -27,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// permet au bouton rejouer de rejoindre la partie en cours
+// permet au bouton rejouer de rejoindre la partie de bombGame
 function setButtonJoinGame() {
     const join = document.getElementById("joinButton");
     join.addEventListener("click", () => {
@@ -46,32 +47,38 @@ socket.on("gameOver", ({ winnerName }) => {
     document.getElementById('winnerDisplay').innerText = `Gagnant : ${winnerName}`;
 });
 
-
+// Cache le bouton pour rejoindre la partie.
 function hideJoinButton() {
     const join = document.getElementById("joinButton");
     join.style.display = "none";
 }
 
+// Affiche le bouton pour rejoindre la partie.
 function showJoinButton() {
     const join = document.getElementById("joinButton");
     join.style.display = "block";
 }
 
+// Cache l'input pour écrire le mot.
 function hideTextArea() {
     const textArea = document.getElementById("textArea");
     textArea.style.display = "none";
 }
 
+// Affiche l'input pour écrire le mot.
 function showTextArea() {
     const textArea = document.getElementById("textArea");
     textArea.style.display = "block";
     textArea.focus();
 }
 
+// Éfface l'input.
 function eraseTextArea() {
     document.getElementById("textArea").value = "";
 }
 
+// Ajoute dans une table un nouvel élement 
+// représentant une personne qui se connecte à la salle.
 function addLobbyMember(name, id) {
     const lobbyList = document.getElementById("lobbyList");
     if (lobbyList && !document.getElementById(`player_${id}`)) {
@@ -97,90 +104,56 @@ socket.on("loadPlayers", (players) => {
 // });
 
 
-// socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
-
-//     const trList = document.getElementsByClassName("player");
-
-// for (let i = 0; i < trList.length; i++) {
-//     const playerCell = trList[i].children[0];
-    
-//     if (playerCell && playerCell.innerText === name) {
-//         trList[i].classList.add("activePlayer", `activePlayer_${id}`);
-//         trList[i].id = `activePlayer${id}`;
-
-//         const tdLife = document.createElement("td");
-//         tdLife.innerText = life;
-//         tdLife.classList.add("life", `life_${id}`);
-//         tdLife.id = `life_${id}`;
-
-//         const tdWord = document.createElement("td");
-//         tdWord.innerText = "";
-//         tdWord.classList.add("word", `word_${id}`);
-//         tdWord.id = `word_${id}`;
-
-//         trList[i].appendChild(tdLife);
-//         trList[i].appendChild(tdWord);
-
-//         // ✅ Sécurise le innerText ici aussi
-//         const element = document.getElementById(`player_${id}`);
-//         if (element) {
-//             element.innerText = name;
-//         } else {
-//             console.warn(`player_${id} introuvable`);
-//         }
-//     }
-// }
-
-
-//     // Vérifier si l'affichage sous forme de cartes existe avant d'ajouter
-//     const playersDisplay = document.getElementById('playersDisplay');
-//     if (playersDisplay) {
-//         let playerCard = document.createElement('div');
-//         playerCard.classList.add('player-card');
-//         playerCard.id = `player-${id}`;
-
-//         playerCard.innerHTML = `
-//             <div class="player-name">${name}</div>
-//             <div class="player-lives">❤️ ${life}</div>
-//             <div class="player-word" id="word-${id}"></div>
-//         `;
-//         playersDisplay.appendChild(playerCard);
-//     } else {
-//         console.warn("playersDisplay n'existe pas dans ce contexte.");
-//     }
-// });
-
 socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
+
     const trList = document.getElementsByClassName("player");
 
-    for (let i = 0; i < trList.length; i++) {
-        const playerLi = trList[i];  // chaque trList[i] est déjà un <li>
-        if (playerLi && playerLi.innerText === name) {
-            playerLi.classList.add("activePlayer", `activePlayer_${id}`);
-            playerLi.id = `activePlayer${id}`;
+for (let i = 0; i < trList.length; i++) {
+    const playerCell = trList[i].children[0];
+    if (playerCell && playerCell.innerText === name) {
+        trList[i].classList.add("activePlayer", `activePlayer_${id}`);
+        trList[i].id = `activePlayer${id}`;
 
-            // ajoute vie (❤️) en tant que span ou autre
-            const lifeSpan = document.createElement("span");
-            lifeSpan.innerText = ` ❤️ ${life}`;
-            lifeSpan.classList.add("life", `life_${id}`);
-            lifeSpan.id = `life_${id}`;
-            playerLi.appendChild(lifeSpan);
+        const tdLife = document.createElement("td");
+        tdLife.innerText = life;
+        tdLife.classList.add("life", `life_${id}`);
+        tdLife.id = `life_${id}`;
+        console.log("id du player life_" + id)
+
+        const tdWord = document.createElement("td");
+        tdWord.innerText = "";
+        tdWord.classList.add("word", `word_${id}`);
+        tdWord.id = `word_${id}`;
+
+        trList[i].appendChild(tdLife);
+        trList[i].appendChild(tdWord);
+
+        // ✅ Sécurise le innerText ici aussi
+        const element = document.getElementById(`player_${id}`);
+        if (element) {
+            element.innerText = name;
+        } else {
+            console.warn(`player_${id} introuvable`);
         }
     }
+}
 
-    // mise à jour carte joueur
+
+    // Vérifier si l'affichage sous forme de cartes existe avant d'ajouter
     const playersDisplay = document.getElementById('playersDisplay');
-    if (playersDisplay && !document.getElementById(`player-${id}`)) {
+    if (playersDisplay) {
         let playerCard = document.createElement('div');
         playerCard.classList.add('player-card');
         playerCard.id = `player-${id}`;
 
         playerCard.innerHTML = `
             <div class="player-name">${name}</div>
-            <div class="player-lives" id="card-life-${id}">❤️ ${life}</div>
+            <div class="player-lives">❤️ ${life}</div>
             <div class="player-word" id="word-${id}"></div>
         `;
         playersDisplay.appendChild(playerCard);
+    } else {
+        console.warn("playersDisplay n'existe pas dans ce contexte.");
     }
 });
 
@@ -241,12 +214,13 @@ socket.on("refresh", ({ syllable, currentTurn }) => {
 });
 
 
-socket.on("validate", (mode) => {
+socket.on("validate", (mode, bonnusLetters) => {
     if (mode === "multi") {
         hideTextArea();
     } else {
         currentStreak += 1;
         showStreak();
+        createBonusLetters(bonnusLetters);
     }
     
 });
@@ -265,27 +239,12 @@ socket.on("explosion", (mode) => {
     }
 });
 
-// socket.on("displayExplosion", (mode, turn) => {
-//     if (mode === "multi") {
-//         let life = document.getElementById("life_" + turn);
-//         life.innerText = parseInt(life.innerText) - 1;
-//     }
-// });
-
 socket.on("displayExplosion", (mode, turn) => {
     if (mode === "multi") {
-        let lifeEl = document.getElementById("life_" + turn);
-        if (lifeEl) {
-            lifeEl.innerText = ` ❤️ ${parseInt(lifeEl.innerText.match(/\d+/)[0]) - 1}`;
-        }
-
-        let cardLife = document.getElementById("card-life-" + turn);
-        if (cardLife) {
-            cardLife.innerText = `❤️ ${parseInt(cardLife.innerText.match(/\d+/)[0]) - 1}`;
-        }
+        let life = document.getElementById("life_" + turn);
+        life.innerText = parseInt(life.innerText) - 1;
     }
 });
-
 
 socket.on("displayElimination", (turn) => {
     document.getElementById("player_" + turn).classList.add("eliminated");
@@ -346,9 +305,10 @@ function createBonusLetters(alphabet = "ABCDEFGHIJLMNOPQRSTUV") {
     table.appendChild(tr2);
 }
 
-function guess(word) {
-   // peut être vérifier en local si le mot est valide avant de faire la requete pour vérifier
-    socket.emit("guessBombWord", (word, bombGameRoomName));
+async function guess(word) {
+    if (word.includes(currentSyllable) && await isWordInIndexedDB(word)) {
+        socket.emit("guessBombWord", word, bombGameRoomName);
+    }
 
 }
 
@@ -367,6 +327,7 @@ function replayButton() {
         replay.addEventListener("click", () => {
             hideEndBanner();
             socket.emit("joinBombSolo", bombGameRoomName);
+            createBonusLetters();
         });
     }
 }
@@ -393,12 +354,93 @@ document.addEventListener("keydown", (event) => {
     if (key === "ENTER") {
         let text = document.getElementById("textArea").value.toUpperCase();
         text = removeAccents(text);
-        socket.emit("guessBombWord", ({word: text, name: bombGameRoomName}));
+        guess(text);
         eraseTextArea();
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+// Récupère la liste de mot depuis le serveur.
+async function loadServerFile() {
+    try {
+        const response = await fetch("wordList.txt");
+        if (!response.ok) throw new Error("Erreur de chargement du fichier.");
+        const text = await response.text();
+        const wordsArray = text.split("\n").map(w => w.trim()).filter(w => w !== "");
+        await saveToIndexedDB(wordsArray);
+    } catch (error) {
+        console.error("Erreur lors du chargement :", error);
+    }
+}
+
+// Stocke chaque mot dans IndexedDB avec sa taille
+async function saveToIndexedDB(wordsArray) {
+    const db = await initIndexedDB();
+    const transaction = db.transaction(["words"], "readwrite");
+    const store = transaction.objectStore("words");
+    wordsArray.forEach(word => {
+        store.put({ word: word, length: word.length });
+    });
+    transaction.oncomplete = () => alert("Chargement terminé, merci d'avoir patienté");
+    transaction.onerror = event => console.error("Erreur d'ajout", event.target.error);
+}
+
+// Initialise la base de données des mots.
+function initIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open("WordDatabase", 1);
+        request.onupgradeneeded = function(event) {
+            let db = event.target.result;
+            if (!db.objectStoreNames.contains("words")) {
+                db.createObjectStore("words", { keyPath: "word" });
+            }
+        };
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            resolve(db);
+        };
+        request.onerror = function(event) {
+            reject("Erreur IndexedDB: " + event.target.errorCode);
+        };
+    });
+}
+
+// Vérifie si la base de données est vide.
+async function isIndexedDBEmpty() {
+    const db = await initIndexedDB();
+    return new Promise((resolve) => {
+        const transaction = db.transaction(["words"], "readonly");
+        const store = transaction.objectStore("words");
+        const request = store.count();
+        request.onsuccess = function() {
+            resolve(request.result === 0); // True si vide, False sinon
+        };
+        request.onerror = function() {
+            resolve(true);
+        };
+    });
+}
+
+async function isWordInIndexedDB(word) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(["words"], "readonly");
+        const store = transaction.objectStore("words");
+        const request = store.get(word);
+        request.onsuccess = function() {
+            resolve(request.result !== undefined);
+        };
+        request.onerror = function() {
+            reject("Erreur lors de la recherche du mot !");
+        };
+    });
+}
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const isEmpty = await isIndexedDBEmpty();
+    if (isEmpty) {
+        alert("Chargement de la base de données, cela peut prendre quelques instants");
+        loadServerFile();
+    }
     setButtonJoinGame();
     bombGameRoomName = localStorage.getItem("name");
     if (bombGameRoomName) {
