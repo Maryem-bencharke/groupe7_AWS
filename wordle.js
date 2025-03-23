@@ -227,15 +227,17 @@ function goBackToGames() {
     window.location.href = "games.html";
 }
 
-function addLobbyMember(name, id) {
-    const table = document.getElementById("lobbyMembers");
-    const tr = document.createElement("tr");
-    tr.classList.add("player");
-    tr.id = "player_" + id;
-    const td = document.createElement("td");
-    td.innerText = name; 
-    tr.appendChild(td);
-    table.appendChild(tr);
+function addLobbyMember(name, id) { 
+    const lobbyList = document.getElementById("lobbyList");
+    if (lobbyList) {
+        const li = document.createElement("li");
+        li.classList.add("player");
+        li.id = `player_${id}`;
+        li.innerText = name;  
+        lobbyList.appendChild(li);
+    } else {
+        console.error("Erreur : lobbyList est introuvable");
+    }
 }
 
 

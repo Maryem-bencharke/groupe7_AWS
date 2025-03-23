@@ -102,12 +102,20 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 
 
+// onAuthStateChanged(auth, (user) => {
+//     if (user) {
+//         // L'utilisateur est connecté
+//         localStorage.setItem('isLoggedIn', 'true');
+//     } else {
+//         // Pas connecté (invité)
+//         localStorage.setItem('isLoggedIn', 'false');
+//     }
+// });
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // L'utilisateur est connecté
         localStorage.setItem('isLoggedIn', 'true');
+        socket.emit('setUsername', user.displayName || user.email); // vérifie bien cette ligne
     } else {
-        // Pas connecté (invité)
         localStorage.setItem('isLoggedIn', 'false');
     }
 });
