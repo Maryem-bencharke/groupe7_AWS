@@ -51,7 +51,18 @@ let gameTimer = {};
 
 io.on("connection", (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
+    // Gérer le pseudo ou générer un guestXXXXX
+    socket.on('setUsername', (username) => {
+        socket.username = username || `Guest${Math.floor(Math.random() * 10000)}`;
+    });
 
+    // Exemple de gestion simple, si non spécifié :
+    if (!socket.username) {
+        socket.username = `Guest${Math.floor(Math.random() * 10000)}`;
+    }
+
+    // Émettre l'info du joueur connecté aux autres joueurs dans les lobbys :
+    socket.emit('playerConnected', socket.username);
     socket.emit("roomList", publicRooms);
 
     socket.on("createRoom", ({name, game, password}) => {
@@ -281,70 +292,155 @@ io.on("connection", (socket) => {
         }
     }
 
+    // socket.on("joinBombRoom", (name) => {
+    //     console.log("room : " + name + " connecter avec : " + socket.id);
+    //     if (!publicRooms[name].life) {
+    //         publicRooms[name].life = {};
+    //     }
+    //     publicRooms[name].life[socket.id] = bombGameStartLife;
+
+    //     publicRooms[name].players.push(socket.id);
+    //     socket.join(name);
+    //     io.to(socket.id).emit("loadPlayers", publicRooms[name].players, publicRooms[name].players.length);  // récupère tous les joueurs de la salle
+    //     socket.broadcast.to(name).emit("loadJoiningPlayer", socket.id, publicRooms[name].players.length - 1); // affiche sur l'écran le joueur qui rentre
+    // });
+
+
+    // socket.on("joinBombGame", (name) => {
+        
+    //     if (!publicRooms[name].bombTime) {
+    //         publicRooms[name].bombTime = bombGameMaxTimer;
+    //     }
+    //     publicRooms[name].activePlayers.push(socket.id);
+    //     socket.join(name + "_active");
+
+        
+    //     io.to(name).emit("loadParticipatingPlayer", socket.id, bombGameStartLife, publicRooms[name].players.length);
+
+    //     if (publicRooms[name].activePlayers.length === 2) {
+    //         io.to(name).emit("waitingToLaunch");
+
+    //         let timeLeft = 6;
+    //         gameTimer[name] = setInterval(() => {
+    //             io.to(name).emit("updateTimer", timeLeft);
+    //             if (timeLeft <= 0) {
+    //                 clearInterval(gameTimer[name]);
+    //                 delete gameTimer[name];
+    //                 publicRooms[name].currentTurn = Math.floor(Math.random() * publicRooms[name].activePlayers.length);
+    //                 startGameTimer(name);
+    //                 nextTurn(name);                    
+    //                 return;
+    //             }
+    //             timeLeft -= 1;
+    //         }, 1000);
+    //     }
+
+    // });
     socket.on("joinBombRoom", (name) => {
-        console.log("room : " + name + " connecter avec : " + socket.id);
+        console.log("room : " + name + " connecté avec : " + socket.id);
+    
         if (!publicRooms[name].life) {
             publicRooms[name].life = {};
         }
         publicRooms[name].life[socket.id] = bombGameStartLife;
-
-        publicRooms[name].players.push(socket.id);
+    
+        // Ajoute l'utilisateur avec son pseudo ou guestXXXX
+        publicRooms[name].players.push({ id: socket.id, name: socket.username });
+    
         socket.join(name);
-        io.to(socket.id).emit("loadPlayers", publicRooms[name].players, publicRooms[name].players.length);  // récupère tous les joueurs de la salle
-        socket.broadcast.to(name).emit("loadJoiningPlayer", socket.id, publicRooms[name].players.length - 1); // affiche sur l'écran le joueur qui rentre
+    
+        // Envoie la liste complète des joueurs avec leur pseudo
+        io.to(socket.id).emit("loadPlayers", publicRooms[name].players);
+    
+        // Informe les autres joueurs qu'un nouveau joueur a rejoint (pseudo inclus)
+        socket.broadcast.to(name).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
     });
-
+    
+    
     socket.on("joinBombGame", (name) => {
-        
         if (!publicRooms[name].bombTime) {
             publicRooms[name].bombTime = bombGameMaxTimer;
         }
+    
         publicRooms[name].activePlayers.push(socket.id);
         socket.join(name + "_active");
-
-        
-        io.to(name).emit("loadParticipatingPlayer", socket.id, bombGameStartLife, publicRooms[name].players.length);
-
+    
+        // Récupère clairement le joueur avec son pseudo
+        let player = publicRooms[name].players.find(p => p.id === socket.id);
+    
+        io.to(name).emit("loadParticipatingPlayer", {
+            id: socket.id,
+            name: player.name,
+            life: bombGameStartLife
+        });
+    
         if (publicRooms[name].activePlayers.length === 2) {
             io.to(name).emit("waitingToLaunch");
-
+    
             let timeLeft = 6;
             gameTimer[name] = setInterval(() => {
                 io.to(name).emit("updateTimer", timeLeft);
                 if (timeLeft <= 0) {
                     clearInterval(gameTimer[name]);
                     delete gameTimer[name];
+    
                     publicRooms[name].currentTurn = Math.floor(Math.random() * publicRooms[name].activePlayers.length);
                     startGameTimer(name);
-                    nextTurn(name);                    
+                    nextTurn(name);
                     return;
                 }
                 timeLeft -= 1;
             }, 1000);
         }
-
     });
+    
 
-    socket.on("guessBombWord", async ({word, name}) => {
+    // socket.on("guessBombWord", async ({word, name}) => {
+    //     if (name) {
+    //         if (word.includes(publicRooms[name].currentSyllable) && !publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
+    //             // faire passer le tour au suivant
+    //             io.to(socket.id).emit("validate", "multi");
+    //             publicRooms[name].usedWords.push(word);
+    //             nextTurn(name);
+    //             // afficher le mot taper sur l'écran de tt le monde
+    //         }
+    //     } else {
+    //         // mode solo
+    //         console.log("mode solo " + privateRooms[socket.id].usedWords);
+    //         if (word.includes(privateRooms[socket.id].currentSyllable) && !privateRooms[socket.id].usedWords.includes(word) && await checkWord(word)) {
+    //             socket.emit("validate", "solo");
+    //             privateRooms[socket.id].usedWords.push(word);
+    //             nextTurn(name);
+    //         }
+    //     }
+    // });
+    socket.on("guessBombWord", async ({ word, name }) => {
         if (name) {
-            if (word.includes(publicRooms[name].currentSyllable) && !publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
-                // faire passer le tour au suivant
+            if (word.includes(publicRooms[name].currentSyllable) && 
+                !publicRooms[name].usedWords.includes(word) && 
+                await checkWord(word)) {
+    
                 io.to(socket.id).emit("validate", "multi");
                 publicRooms[name].usedWords.push(word);
+    
+                // Diffuse clairement le mot tapé à tous les joueurs avec l'id du joueur
+                io.to(name).emit("updateCurrentWord", { playerId: socket.id, word });
+    
                 nextTurn(name);
-                // afficher le mot taper sur l'écran de tt le monde
             }
         } else {
-            // mode solo
-            console.log("mode solo " + privateRooms[socket.id].usedWords);
-            if (word.includes(privateRooms[socket.id].currentSyllable) && !privateRooms[socket.id].usedWords.includes(word) && await checkWord(word)) {
+            // Mode solo
+            if (word.includes(privateRooms[socket.id].currentSyllable) && 
+                !privateRooms[socket.id].usedWords.includes(word) && 
+                await checkWord(word)) {
+    
                 socket.emit("validate", "solo");
                 privateRooms[socket.id].usedWords.push(word);
-                nextTurn(name);
+                nextTurn(null); // Bien préciser null ici pour solo
             }
         }
     });
-
+    
     socket.on("leaveRoom", (name) => {
         if (name && publicRooms[name]) {
             publicRooms[name].players = publicRooms[name].players.filter(id => id !== socket.id);
@@ -375,27 +471,58 @@ io.on("connection", (socket) => {
     
     
 
+    // function nextTurn(name) {
+    //     setRandomSyllable(name);
+    //     if (name) {
+    //         publicRooms[name].currentTurn = (publicRooms[name].currentTurn + 1) % publicRooms[name].activePlayers.length;
+    //         console.log(publicRooms[name].currentSyllable);
+    //         io.to(name).emit("refresh", publicRooms[name].currentSyllable, publicRooms[name].currentTurn);
+    //         io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("startTurn");
+    //         // temps minimum pour répondre
+    //         if (publicRooms[name].bombTime < bombGameMinTimer) {
+    //             publicRooms[name].bombTime = bombGameMinTimer;
+    //         }
+    //     } else {
+    //         // mode solo
+    //         socket.emit("refresh", privateRooms[socket.id].currentSyllable, 0);
+    //         socket.emit("startTurn");
+    //         if (privateRooms[socket.id].bombTime < bombGameMinTimer) {
+    //             privateRooms[socket.id].bombTime = bombGameMinTimer;
+    //         }
+    //     }
+        
+    // }
     function nextTurn(name) {
         setRandomSyllable(name);
         if (name) {
             publicRooms[name].currentTurn = (publicRooms[name].currentTurn + 1) % publicRooms[name].activePlayers.length;
-            console.log(publicRooms[name].currentSyllable);
-            io.to(name).emit("refresh", publicRooms[name].currentSyllable, publicRooms[name].currentTurn);
+    
+            io.to(name).emit("refresh", {
+                syllable: publicRooms[name].currentSyllable,
+                currentTurn: publicRooms[name].activePlayers[publicRooms[name].currentTurn]
+            });
+    
             io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("startTurn");
-            // temps minimum pour répondre
+    
+            // gestion du temps minimum pour répondre
             if (publicRooms[name].bombTime < bombGameMinTimer) {
                 publicRooms[name].bombTime = bombGameMinTimer;
             }
         } else {
-            // mode solo
-            socket.emit("refresh", privateRooms[socket.id].currentSyllable, 0);
+            // Mode solo clairement pris en compte :
+            socket.emit("refresh", {
+                syllable: privateRooms[socket.id].currentSyllable,
+                currentTurn: socket.id
+            });
+    
             socket.emit("startTurn");
+    
             if (privateRooms[socket.id].bombTime < bombGameMinTimer) {
                 privateRooms[socket.id].bombTime = bombGameMinTimer;
             }
         }
-        
     }
+    
 
     function startGameTimer(name) {
         if (name) {

@@ -4,7 +4,7 @@ import {
     signInWithEmailAndPassword,
     signOut
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
 const db = getFirestore();
@@ -53,6 +53,25 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    // const loginForm = document.getElementById("login-form");
+    // if (loginForm) {
+    //     loginForm.addEventListener("submit", async function(event) {
+    //         event.preventDefault();
+
+    //         let email = document.getElementById("login-email").value;
+    //         let password = document.getElementById("login-password").value;
+
+    //         try {
+    //             await signInWithEmailAndPassword(auth, email, password);
+    //             alert("Connexion réussie !");
+    //             window.location.href = "games.html";
+    //         } catch (error) {
+    //             console.error("Erreur de connexion :", error);
+    //             alert("Erreur : " + error.message);
+    //         }
+    //     });
+    // }
+
     const loginForm = document.getElementById("login-form");
     if (loginForm) {
         loginForm.addEventListener("submit", async function(event) {
@@ -62,17 +81,26 @@ document.addEventListener("DOMContentLoaded", function() {
             let password = document.getElementById("login-password").value;
 
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Récupère le username depuis Firestore
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                let username = userDoc.exists() ? userDoc.data().username : `Guest${Math.floor(Math.random() * 10000)}`;
+
+                // Émettre le username via socket juste ici après connexion Firebase réussie :
+                const socket = io('https://groupe7-aws.onrender.com');
+                socket.emit('setUsername', username);
+
                 alert("Connexion réussie !");
                 window.location.href = "games.html";
             } catch (error) {
                 console.error("Erreur de connexion :", error);
                 alert("Erreur : " + error.message);
             }
-        });
-    }
+    });
+}
 
-    // Ajoute ceci à la fin de ton fichier auth.js (juste avant la fin)
 
 onAuthStateChanged(auth, (user) => {
     if (user) {

@@ -142,3 +142,31 @@ body {
     border-radius: 15px;
     background-color: yellow;
 }
+
+.players-display {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 20px;
+}
+
+.player-card {
+    text-align: center;
+    padding: 10px;
+    background-color: #ccc;
+    border-radius: 10px;
+}
+
+.current-turn {
+    border: 3px solid yellow;
+}
+
+.player-lives {
+    color: red;
+    font-size: 18px;
+}
+
+.player-word {
+    font-size: 20px;
+    font-weight: bold;
+}
