@@ -60,15 +60,14 @@ function eraseTextArea() {
 }
 
 function addLobbyMember(name, id) {
-    const list = document.getElementById("lobbyList");
-    
-    // Vérifie si le joueur existe déjà
-    if (document.getElementById(`player_${id}`)) return;
-
-    const li = document.createElement("li");
-    li.id = `player_${id}`;
-    li.innerText = name;
-    list.appendChild(li);
+    const lobbyList = document.getElementById("lobbyList");
+    if (lobbyList && !document.getElementById(`player_${id}`)) {
+        const li = document.createElement("li");
+        li.classList.add("player");
+        li.id = `player_${id}`;
+        li.innerText = name;
+        lobbyList.appendChild(li);
+    }
 }
 
 
@@ -96,28 +95,7 @@ socket.on("loadPlayers", (players) => {
 
 
 socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
-    // const trList = document.getElementsByClassName("player");
 
-    // for (let i = 0; i < trList.length; i++) {
-    //     const firstChild = trList[i].children[0]; 
-    //     if (firstChild && firstChild.innerText === name) {
-    //         trList[i].classList.add("activePlayer", `activePlayer_${id}`);
-    //         trList[i].id = `activePlayer${id}`;
-
-    //         const tdLife = document.createElement("td");
-    //         tdLife.innerText = life;
-    //         tdLife.classList.add("life", `life_${id}`);
-    //         tdLife.id = `life_${id}`;
-
-    //         const tdWord = document.createElement("td");
-    //         tdWord.innerText = "";
-    //         tdWord.classList.add("word", `word_${id}`);
-    //         tdWord.id = `word_${id}`;
-
-    //         trList[i].appendChild(tdLife);
-    //         trList[i].appendChild(tdWord);
-    //     }
-    // }
     const trList = document.getElementsByClassName("player");
 
 for (let i = 0; i < trList.length; i++) {

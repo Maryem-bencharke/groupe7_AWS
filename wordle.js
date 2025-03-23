@@ -248,28 +248,18 @@ socket.on("loadPlayers", (players) => {
 
 
 
-// function addLobbyMember(name, id) {
-//     const lobbyList = document.getElementById("lobbyList");
-//     if (lobbyList && !document.getElementById(`player_${id}`)) {
-//         const li = document.createElement("li");
-//         li.classList.add("player");
-//         li.id = `player_${id}`;
-//         li.innerText = name;
-//         lobbyList.appendChild(li);
-//     }
-// }
-
 function addLobbyMember(name, id) {
-    const list = document.getElementById("lobbyList");
-    
-    // Vérifie si le joueur existe déjà
-    if (document.getElementById(`player_${id}`)) return;
-
-    const li = document.createElement("li");
-    li.id = `player_${id}`;
-    li.innerText = name;
-    list.appendChild(li);
+    const lobbyList = document.getElementById("lobbyList");
+    if (lobbyList && !document.getElementById(`player_${id}`)) {
+        const li = document.createElement("li");
+        li.classList.add("player");
+        li.id = `player_${id}`;
+        li.innerText = name;
+        lobbyList.appendChild(li);
+    }
 }
+
+
 
 
 socket.on("gameOver", ({ winnerName }) => {
