@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importer un fichier TXT dans IndexedDB</title>
+</head>
+<body>
+    <h2>Importer un fichier TXT dans IndexedDB</h2>
+    <input type="file" id="fileInput" accept=".txt">
+    <button onclick="importFile()">Importer</button>
+    <hr>
+    <h3>Données stockées :</h3>
+    <button onclick="showStoredData()">Afficher les données</button>
+    <ul id="dataList"></ul>
+
+    <script>
+        let db;
+
+        // 📌 Ouvrir IndexedDB et initialiser la base
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open("WordDatabase", 1);
+
+                request.onupgradeneeded = function(event) {
+                    let db = event.target.result;
+                    if (!db.objectStoreNames.contains("words")) {
+                        db.createObjectStore("words", { keyPath: "word" });
+                    }
+                };
+
+                request.onsuccess = function(event) {
+                    db = event.target.result;
+                    console.log("IndexedDB prêt !");
+                    resolve(db);
+                };
+
+                request.onerror = function(event) {
+                    reject("Erreur IndexedDB: " + event.target.errorCode);
+                };
+            });
+        }
+
+        // 📌 Importer un fichier TXT et stocker chaque mot avec sa taille
+        async function importFile() {
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Sélectionnez un fichier !");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                const content = event.target.result;
+                const wordsArray = content.split("\n").map(w => w.trim()).filter(w => w !== "");
+
+                await saveToIndexedDB(wordsArray);
+            };
+            reader.readAsText(file);
+        }
+
+        // 📌 Stocker chaque mot dans IndexedDB avec sa taille
+        async function saveToIndexedDB(wordsArray) {
+            const db = await initIndexedDB();
+            const transaction = db.transaction(["words"], "readwrite");
+            const store = transaction.objectStore("words");
+
+            wordsArray.forEach(word => {
+                store.put({ word: word, length: word.length });
+            });
+
+            transaction.oncomplete = () => alert("Fichier importé dans IndexedDB !");
+            transaction.onerror = event => console.error("Erreur d'ajout", event.target.error);
+        }
+
+        // 📌 Afficher les mots stockés dans IndexedDB
+        async function showStoredData() {
+            const db = await initIndexedDB();
+            const transaction = db.transaction(["words"], "readonly");
+            const store = transaction.objectStore("words");
+            const request = store.getAll();
+
+            request.onsuccess = function() {
+                const dataList = document.getElementById("dataList");
+                dataList.innerHTML = "";
+                request.result.forEach(entry => {
+                    const li = document.createElement("li");
+                    li.textContent = `Mot: ${entry.word} (Taille: ${entry.length})`;
+                    dataList.appendChild(li);
+                });
+            };
+
+            request.onerror = function(event) {
+                console.error("Erreur de lecture", event.target.error);
+            };
+        }
+    </script>
+</body>
+</html>
