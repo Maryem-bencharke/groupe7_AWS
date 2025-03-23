@@ -251,6 +251,9 @@ function addLobbyMember(name, id) {
 }
 
 
+socket.on("gameOver", ({ winnerName }) => {
+    document.getElementById('winnerDisplay').innerText = `Gagnant : ${winnerName}`;
+});
 
 
 

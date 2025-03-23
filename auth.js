@@ -114,12 +114,14 @@ document.addEventListener("DOMContentLoaded", function() {
 // });
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        const username = user.email.split('@')[0]; // ou récupère depuis Firestore directement
-        socket.emit('setUsername', username);
+        const username = user.email.split('@')[0]; // Exemple avec l'email comme pseudo, ou récupère depuis Firestore
+        socket.emit('setUsername', username); // Envoie explicitement le pseudo à ton serveur Socket.io
+        localStorage.setItem('username', username); // Sauvegarde localement aussi (recommandé)
     } else {
         socket.emit('setUsername', `Guest${Math.floor(Math.random() * 10000)}`);
+        localStorage.removeItem('username');
     }
-});
 
+});
 
 });

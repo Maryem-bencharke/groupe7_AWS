@@ -54,7 +54,9 @@ io.on("connection", (socket) => {
     // Gérer le pseudo ou générer un guestXXXXX
     socket.on('setUsername', (username) => {
         socket.username = username || `Guest${Math.floor(Math.random() * 10000)}`;
+        console.log(`Pseudo défini : ${socket.username}`); // Pour déboguer précisément
     });
+    
 
     // Exemple de gestion simple, si non spécifié :
     if (!socket.username) {
@@ -553,13 +555,18 @@ io.on("connection", (socket) => {
                         publicRooms[name].activePlayers = publicRooms[name].activePlayers.filter(id => id !== publicRooms[name].activePlayers[publicRooms[name].currentTurn]);
                         publicRooms[name].currentTurn = publicRooms[name].currentTurn - 1;
                         // actualiser la perte de vie pour tout le monde
-                        
                     }
                     if (publicRooms[name].activePlayers.length < 2) {
                         // fin de la partie
                         console.log("plus assez de personnes")
                         clearInterval(gameTimer[name]);
                         delete gameTimer[name];
+    
+                        // Exemple précis quand un joueur gagne :
+                        const winnerId = publicRooms[name].activePlayers[0]; // exemple
+                        const winner = publicRooms[name].players.find(p => p.id === winnerId);
+                        io.to(name).emit("gameOver", { winnerName: winner ? winner.name : "Inconnu" });
+    
                         io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
                         publicRooms[name].activePlayers = [];
                         
@@ -593,7 +600,6 @@ io.on("connection", (socket) => {
                 privateRooms[socket.id].bombTime -= 0.5;
             }, 500);
         }
-        
     }
 
     socket.on("joinBombSolo", (name) => {

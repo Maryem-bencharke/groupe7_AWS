@@ -26,6 +26,10 @@ function setButtonJoinGame() {
     
 }
 
+socket.on("gameOver", ({ winnerName }) => {
+    document.getElementById('winnerDisplay').innerText = `Gagnant : ${winnerName}`;
+});
+
 
 function hideJoinButton() {
     const join = document.getElementById("joinButton");
