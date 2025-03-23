@@ -251,6 +251,7 @@ io.on("connection", (socket) => {
     let bombGameMinTimer = 5.0;
     let bombGameMaxTimer = 15.0;
     let gameTimer = {};
+    let bonusLetterAlphabet = "ABCDEFGHIJLMNOPQRSTUV";
 
 
     function getRandomSyllable() {
@@ -290,7 +291,16 @@ io.on("connection", (socket) => {
         publicRooms[name].activePlayers.push(socket.id);
         socket.join(name + "_active");
 
+        if (!publicRooms[name].activePlayers.life) {
+            publicRooms[name].activePlayers.life = bombGameStartLife;
+        }
+        publicRooms[name].activePlayers.life = bombGameStartLife;
         
+        if (!publicRooms[name].activePlayers.bonusLetters) {
+            publicRooms[name].activePlayers.bonusLetters = bonusLetterAlphabet;
+        }
+        publicRooms[name].activePlayers.bonusLetters = bonusLetterAlphabet;
+
         io.to(name).emit("loadParticipatingPlayer", socket.id, bombGameStartLife, publicRooms[name].players.length);
 
         if (publicRooms[name].activePlayers.length === 2) {
@@ -315,7 +325,7 @@ io.on("connection", (socket) => {
 
     socket.on("guessBombWord", async (word, name) => {
         if (name) {
-            if (word.includes(publicRooms[name].currentSyllable) && !publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
+            if (!publicRooms[name].usedWords.includes(word)) {
                 // faire passer le tour au suivant
                 io.to(socket.id).emit("validate", "multi");
                 publicRooms[name].usedWords.push(word);
@@ -325,9 +335,11 @@ io.on("connection", (socket) => {
         } else {
             // mode solo
             if (!privateRooms[socket.id].usedWords.includes(word)) {
-                socket.emit("validate", "solo");
                 privateRooms[socket.id].usedWords.push(word);
+                checkBonusLetters(word, privateRooms[socket.id]);
                 nextTurn(name);
+                console.log(privateRooms[socket.id].bonusLetters + " aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+                socket.emit("validate", "solo", privateRooms[socket.id].bonusLetters);
             }
         }
     });
@@ -421,11 +433,23 @@ io.on("connection", (socket) => {
             currentSyllable: "",
             progressScore: 0,
             level: 0,
+            bonusLetters: bonusLetterAlphabet,
         };
         socket.join(socket.id);
         startGameTimer(name);
         nextTurn(name);
     });
+
+    function checkBonusLetters(word, player) {
+        word = new Set(word);
+        const remainingLetters = player.bonusLetters.split("").filter(letter => !word.has(letter));
+        if (remainingLetters.length === 0) {
+            player.bonusLetters = bonusLetterAlphabet;
+            player.life += 1;
+        } else {
+            player.bonusLetters = remainingLetters.join("");
+        }
+    }
 
 });
 

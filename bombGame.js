@@ -123,12 +123,13 @@ socket.on("refresh", (syllable, currentTurn) => {
     //currentPlayerTurn = currentTurn;
 });
 
-socket.on("validate", (mode) => {
+socket.on("validate", (mode, bonnusLetters) => {
     if (mode === "multi") {
         hideTextArea();
     } else {
         currentStreak += 1;
         showStreak();
+        createBonusLetters(bonnusLetters);
     }
     
 });
@@ -235,6 +236,7 @@ function replayButton() {
         replay.addEventListener("click", () => {
             hideEndBanner();
             socket.emit("joinBombSolo", bombGameRoomName);
+            createBonusLetters();
         });
     }
 }
