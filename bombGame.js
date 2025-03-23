@@ -136,11 +136,50 @@ socket.on("loadJoiningPlayer", ({ id, name }) => {
 // });
 
 // affiche clairement les joueurs actifs sur le côté
+// socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
+//     const trList = document.getElementsByClassName("player");
+
+//     for (let i = 0; i < trList.length; i++) {
+//         if (trList[i].children[0].innerText === name) {
+//             trList[i].classList.add("activePlayer", `activePlayer_${id}`);
+//             trList[i].id = `activePlayer${id}`;
+
+//             const tdLife = document.createElement("td");
+//             tdLife.innerText = life;
+//             tdLife.classList.add("life", `life_${id}`);
+//             tdLife.id = `life_${id}`;
+
+//             const tdWord = document.createElement("td");
+//             tdWord.innerText = "";
+//             tdWord.classList.add("word", `word_${id}`);
+//             tdWord.id = `word_${id}`;
+
+//             trList[i].appendChild(tdLife);
+//             trList[i].appendChild(tdWord);
+//         }
+//     }
+
+//     // Affichage sous forme de cartes visuelles (comme ton screenshot)
+//     const playersDisplay = document.getElementById('playersDisplay');
+
+//     let playerCard = document.createElement('div');
+//     playerCard.classList.add('player-card');
+//     playerCard.id = `player-${id}`;
+
+//     playerCard.innerHTML = `
+//         <div class="player-name">${name}</div>
+//         <div class="player-lives">❤️ ${life}</div>
+//         <div class="player-word" id="word-${id}"></div>
+//     `;
+//     playersDisplay.appendChild(playerCard);
+// });
+
 socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
     const trList = document.getElementsByClassName("player");
 
     for (let i = 0; i < trList.length; i++) {
-        if (trList[i].children[0].innerText === name) {
+        const firstChild = trList[i].children[0]; 
+        if (firstChild && firstChild.innerText === name) {
             trList[i].classList.add("activePlayer", `activePlayer_${id}`);
             trList[i].id = `activePlayer${id}`;
 
@@ -159,20 +198,24 @@ socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
         }
     }
 
-    // Affichage sous forme de cartes visuelles (comme ton screenshot)
+    // Vérifier si l'affichage sous forme de cartes existe avant d'ajouter
     const playersDisplay = document.getElementById('playersDisplay');
+    if (playersDisplay) {
+        let playerCard = document.createElement('div');
+        playerCard.classList.add('player-card');
+        playerCard.id = `player-${id}`;
 
-    let playerCard = document.createElement('div');
-    playerCard.classList.add('player-card');
-    playerCard.id = `player-${id}`;
-
-    playerCard.innerHTML = `
-        <div class="player-name">${name}</div>
-        <div class="player-lives">❤️ ${life}</div>
-        <div class="player-word" id="word-${id}"></div>
-    `;
-    playersDisplay.appendChild(playerCard);
+        playerCard.innerHTML = `
+            <div class="player-name">${name}</div>
+            <div class="player-lives">❤️ ${life}</div>
+            <div class="player-word" id="word-${id}"></div>
+        `;
+        playersDisplay.appendChild(playerCard);
+    } else {
+        console.warn("playersDisplay n'existe pas dans ce contexte.");
+    }
 });
+
 
 // affiche clairement le mot que chaque joueur tape
 // socket.on("updateCurrentWord", ({ playerId, word }) => {
