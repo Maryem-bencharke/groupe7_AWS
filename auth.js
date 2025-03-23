@@ -81,16 +81,29 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Gère aussi le cas de l'invité
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      const username = userDoc.exists() ? userDoc.data().username : `Guest${Math.floor(Math.random() * 10000)}`;
-      socket.emit("setUsername", username);
+        try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                const username = userDoc.data().username;
+                localStorage.setItem("username", username);
+                socket.emit("setUsername", username);
+            } else {
+                const fallback = `Guest${Math.floor(Math.random() * 10000)}`;
+                localStorage.setItem("username", fallback);
+                socket.emit("setUsername", fallback);
+            }
+        } catch (err) {
+            console.error("Erreur de récupération du pseudo : ", err);
+        }
     } else {
-      socket.emit("setUsername", `Guest${Math.floor(Math.random() * 10000)}`);
+        const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
+        localStorage.setItem("username", guestName);
+        socket.emit("setUsername", guestName);
     }
-  });
+});
+
 });
 
 // Fonction pour déconnecter l'utilisateur

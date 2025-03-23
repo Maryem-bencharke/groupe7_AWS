@@ -60,30 +60,39 @@ function eraseTextArea() {
 }
 
 function addLobbyMember(name, id) {
-    const lobbyList = document.getElementById("lobbyList");
-    if (lobbyList) {
-        const li = document.createElement("li");
-        li.classList.add("player");
-        li.id = `player_${id}`;
-        li.innerText = name;
-        lobbyList.appendChild(li);
-    } else {
-        console.error("Erreur : lobbyList introuvable !");
-    }
+    const list = document.getElementById("lobbyList");
+    
+    // Vérifie si le joueur existe déjà
+    if (document.getElementById(`player_${id}`)) return;
+
+    const li = document.createElement("li");
+    li.id = `player_${id}`;
+    li.innerText = name;
+    list.appendChild(li);
 }
 
 
 
+
+// socket.on("loadPlayers", (players) => {
+//     players.forEach(player => {
+//         addLobbyMember(player.name, player.id);
+//     });
+// });
+// // Lorsqu'un nouveau joueur rejoint, l'afficher clairement :
+// socket.on("loadJoiningPlayer", ({ id, name }) => {
+//     addLobbyMember(name, id);
+// });
 socket.on("loadPlayers", (players) => {
+    const lobbyList = document.getElementById("lobbyList");
+    if (lobbyList) {
+        lobbyList.innerHTML = ""; //vide le lobby avant de remplir
+    }
+
     players.forEach(player => {
         addLobbyMember(player.name, player.id);
     });
 });
-// Lorsqu'un nouveau joueur rejoint, l'afficher clairement :
-socket.on("loadJoiningPlayer", ({ id, name }) => {
-    addLobbyMember(name, id);
-});
-
 
 
 socket.on("loadParticipatingPlayer", ({ id, name, life }) => {

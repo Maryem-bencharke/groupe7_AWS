@@ -96,27 +96,26 @@ io.on("connection", (socket) => {
         }
     });
 
-    // socket.on("joinRoom", (name) => {
-    //     if (!publicRooms[name]) {
-    //         publicRooms[name] = { players: [] };
-    //     }
-    //     publicRooms[name].players.push({ id: socket.id, name: socket.username });
-    //     socket.join(name);
-
-    //     // Émettre clairement vers le joueur actuel
-    //     io.to(socket.id).emit("loadPlayers", publicRooms[name].players);
-
-    //     // Informer les autres joueurs
-    //     socket.broadcast.to(name).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
-    // });
-    socket.on("joinRoom", (roomName) => {
-        if (!publicRooms[roomName]) publicRooms[roomName] = { players: [] };
-        publicRooms[roomName].players.push({ id: socket.id, name: socket.username });
+    // socket.on("joinRoom", (roomName) => {
+    //     if (!publicRooms[roomName]) publicRooms[roomName] = { players: [] };
+    //     publicRooms[roomName].players.push({ id: socket.id, name: socket.username });
     
-        socket.join(roomName);
-        io.to(socket.id).emit("loadPlayers", publicRooms[roomName].players);
-        socket.broadcast.to(roomName).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
-      });
+    //     socket.join(roomName);
+    //     io.to(socket.id).emit("loadPlayers", publicRooms[roomName].players);
+    //     socket.broadcast.to(roomName).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
+    //   });
+    socket.on("joinRoom", (name) => {
+        if (!publicRooms[name]) publicRooms[name] = { players: [] };
+    
+        const alreadyIn = publicRooms[name].players.find(p => p.id === socket.id);
+        if (!alreadyIn) {
+            publicRooms[name].players.push({ id: socket.id, name: socket.username });
+        }
+    
+        socket.join(name);
+        io.to(socket.id).emit("loadPlayers", publicRooms[name].players);
+        socket.broadcast.to(name).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
+    });
     
 
     socket.on("wordChoosen", ({name, word}) => {
@@ -364,7 +363,11 @@ io.on("connection", (socket) => {
         publicRooms[name].life[socket.id] = bombGameStartLife;
     
         // Ajoute l'utilisateur avec son pseudo ou guestXXXX
-        publicRooms[name].players.push({ id: socket.id, name: socket.username });
+        // publicRooms[name].players.push({ id: socket.id, name: socket.username });
+        if (!publicRooms[name].players.find(p => p.id === socket.id)) {
+            publicRooms[name].players.push({ id: socket.id, name: socket.username });
+        }
+        
     
         socket.join(name);
     

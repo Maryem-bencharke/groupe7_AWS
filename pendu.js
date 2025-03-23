@@ -288,6 +288,11 @@ function goBackToGames() {
 }
 
 socket.on("loadPlayers", (players) => {
+    const lobbyList = document.getElementById("lobbyList");
+    if (lobbyList) {
+        lobbyList.innerHTML = ""; //vide le lobby avant de remplir
+    }
+
     players.forEach(player => {
         addLobbyMember(player.name, player.id);
     });
@@ -296,15 +301,17 @@ socket.on("loadPlayers", (players) => {
 
 
 function addLobbyMember(name, id) {
-    const lobbyList = document.getElementById("lobbyList");
-    if (lobbyList && !document.getElementById(`player_${id}`)) {
-        const li = document.createElement("li");
-        li.classList.add("player");
-        li.id = `player_${id}`;
-        li.innerText = name;
-        lobbyList.appendChild(li);
-    }
+    const list = document.getElementById("lobbyList");
+    
+    // Vérifie si le joueur existe déjà
+    if (document.getElementById(`player_${id}`)) return;
+
+    const li = document.createElement("li");
+    li.id = `player_${id}`;
+    li.innerText = name;
+    list.appendChild(li);
 }
+
 
 
 socket.on("gameOver", ({ winnerName }) => {
