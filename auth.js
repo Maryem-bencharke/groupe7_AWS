@@ -8,6 +8,7 @@ import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/fireb
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
 const db = getFirestore();
+const socket = io('https://groupe7-aws.onrender.com'); 
 
 // Fonction pour déconnecter l'utilisateur
 function logoutUser() {
@@ -113,11 +114,12 @@ document.addEventListener("DOMContentLoaded", function() {
 // });
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        localStorage.setItem('isLoggedIn', 'true');
-        socket.emit('setUsername', user.displayName || user.email); // vérifie bien cette ligne
+        const username = user.email.split('@')[0]; // ou récupère depuis Firestore directement
+        socket.emit('setUsername', username);
     } else {
-        localStorage.setItem('isLoggedIn', 'false');
+        socket.emit('setUsername', `Guest${Math.floor(Math.random() * 10000)}`);
     }
 });
+
 
 });

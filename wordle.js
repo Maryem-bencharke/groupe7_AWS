@@ -227,17 +227,18 @@ function goBackToGames() {
     window.location.href = "games.html";
 }
 
-function addLobbyMember(name, id) { 
+function addLobbyMember(name, id) {
     const lobbyList = document.getElementById("lobbyList");
     if (lobbyList) {
         const li = document.createElement("li");
         li.classList.add("player");
         li.id = `player_${id}`;
-        li.innerText = name;  
+        li.innerText = name;
         lobbyList.appendChild(li);
     } else {
-        console.error("Erreur : lobbyList est introuvable");
+        console.error("Erreur : lobbyList introuvable !");
     }
 }
+
 
 

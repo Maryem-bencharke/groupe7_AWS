@@ -63,16 +63,16 @@ function eraseTextArea() {
 //     table.appendChild(tr);
 // }
 
-function addLobbyMember(name, id) { 
+function addLobbyMember(name, id) {
     const lobbyList = document.getElementById("lobbyList");
     if (lobbyList) {
         const li = document.createElement("li");
         li.classList.add("player");
         li.id = `player_${id}`;
-        li.innerText = name;  
+        li.innerText = name;
         lobbyList.appendChild(li);
     } else {
-        console.error("Erreur : lobbyList est introuvable");
+        console.error("Erreur : lobbyList introuvable !");
     }
 }
 
@@ -171,16 +171,26 @@ socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
 });
 
 // affiche clairement le mot que chaque joueur tape
-socket.on("updateCurrentWord", ({ playerId, word }) => {
-    // Met à jour l'affichage sous forme de cartes
-    const wordDisplay = document.getElementById(`word-${playerId}`);
-    if (wordDisplay) wordDisplay.innerText = word;
+// socket.on("updateCurrentWord", ({ playerId, word }) => {
+//     // Met à jour l'affichage sous forme de cartes
+//     const wordDisplay = document.getElementById(`word-${playerId}`);
+//     if (wordDisplay) wordDisplay.innerText = word;
 
-    // Met à jour l'affichage en tableau
-    const tdWord = document.getElementById(`word_${playerId}`);
-    if (tdWord) tdWord.innerText = word;
+//     // Met à jour l'affichage en tableau
+//     const tdWord = document.getElementById(`word_${playerId}`);
+//     if (tdWord) tdWord.innerText = word;
+// });
+socket.on("updateCurrentWord", ({playerId, word}) => {
+    let wordDisplay = document.getElementById(`word-${playerId}`);
+    if (!wordDisplay) {
+        // Crée l'élément s'il n'existe pas encore
+        const playersDisplay = document.getElementById('playersDisplay');
+        wordDisplay = document.createElement('div');
+        wordDisplay.id = `word-${playerId}`;
+        playersDisplay.appendChild(wordDisplay);
+    }
+    wordDisplay.innerText = word;
 });
-
 
 // socket.on("updateTimer", (timeLeft) => {
 //     // affiche un temps restant avant que la partie se lance avec les joueurs actuels
