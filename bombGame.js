@@ -274,3 +274,11 @@ document.addEventListener("DOMContentLoaded", () => {
         showStreak();
     }
 });
+
+document.getElementById("backButton").addEventListener("click", () => {
+    goBackToGames(); 
+});
+
+function goBackToGames() {
+    window.location.href = "games.html";
+}
