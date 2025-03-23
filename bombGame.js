@@ -88,28 +88,60 @@ socket.on("loadJoiningPlayer", ({ id, name }) => {
 
 
 socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
+    // const trList = document.getElementsByClassName("player");
+
+    // for (let i = 0; i < trList.length; i++) {
+    //     const firstChild = trList[i].children[0]; 
+    //     if (firstChild && firstChild.innerText === name) {
+    //         trList[i].classList.add("activePlayer", `activePlayer_${id}`);
+    //         trList[i].id = `activePlayer${id}`;
+
+    //         const tdLife = document.createElement("td");
+    //         tdLife.innerText = life;
+    //         tdLife.classList.add("life", `life_${id}`);
+    //         tdLife.id = `life_${id}`;
+
+    //         const tdWord = document.createElement("td");
+    //         tdWord.innerText = "";
+    //         tdWord.classList.add("word", `word_${id}`);
+    //         tdWord.id = `word_${id}`;
+
+    //         trList[i].appendChild(tdLife);
+    //         trList[i].appendChild(tdWord);
+    //     }
+    // }
     const trList = document.getElementsByClassName("player");
 
-    for (let i = 0; i < trList.length; i++) {
-        const firstChild = trList[i].children[0]; 
-        if (firstChild && firstChild.innerText === name) {
-            trList[i].classList.add("activePlayer", `activePlayer_${id}`);
-            trList[i].id = `activePlayer${id}`;
+for (let i = 0; i < trList.length; i++) {
+    const playerCell = trList[i].children[0];
+    
+    if (playerCell && playerCell.innerText === name) {
+        trList[i].classList.add("activePlayer", `activePlayer_${id}`);
+        trList[i].id = `activePlayer${id}`;
 
-            const tdLife = document.createElement("td");
-            tdLife.innerText = life;
-            tdLife.classList.add("life", `life_${id}`);
-            tdLife.id = `life_${id}`;
+        const tdLife = document.createElement("td");
+        tdLife.innerText = life;
+        tdLife.classList.add("life", `life_${id}`);
+        tdLife.id = `life_${id}`;
 
-            const tdWord = document.createElement("td");
-            tdWord.innerText = "";
-            tdWord.classList.add("word", `word_${id}`);
-            tdWord.id = `word_${id}`;
+        const tdWord = document.createElement("td");
+        tdWord.innerText = "";
+        tdWord.classList.add("word", `word_${id}`);
+        tdWord.id = `word_${id}`;
 
-            trList[i].appendChild(tdLife);
-            trList[i].appendChild(tdWord);
+        trList[i].appendChild(tdLife);
+        trList[i].appendChild(tdWord);
+
+        // ✅ Sécurise le innerText ici aussi
+        const element = document.getElementById(`player_${id}`);
+        if (element) {
+            element.innerText = name;
+        } else {
+            console.warn(`player_${id} introuvable`);
         }
     }
+}
+
 
     // Vérifier si l'affichage sous forme de cartes existe avant d'ajouter
     const playersDisplay = document.getElementById('playersDisplay');
