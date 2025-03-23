@@ -12,7 +12,7 @@ let currentSyllable = "";
 // Création des interfaces et gestions des boutons
 //
 
-// permet au bouton rejouer de rejoindre la partie en cours
+// permet au bouton rejouer de rejoindre la partie de bombGame
 function setButtonJoinGame() {
     const join = document.getElementById("joinButton");
     join.addEventListener("click", () => {
@@ -27,32 +27,38 @@ function setButtonJoinGame() {
     
 }
 
-
+// Cache le bouton pour rejoindre la partie.
 function hideJoinButton() {
     const join = document.getElementById("joinButton");
     join.style.display = "none";
 }
 
+// Affiche le bouton pour rejoindre la partie.
 function showJoinButton() {
     const join = document.getElementById("joinButton");
     join.style.display = "block";
 }
 
+// Cache l'input pour écrire le mot.
 function hideTextArea() {
     const textArea = document.getElementById("textArea");
     textArea.style.display = "none";
 }
 
+// Affiche l'input pour écrire le mot.
 function showTextArea() {
     const textArea = document.getElementById("textArea");
     textArea.style.display = "block";
     textArea.focus();
 }
 
+// Éfface l'input.
 function eraseTextArea() {
     document.getElementById("textArea").value = "";
 }
 
+// Ajoute dans une table un nouvel élement 
+// représentant une personne qui se connecte à la salle.
 function addLobbyMember(name, number) {
     const table = document.getElementById("lobbyMembers");
     const tr = document.createElement("tr");
