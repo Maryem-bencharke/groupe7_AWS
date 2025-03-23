@@ -54,25 +54,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // const loginForm = document.getElementById("login-form");
-    // if (loginForm) {
-    //     loginForm.addEventListener("submit", async function(event) {
-    //         event.preventDefault();
-
-    //         let email = document.getElementById("login-email").value;
-    //         let password = document.getElementById("login-password").value;
-
-    //         try {
-    //             await signInWithEmailAndPassword(auth, email, password);
-    //             alert("Connexion réussie !");
-    //             window.location.href = "games.html";
-    //         } catch (error) {
-    //             console.error("Erreur de connexion :", error);
-    //             alert("Erreur : " + error.message);
-    //         }
-    //     });
-    // }
-
     const loginForm = document.getElementById("login-form");
     if (loginForm) {
         loginForm.addEventListener("submit", async function(event) {
@@ -85,13 +66,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // Récupère le username depuis Firestore
+                // 🔥 Récupération précise du username depuis Firestore
                 const userDoc = await getDoc(doc(db, "users", user.uid));
-                let username = userDoc.exists() ? userDoc.data().username : `Guest${Math.floor(Math.random() * 10000)}`;
+                let username;
+                if (userDoc.exists()) {
+                    username = userDoc.data().username;
+                } else {
+                    username = `Guest${Math.floor(Math.random() * 10000)}`;
+                }
 
-                // Émettre le username via socket juste ici après connexion Firebase réussie :
-                const socket = io('https://groupe7-aws.onrender.com');
-                socket.emit('setUsername', username);
+                socket.emit('setUsername', username);  // 🚨 envoie clairement une seule fois
 
                 alert("Connexion réussie !");
                 window.location.href = "games.html";
@@ -99,29 +83,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 console.error("Erreur de connexion :", error);
                 alert("Erreur : " + error.message);
             }
-    });
-}
-
-
-// onAuthStateChanged(auth, (user) => {
-//     if (user) {
-//         // L'utilisateur est connecté
-//         localStorage.setItem('isLoggedIn', 'true');
-//     } else {
-//         // Pas connecté (invité)
-//         localStorage.setItem('isLoggedIn', 'false');
-//     }
-// });
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        const username = user.email.split('@')[0]; // Exemple avec l'email comme pseudo, ou récupère depuis Firestore
-        socket.emit('setUsername', username); // Envoie explicitement le pseudo à ton serveur Socket.io
-        localStorage.setItem('username', username); // Sauvegarde localement aussi (recommandé)
-    } else {
-        socket.emit('setUsername', `Guest${Math.floor(Math.random() * 10000)}`);
-        localStorage.removeItem('username');
+        });
     }
 
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            // 🚨 seulement si déconnecté, car connecté est déjà géré précisément ailleurs
+            socket.emit('setUsername', `Guest${Math.floor(Math.random() * 10000)}`);
+        }
+    });
 });
 
-});
