@@ -98,10 +98,15 @@
             if (pseudo) {
                 localStorage.setItem('username', pseudo);
                 document.getElementById('pseudoModal').style.display = 'none';
+        
+                // ENVOIE au serveur
+                const socket = io('https://groupe7-aws.onrender.com');
+                socket.emit('setUsername', pseudo);
             } else {
                 alert('Veuillez entrer un pseudo.');
             }
         }
+        
 
         // Afficher le modal si le pseudo n'est pas défini
         if (!localStorage.getItem('username')) {
