@@ -1,21 +1,14 @@
-const socket = io('https://groupe7-aws.onrender.com');
-
+var socket = io('https://groupe7-aws.onrender.com');
+//const socket = io("http://127.0.0.1:3000");
 let targetWordLenght = 0;
-let wordleLife  = 6;
+let life = 6;
 let currentGuess = "";
-// let roomName;
-
-
-const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
-socket.emit('setUsername', username);
-
-let roomName = sessionStorage.getItem("roomName");
-socket.emit("joinRoom", roomName);
+let roomName;
 
 //Mise à jour de la grille
 function updateGrid() {
     for (let i = targetWordLenght - 1; i >= 0; i--) {
-        const cell = document.getElementById(`cell-${wordleLife  - 1}-${i}`);
+        const cell = document.getElementById(`cell-${life - 1}-${i}`);
         if (cell) {
             cell.textContent = currentGuess[i] || "";
         }
@@ -119,7 +112,7 @@ function createGrid(wordLength) {
     const gridContainer = document.getElementById("grid");
     gridContainer.innerHTML = "";
 
-    for (let attempt = wordleLife  - 1; attempt >= 0; attempt--) {
+    for (let attempt = life - 1; attempt >= 0; attempt--) {
         const row = document.createElement("div");
         row.classList.add("row");
 
@@ -163,7 +156,7 @@ socket.on("startGuessing", (word) => {
 });
 
 socket.on("guessResult", ({result, remainingLife}) => {
-    wordleLife  = remainingLife;
+    life = remainingLife;
     let i = 0;
     for ([letter, color] of result) {
         // on change les couleurs des boutons du claviers
@@ -187,7 +180,7 @@ socket.on("stopGuessing", (msg) => {
 })
 
 socket.on("gameResult", (msg) => {
-    wordleLife  = 6;
+    life = 6;
     resetKeyboardColors();
     showChoosenWordDisplay();
     alert(msg);
@@ -197,13 +190,13 @@ socket.on("gameResult", (msg) => {
 });
 
 socket.on("soloGameResult", (msg) => {
-    wordleLife  = 6;
+    life = 6;
     resetKeyboardColors();
     blockVirtualKeyboardEvent();
     removeKeyboardEvent();
     document.getElementById("grid").innerHTML = ""; // efface la grid
     document.getElementById("endBanner").style.display = "block";
-    document.getElementById("victoryBanner").innerText = msg;
+    document.getElementById("victoryBanner").innerText = "Victoire";
 });
 
 function showChoosenWordDisplay() {
@@ -229,42 +222,3 @@ document.addEventListener("DOMContentLoaded", () => {
     replayButton();
     console.log("Jeu prêt");
 });
-
-function goBackToGames() {
-    window.location.href = "games.html";
-}
-
-socket.on("loadPlayers", (players) => {
-    const lobbyList = document.getElementById("lobbyList");
-    if (lobbyList) {
-        lobbyList.innerHTML = ""; //vide le lobby avant de remplir
-    }
-
-    players.forEach(player => {
-        addLobbyMember(player.name, player.id);
-    });
-});
-
-
-
-
-function addLobbyMember(name, id) {
-    const lobbyList = document.getElementById("lobbyList");
-    if (lobbyList && !document.getElementById(`player_${id}`)) {
-        const li = document.createElement("li");
-        li.classList.add("player");
-        li.id = `player_${id}`;
-        li.innerText = name;
-        lobbyList.appendChild(li);
-    }
-}
-
-
-
-
-socket.on("gameOver", ({ winnerName }) => {
-    document.getElementById('winnerDisplay').innerText = `Gagnant : ${winnerName}`;
-});
-
-
-

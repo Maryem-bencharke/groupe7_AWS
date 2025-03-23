@@ -1,7 +1,14 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
+const admin = require("firebase-admin");
+const serviceAccount = require("./serviceAccountKey.json"); // Assure-toi que le fichier est bien à cet endroit
 
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -18,7 +25,7 @@ let players = new Set();
 io.on("connection", (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
 
-    socket.on("joinGame", () => {
+    socket.on("joinGame", async () => {
         console.log(`Un joueur a rejoint une partie : ${socket.id}`);
         players.add(socket.id);
 
@@ -34,7 +41,7 @@ io.on("connection", (socket) => {
             }
 
             const room = `room-${Date.now()}`;
-            const word = getRandomWord();
+            const word = await getRandomWord();
 
             rooms[room] = {
                 players: [waitingPlayer.id, socket.id],
@@ -57,7 +64,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    //GESTION IMMÉDIATE DE LA FIN DE PARTIE
     socket.on("gameOver", ({ room, winner, correctWord }) => {
         if (rooms[room]) {
             io.to(room).emit("gameOver", { winner, correctWord });
@@ -79,9 +85,22 @@ io.on("connection", (socket) => {
     });
 });
 
-function getRandomWord() {
-    const words = ["APPLE", "BANANA", "CHERRY", "ORANGE", "MELON"];
-    return words[Math.floor(Math.random() * words.length)];
+async function getRandomWord() {
+    try {
+        const wordsRef = db.collection("words");
+        const snapshot = await wordsRef.get();
+
+        if (snapshot.empty) {
+            console.warn("Aucun mot trouvé dans Firebase.");
+            return "DEFAULT";
+        }
+
+        const words = snapshot.docs.map(doc => doc.data().word);
+        return words[Math.floor(Math.random() * words.length)];
+    } catch (error) {
+        console.error("Erreur lors de la récupération du mot :", error);
+        return "ERROR";
+    }
 }
 
 server.listen(3000, () => console.log("Serveur multijoueur démarré sur http://127.0.0.1:3000"));
