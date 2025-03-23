@@ -432,6 +432,8 @@ io.on("connection", (socket) => {
             usedWords: [],
             bombTime: bombGameMaxTimer,
             currentSyllable: "",
+            progressScore: 0,
+            level: 0,
         };
         socket.join(socket.id);
         startGameTimer(name);

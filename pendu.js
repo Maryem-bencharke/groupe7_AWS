@@ -271,10 +271,14 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Jeu prêt");
 });
 
+document.getElementById("backButton").addEventListener("click", () => {
+    goBackToGames(); 
+});
+
 function goBackToGames() {
     console.log("Bouton cliqué");
     setTimeout(() => {
         window.location.href = "games.html";
-    }, 500); // Délai de 500 ms avant la redirection
+    }, 500); 
 }
 
