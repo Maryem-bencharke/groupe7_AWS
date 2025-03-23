@@ -41,7 +41,7 @@ io.on("connection", (socket) => {
             }
 
             const room = `room-${Date.now()}`;
-            const word = await getRandomWord();
+            const word = await getRandomWordtest();
 
             rooms[room] = {
                 players: [waitingPlayer.id, socket.id],
@@ -85,22 +85,22 @@ io.on("connection", (socket) => {
     });
 });
 
-async function getRandomWord() {
+async function getRandomWordtest() {
     try {
-        const wordsRef = db.collection("words");
+        const wordsRef =  db.collection("words");
+        // Compter le nombre de documents dans la collection
         const snapshot = await wordsRef.get();
 
-        if (snapshot.empty) {
-            console.warn("Aucun mot trouvé dans Firebase.");
-            return "DEFAULT";
-        }
+        // Choisir un document aléatoire parmi ceux récupérés
+        const randomIndex = Math.floor(Math.random() * snapshot.size);
+        const randomDoc = snapshot.docs[randomIndex];
 
-        const words = snapshot.docs.map(doc => doc.data().word);
-        return words[Math.floor(Math.random() * words.length)];
+        const word = randomDoc.data().word;
+
+        return word;
     } catch (error) {
-        console.error("Erreur lors de la récupération du mot :", error);
-        return "ERROR";
+        console.error("Erreur lors de la récupération du mot aléatoire :", error);
+        throw error;
     }
 }
-
 server.listen(3000, () => console.log("Serveur multijoueur démarré sur http://127.0.0.1:3000"));

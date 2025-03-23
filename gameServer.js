@@ -610,11 +610,25 @@ io.on("connection", (socket) => {
 
 });
 
-function getRandomWordTest() {
-    const words = ["APPLE", "BANANA", "CHERRY", "ORANGE", "MELON"];
-    return words[Math.floor(Math.random() * words.length)];
-}
+async function getRandomWordtest() {
+    try {
+        const wordsRef =  db.collection("words");
+        // Compter le nombre de documents dans la collection
+        const snapshot = await wordsRef.get();
 
+        // Choisir un document aléatoire parmi ceux récupérés
+        const randomIndex = Math.floor(Math.random() * snapshot.size);
+        const randomDoc = snapshot.docs[randomIndex];
+
+        const word = randomDoc.data().word;
+
+
+        return word;
+    } catch (error) {
+        console.error("Erreur lors de la récupération du mot aléatoire :", error);
+        throw error;
+    }
+}
 // Mode solo : génération d'un mot aléatoire
 async function getRandomWord() {
     try {
