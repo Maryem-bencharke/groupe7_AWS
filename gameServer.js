@@ -51,17 +51,24 @@ let gameTimer = {};
 
 io.on("connection", (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
-    // Gérer le pseudo ou générer un guestXXXXX
-    socket.on('setUsername', (username) => {
-        socket.username = username || `Guest${Math.floor(Math.random() * 10000)}`;
-        console.log(`Pseudo défini : ${socket.username}`); // Pour déboguer précisément
-    });
-    
+    // // Gérer le pseudo ou générer un guestXXXXX
+    // socket.on('setUsername', (username) => {
+    //     socket.username = username || `Guest${Math.floor(Math.random() * 10000)}`;
+    //     console.log(`Pseudo défini : ${socket.username}`); // Pour déboguer précisément
+    // });
+    socket.username = `Guest${Math.floor(Math.random() * 10000)}`;
 
-    // Exemple de gestion simple, si non spécifié :
-    if (!socket.username) {
-        socket.username = `Guest${Math.floor(Math.random() * 10000)}`;
-    }
+    socket.on("setUsername", (username) => {
+      if (username) {
+        socket.username = username;
+        console.log("Pseudo défini :", username);
+      }
+    });
+
+    // // Exemple de gestion simple, si non spécifié :
+    // if (!socket.username) {
+    //     socket.username = `Guest${Math.floor(Math.random() * 10000)}`;
+    // }
 
     // Émettre l'info du joueur connecté aux autres joueurs dans les lobbys :
     socket.emit('playerConnected', socket.username);
@@ -90,30 +97,27 @@ io.on("connection", (socket) => {
     });
 
     // socket.on("joinRoom", (name) => {
-    //     console.log("room : " + name + " connecter avec : " + socket.id);
-    //     publicRooms[name].players.push(socket.id);
-    //     //if (!publicRooms[name].life) {
-    //     //    publicRooms[name].life = {};
-    //     //}
-    //     //publicRooms[name].life[socket.id] = 6;
-    //     socket.join(name);
-    //     if (publicRooms[name].players.length === 2) {
-    //         io.to(name).emit("chooseWords", "Choisissez un mot pour l'adversaire");
+    //     if (!publicRooms[name]) {
+    //         publicRooms[name] = { players: [] };
     //     }
+    //     publicRooms[name].players.push({ id: socket.id, name: socket.username });
+    //     socket.join(name);
+
+    //     // Émettre clairement vers le joueur actuel
+    //     io.to(socket.id).emit("loadPlayers", publicRooms[name].players);
+
+    //     // Informer les autres joueurs
+    //     socket.broadcast.to(name).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
     // });
-    socket.on("joinRoom", (name) => {
-        if (!publicRooms[name]) {
-            publicRooms[name] = { players: [] };
-        }
-        publicRooms[name].players.push({ id: socket.id, name: socket.username });
-        socket.join(name);
-
-        // Émettre clairement vers le joueur actuel
-        io.to(socket.id).emit("loadPlayers", publicRooms[name].players);
-
-        // Informer les autres joueurs
-        socket.broadcast.to(name).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
-    });
+    socket.on("joinRoom", (roomName) => {
+        if (!publicRooms[roomName]) publicRooms[roomName] = { players: [] };
+        publicRooms[roomName].players.push({ id: socket.id, name: socket.username });
+    
+        socket.join(roomName);
+        io.to(socket.id).emit("loadPlayers", publicRooms[roomName].players);
+        socket.broadcast.to(roomName).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
+      });
+    
 
     socket.on("wordChoosen", ({name, word}) => {
         if (!publicRooms[name].words) {

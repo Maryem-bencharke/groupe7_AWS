@@ -56,17 +56,6 @@ function eraseTextArea() {
     document.getElementById("textArea").value = "";
 }
 
-// function addLobbyMember(name, number) {
-//     const table = document.getElementById("lobbyMembers");
-//     const tr = document.createElement("tr");
-//     tr.classList.add("player");
-//     tr.id = "player_" + number;
-//     const td = document.createElement("td");
-//     td.innerText = name;
-//     tr.appendChild(td);
-//     table.appendChild(tr);
-// }
-
 function addLobbyMember(name, id) {
     const lobbyList = document.getElementById("lobbyList");
     if (lobbyList) {
@@ -82,27 +71,6 @@ function addLobbyMember(name, id) {
 
 
 
-//
-// Fonctions gérant l'affichage sur le jeu
-//
-
-// socket.on("loadPlayers", (players, number) => {
-//     for (let i = 0; i < number; i++) {
-//         addLobbyMember(players[i], i);
-//     }
-// });
-
-// socket.on("loadJoiningPlayer", (name, number) => {
-//     // affichage sur l'écran des joueurs
-//     addLobbyMember(name, number);
-// });
-
-// Chargement des joueurs avec pseudo clairement affichés
-// socket.on("loadPlayers", (players) => {
-//     players.forEach((player, index) => {
-//         addLobbyMember(player.name, player.id || index);
-//     });
-// });
 socket.on("loadPlayers", (players) => {
     players.forEach(player => {
         addLobbyMember(player.name, player.id);
@@ -114,65 +82,6 @@ socket.on("loadJoiningPlayer", ({ id, name }) => {
 });
 
 
-// affiche sur le coté les joueurs qui jouent
-// socket.on("loadParticipatingPlayer", (name, life, number) => {
-//     const trList = document.getElementsByClassName("player");
-//     for (let i = 0; i < number; i++) {
-//         if (trList[i].children[0].innerText === name) {
-//             trList[i].classList.add("activePlayer", "activePlayer_" + i);
-//             trList[i].id = "activePlayer" + i;
-//             const tdLife = document.createElement("td");
-//             tdLife.innerText = life;
-//             tdLife.classList.add("life", "life_" + i);
-//             tdLife.id = "life_" + i;
-//             const tdWord = document.createElement("td");
-//             tdWord.innerText = "";
-//             tdWord.classList.add("word", "word_" + i);
-//             tdWord.id = "word_" + i;
-//             trList[i].appendChild(tdLife);
-//             trList[i].appendChild(tdWord);
-//         }
-//     }
-// });
-
-// affiche clairement les joueurs actifs sur le côté
-// socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
-//     const trList = document.getElementsByClassName("player");
-
-//     for (let i = 0; i < trList.length; i++) {
-//         if (trList[i].children[0].innerText === name) {
-//             trList[i].classList.add("activePlayer", `activePlayer_${id}`);
-//             trList[i].id = `activePlayer${id}`;
-
-//             const tdLife = document.createElement("td");
-//             tdLife.innerText = life;
-//             tdLife.classList.add("life", `life_${id}`);
-//             tdLife.id = `life_${id}`;
-
-//             const tdWord = document.createElement("td");
-//             tdWord.innerText = "";
-//             tdWord.classList.add("word", `word_${id}`);
-//             tdWord.id = `word_${id}`;
-
-//             trList[i].appendChild(tdLife);
-//             trList[i].appendChild(tdWord);
-//         }
-//     }
-
-//     // Affichage sous forme de cartes visuelles (comme ton screenshot)
-//     const playersDisplay = document.getElementById('playersDisplay');
-
-//     let playerCard = document.createElement('div');
-//     playerCard.classList.add('player-card');
-//     playerCard.id = `player-${id}`;
-
-//     playerCard.innerHTML = `
-//         <div class="player-name">${name}</div>
-//         <div class="player-lives">❤️ ${life}</div>
-//         <div class="player-word" id="word-${id}"></div>
-//     `;
-//     playersDisplay.appendChild(playerCard);
-// });
 
 socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
     const trList = document.getElementsByClassName("player");
@@ -217,16 +126,6 @@ socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
 });
 
 
-// affiche clairement le mot que chaque joueur tape
-// socket.on("updateCurrentWord", ({ playerId, word }) => {
-//     // Met à jour l'affichage sous forme de cartes
-//     const wordDisplay = document.getElementById(`word-${playerId}`);
-//     if (wordDisplay) wordDisplay.innerText = word;
-
-//     // Met à jour l'affichage en tableau
-//     const tdWord = document.getElementById(`word_${playerId}`);
-//     if (tdWord) tdWord.innerText = word;
-// });
 socket.on("updateCurrentWord", ({playerId, word}) => {
     let wordDisplay = document.getElementById(`word_${playerId}`);
     if (!wordDisplay) {
@@ -252,16 +151,7 @@ socket.on("updateCurrentWord", ({playerId, word}) => {
 });
 
 
-// socket.on("updateTimer", (timeLeft) => {
-//     // affiche un temps restant avant que la partie se lance avec les joueurs actuels
-//     const timer = document.getElementById("remainingTime");
-//     if (timeLeft > 0) {
-//         timer.innerText = `Temps restant avant lancement automatique ${timeLeft}s`;
-//     } else {
-//         timer.style.display = "none";
-//     }
-    
-// });
+
 
 socket.on("updateTimer", (timeLeft) => {
     const timer = document.getElementById("remainingTime");
@@ -273,10 +163,6 @@ socket.on("updateTimer", (timeLeft) => {
 });
 
 
-// socket.on("refresh", (syllable, currentTurn) => {
-//     reloadSyllableDisplay(syllable);
-//     //currentPlayerTurn = currentTurn;
-// });
 socket.on("refresh", ({ syllable, currentTurn }) => {
     reloadSyllableDisplay(syllable);
 
