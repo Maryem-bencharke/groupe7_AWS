@@ -97,56 +97,90 @@ socket.on("loadPlayers", (players) => {
 // });
 
 
-socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
+// socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
 
+//     const trList = document.getElementsByClassName("player");
+
+// for (let i = 0; i < trList.length; i++) {
+//     const playerCell = trList[i].children[0];
+    
+//     if (playerCell && playerCell.innerText === name) {
+//         trList[i].classList.add("activePlayer", `activePlayer_${id}`);
+//         trList[i].id = `activePlayer${id}`;
+
+//         const tdLife = document.createElement("td");
+//         tdLife.innerText = life;
+//         tdLife.classList.add("life", `life_${id}`);
+//         tdLife.id = `life_${id}`;
+
+//         const tdWord = document.createElement("td");
+//         tdWord.innerText = "";
+//         tdWord.classList.add("word", `word_${id}`);
+//         tdWord.id = `word_${id}`;
+
+//         trList[i].appendChild(tdLife);
+//         trList[i].appendChild(tdWord);
+
+//         // ✅ Sécurise le innerText ici aussi
+//         const element = document.getElementById(`player_${id}`);
+//         if (element) {
+//             element.innerText = name;
+//         } else {
+//             console.warn(`player_${id} introuvable`);
+//         }
+//     }
+// }
+
+
+//     // Vérifier si l'affichage sous forme de cartes existe avant d'ajouter
+//     const playersDisplay = document.getElementById('playersDisplay');
+//     if (playersDisplay) {
+//         let playerCard = document.createElement('div');
+//         playerCard.classList.add('player-card');
+//         playerCard.id = `player-${id}`;
+
+//         playerCard.innerHTML = `
+//             <div class="player-name">${name}</div>
+//             <div class="player-lives">❤️ ${life}</div>
+//             <div class="player-word" id="word-${id}"></div>
+//         `;
+//         playersDisplay.appendChild(playerCard);
+//     } else {
+//         console.warn("playersDisplay n'existe pas dans ce contexte.");
+//     }
+// });
+
+socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
     const trList = document.getElementsByClassName("player");
 
-for (let i = 0; i < trList.length; i++) {
-    const playerCell = trList[i].children[0];
-    
-    if (playerCell && playerCell.innerText === name) {
-        trList[i].classList.add("activePlayer", `activePlayer_${id}`);
-        trList[i].id = `activePlayer${id}`;
+    for (let i = 0; i < trList.length; i++) {
+        const playerLi = trList[i];  // chaque trList[i] est déjà un <li>
+        if (playerLi && playerLi.innerText === name) {
+            playerLi.classList.add("activePlayer", `activePlayer_${id}`);
+            playerLi.id = `activePlayer${id}`;
 
-        const tdLife = document.createElement("td");
-        tdLife.innerText = life;
-        tdLife.classList.add("life", `life_${id}`);
-        tdLife.id = `life_${id}`;
-
-        const tdWord = document.createElement("td");
-        tdWord.innerText = "";
-        tdWord.classList.add("word", `word_${id}`);
-        tdWord.id = `word_${id}`;
-
-        trList[i].appendChild(tdLife);
-        trList[i].appendChild(tdWord);
-
-        // ✅ Sécurise le innerText ici aussi
-        const element = document.getElementById(`player_${id}`);
-        if (element) {
-            element.innerText = name;
-        } else {
-            console.warn(`player_${id} introuvable`);
+            // ajoute vie (❤️) en tant que span ou autre
+            const lifeSpan = document.createElement("span");
+            lifeSpan.innerText = ` ❤️ ${life}`;
+            lifeSpan.classList.add("life", `life_${id}`);
+            lifeSpan.id = `life_${id}`;
+            playerLi.appendChild(lifeSpan);
         }
     }
-}
 
-
-    // Vérifier si l'affichage sous forme de cartes existe avant d'ajouter
+    // mise à jour carte joueur
     const playersDisplay = document.getElementById('playersDisplay');
-    if (playersDisplay) {
+    if (playersDisplay && !document.getElementById(`player-${id}`)) {
         let playerCard = document.createElement('div');
         playerCard.classList.add('player-card');
         playerCard.id = `player-${id}`;
 
         playerCard.innerHTML = `
             <div class="player-name">${name}</div>
-            <div class="player-lives">❤️ ${life}</div>
+            <div class="player-lives" id="card-life-${id}">❤️ ${life}</div>
             <div class="player-word" id="word-${id}"></div>
         `;
         playersDisplay.appendChild(playerCard);
-    } else {
-        console.warn("playersDisplay n'existe pas dans ce contexte.");
     }
 });
 
@@ -231,12 +265,27 @@ socket.on("explosion", (mode) => {
     }
 });
 
+// socket.on("displayExplosion", (mode, turn) => {
+//     if (mode === "multi") {
+//         let life = document.getElementById("life_" + turn);
+//         life.innerText = parseInt(life.innerText) - 1;
+//     }
+// });
+
 socket.on("displayExplosion", (mode, turn) => {
     if (mode === "multi") {
-        let life = document.getElementById("life_" + turn);
-        life.innerText = parseInt(life.innerText) - 1;
+        let lifeEl = document.getElementById("life_" + turn);
+        if (lifeEl) {
+            lifeEl.innerText = ` ❤️ ${parseInt(lifeEl.innerText.match(/\d+/)[0]) - 1}`;
+        }
+
+        let cardLife = document.getElementById("card-life-" + turn);
+        if (cardLife) {
+            cardLife.innerText = `❤️ ${parseInt(cardLife.innerText.match(/\d+/)[0]) - 1}`;
+        }
     }
 });
+
 
 socket.on("displayElimination", (turn) => {
     document.getElementById("player_" + turn).classList.add("eliminated");
