@@ -90,18 +90,15 @@ function addLobbyMember(name, id) {
     }
 }
 
-
-
-
 socket.on("loadPlayers", (players) => {
     players.forEach(player => {
         addLobbyMember(player.name, player.id);
     });
 });
-// // Lorsqu'un nouveau joueur rejoint, l'afficher clairement :
-// socket.on("loadJoiningPlayer", ({ id, name }) => {
-//     addLobbyMember(name, id);
-// });
+
+socket.on("loadJoiningPlayer", (name, number) => {
+    addLobbyMember(name.name, number);
+});
 
 
 socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
@@ -260,7 +257,7 @@ socket.on("defeat", () => {
 socket.on("joinNextGame", (winner) => {
     showJoinButton();
     hideTextArea();
-    reloadSyllableDisplay("Gagnant : " + winner)
+    document.getElementById("syllableDisplay").innerText = "";
     const timer = document.getElementById("remainingTime");
     timer.innerText = "";
     timer.style.display = "block";
@@ -284,6 +281,13 @@ socket.on("startTurn", () => {
     showTextArea();
 })
 
+socket.on("gameAlreadyStarted", () => {
+    hideJoinButton();
+});
+
+socket.on("waitingToLaunch", () => {
+    document.getElementById('winnerDisplay').innerText = "";
+});
 
 // permet de créer l'alphabet bonus permettant de regagner une vie
 function createBonusLetters(alphabet = "ABCDEFGHIJLMNOPQRSTUV") {

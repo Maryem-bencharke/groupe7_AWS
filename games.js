@@ -1,4 +1,4 @@
-const socket = io('https://groupe7-aws.onrender.com');
+var socket = io('https://groupe7-aws.onrender.com');
 
 socket.on("roomList", (rooms, password) => {
     const table = document.getElementById("roomsList");
