@@ -75,6 +75,14 @@
         </tr>
     </table>
 
+    <!-- Ajout du modal pour choisir le pseudo -->
+    <div id="pseudoModal" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: white; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 999;">
+        <h3>Choisis ton pseudo</h3>
+        <input type="text" id="pseudoInput" placeholder="Ton pseudo" style="padding: 10px; font-size: 16px;" />
+        <button onclick="submitPseudo()" style="padding: 10px; font-size: 16px; margin-top: 10px;">Commencer</button>
+    </div>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -84,6 +92,23 @@
                 `;
             }
         });
+
+        function submitPseudo() {
+            const pseudo = document.getElementById('pseudoInput').value;
+            if (pseudo) {
+                localStorage.setItem('username', pseudo);
+                document.getElementById('pseudoModal').style.display = 'none';
+            } else {
+                alert('Veuillez entrer un pseudo.');
+            }
+        }
+
+        // Afficher le modal si le pseudo n'est pas défini
+        if (!localStorage.getItem('username')) {
+            document.getElementById('pseudoModal').style.display = 'block';
+        } else {
+            document.getElementById('pseudoModal').style.display = 'none';
+        }
     </script>
 </body>
 </html>

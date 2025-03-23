@@ -5,11 +5,15 @@ let currentStreak = 0;
 let maxStreak = 0;
 let bombGameRoomName;
 let currentSyllable = "";
-//let currentPlayerTurn;
 
-//
-// Création des interfaces et gestions des boutons
-//
+
+const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
+socket.emit('setUsername', username);
+
+// Ensuite continue avec le jeu :
+const roomName = sessionStorage.getItem("roomName") || "defaultRoom";
+socket.emit("joinBombRoom", roomName);
+
 
 // permet au bouton rejouer de rejoindre la partie en cours
 function setButtonJoinGame() {
@@ -163,6 +167,10 @@ socket.on("updateTimer", (timeLeft) => {
 });
 
 
+// socket.on("refresh", (syllable, currentTurn) => {
+//     reloadSyllableDisplay(syllable);
+//     //currentPlayerTurn = currentTurn;
+// });
 socket.on("refresh", ({ syllable, currentTurn }) => {
     reloadSyllableDisplay(syllable);
 

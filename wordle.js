@@ -3,7 +3,14 @@ const socket = io('https://groupe7-aws.onrender.com');
 let targetWordLenght = 0;
 let wordleLife  = 6;
 let currentGuess = "";
-let roomName;
+// let roomName;
+
+
+const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
+socket.emit('setUsername', username);
+
+const roomName = sessionStorage.getItem("roomName");
+socket.emit("joinRoom", roomName);
 
 //Mise à jour de la grille
 function updateGrid() {

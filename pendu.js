@@ -5,7 +5,13 @@ let wordToGuess = "";
 let lettersTyped = [];
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let gameMode = null;
-let roomName;
+// let roomName;
+const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
+socket.emit('setUsername', username);
+
+const roomName = sessionStorage.getItem("roomName");
+socket.emit("joinRoom", roomName);
+
 
 socket.on("chooseWords", (msg) => {
     // afficher aux joueurs de taper un mot mour l'autre
