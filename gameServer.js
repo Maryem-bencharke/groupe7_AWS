@@ -268,18 +268,6 @@ io.on("connection", (socket) => {
         }
 
     }
-    
-    async function checkWord(word) {
-        // solution temporaire en attendant indexedDB ou autre
-        const url = `https://api.datamuse.com/words?sp=${word}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (data.length > 0 && data[0].word.toLowerCase() === word.toLowerCase()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     socket.on("joinBombRoom", (name) => {
         console.log("room : " + name + " connecter avec : " + socket.id);
@@ -325,7 +313,7 @@ io.on("connection", (socket) => {
 
     });
 
-    socket.on("guessBombWord", async ({word, name}) => {
+    socket.on("guessBombWord", async (word, name) => {
         if (name) {
             if (word.includes(publicRooms[name].currentSyllable) && !publicRooms[name].usedWords.includes(word) && await checkWord(word)) {
                 // faire passer le tour au suivant
@@ -336,8 +324,7 @@ io.on("connection", (socket) => {
             }
         } else {
             // mode solo
-            console.log("mode solo " + privateRooms[socket.id].usedWords);
-            if (word.includes(privateRooms[socket.id].currentSyllable) && !privateRooms[socket.id].usedWords.includes(word) && await checkWord(word)) {
+            if (!privateRooms[socket.id].usedWords.includes(word)) {
                 socket.emit("validate", "solo");
                 privateRooms[socket.id].usedWords.push(word);
                 nextTurn(name);
