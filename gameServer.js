@@ -440,7 +440,7 @@ io.on("connection", (socket) => {
             }
         }
     });
-    
+
     socket.on("leaveRoom", (name) => {
         if (name && publicRooms[name]) {
             publicRooms[name].players = publicRooms[name].players.filter(id => id !== socket.id);
@@ -543,18 +543,16 @@ io.on("connection", (socket) => {
                         
                     }
                     if (publicRooms[name].activePlayers.length < 2) {
-                        console.log("Partie terminée, plus assez de joueurs.");
+                        // fin de la partie
+                        console.log("plus assez de personnes")
                         clearInterval(gameTimer[name]);
                         delete gameTimer[name];
-                    
-                        if (publicRooms[name].activePlayers.length === 1) {
-                            io.to(name).emit("victory", "Vous avez gagné car l'adversaire a quitté !");
-                            io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
-                        }
+                        io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
                         publicRooms[name].activePlayers = [];
+                        
+                        // peut être mettre le timer à 0 pour la bombe
                         return;
                     }
-                    
                     nextTurn(name);
                     return;
                 }

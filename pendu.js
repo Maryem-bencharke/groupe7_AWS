@@ -270,3 +270,15 @@ document.addEventListener("DOMContentLoaded", () => {
     replayButton();
     console.log("Jeu prêt");
 });
+
+document.getElementById("backButton").addEventListener("click", () => {
+    goBackToGames(); 
+});
+
+function goBackToGames() {
+    console.log("Bouton cliqué");
+    setTimeout(() => {
+        window.location.href = "games.html";
+    }, 500); 
+}
+

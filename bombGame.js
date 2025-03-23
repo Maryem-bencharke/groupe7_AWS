@@ -15,20 +15,17 @@ let currentSyllable = "";
 // permet au bouton rejouer de rejoindre la partie en cours
 function setButtonJoinGame() {
     const join = document.getElementById("joinButton");
-    const quit = document.getElementById("quitButton"); // Récupère le bouton Quitter
-    
     join.addEventListener("click", () => {
         if (bombGameRoomName) {
-            socket.emit("joinBombGame", bombGameRoomName);
+            socket.emit("joinBombGame", (bombGameRoomName));
         } else {
-            socket.emit("joinBombSolo", bombGameRoomName);
+            socket.emit("joinBombSolo", (bombGameRoomName));
         }
         createBonusLetters();
         hideJoinButton();
-        quit.style.display = "block"; // Affiche le bouton quitter
     });
+    
 }
-
 
 
 function hideJoinButton() {
@@ -38,9 +35,7 @@ function hideJoinButton() {
 
 function showJoinButton() {
     const join = document.getElementById("joinButton");
-    const quit = document.getElementById("quitButton");
     join.style.display = "block";
-    quit.style.display = "none"; // Cacher "Quitter" quand on peut rejoindre à nouveau
 }
 
 function hideTextArea() {
@@ -247,19 +242,10 @@ socket.on("displayElimination", (turn) => {
 });
 
 socket.on("defeat", () => {
+    // afficher la bannière de défaite et rejouer
     document.getElementById("endBanner").style.display = "block";
-    document.getElementById("victoryBanner").innerText = "Plus longue série : " + maxStreak;
-    showJoinButton();
-    document.getElementById("quitButton").style.display = "block"; // Afficher quitter
+    document.getElementById("victoryBanner").innerText = "plus longue série : " + maxStreak;    
 });
-
-socket.on("victory", (message) => {
-    document.getElementById("endBanner").style.display = "block";
-    document.getElementById("victoryBanner").innerText = message;
-    showJoinButton();
-    document.getElementById("quitButton").style.display = "block"; // Afficher "Quitter"
-});
-
 
 socket.on("joinNextGame", (winner) => {
     showJoinButton();
@@ -378,9 +364,3 @@ document.addEventListener("DOMContentLoaded", () => {
         showStreak();
     }
 });
-function quitGame() {
-    socket.emit("leaveRoom", bombGameRoomName); // Informe le serveur qu'on quitte
-    window.location.href = "games.html"; // Retour à l'accueil
-}
-
-document.getElementById("quitButton").addEventListener("click", quitGame);

@@ -139,3 +139,22 @@ button:hover {
     cursor: pointer;
     width: 130px;
 }
+
+.back-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #565758;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.back-button:hover {
+    background-color: #818384;
+}
+

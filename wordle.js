@@ -223,3 +223,8 @@ document.addEventListener("DOMContentLoaded", () => {
     replayButton();
     console.log("Jeu prêt");
 });
+
+function goBackToGames() {
+    window.location.href = "games.html";
+}
+
