@@ -270,3 +270,11 @@ document.addEventListener("DOMContentLoaded", () => {
     replayButton();
     console.log("Jeu prêt");
 });
+
+function goBackToGames() {
+    console.log("Bouton cliqué");
+    setTimeout(() => {
+        window.location.href = "games.html";
+    }, 500); // Délai de 500 ms avant la redirection
+}
+
