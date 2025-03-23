@@ -235,11 +235,6 @@ function goBackToGames() {
 }
 
 socket.on("loadPlayers", (players) => {
-    const lobbyList = document.getElementById("lobbyList");
-    if (lobbyList) {
-        lobbyList.innerHTML = ""; //vide le lobby avant de remplir
-    }
-
     players.forEach(player => {
         addLobbyMember(player.name, player.id);
     });

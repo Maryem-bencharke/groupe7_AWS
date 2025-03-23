@@ -73,25 +73,15 @@ function addLobbyMember(name, id) {
 
 
 
-// socket.on("loadPlayers", (players) => {
-//     players.forEach(player => {
-//         addLobbyMember(player.name, player.id);
-//     });
-// });
-// // Lorsqu'un nouveau joueur rejoint, l'afficher clairement :
-// socket.on("loadJoiningPlayer", ({ id, name }) => {
-//     addLobbyMember(name, id);
-// });
 socket.on("loadPlayers", (players) => {
-    const lobbyList = document.getElementById("lobbyList");
-    if (lobbyList) {
-        lobbyList.innerHTML = ""; //vide le lobby avant de remplir
-    }
-
     players.forEach(player => {
         addLobbyMember(player.name, player.id);
     });
 });
+// // Lorsqu'un nouveau joueur rejoint, l'afficher clairement :
+// socket.on("loadJoiningPlayer", ({ id, name }) => {
+//     addLobbyMember(name, id);
+// });
 
 
 socket.on("loadParticipatingPlayer", ({ id, name, life }) => {

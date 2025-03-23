@@ -58,16 +58,13 @@ io.on("connection", (socket) => {
     // });
     socket.username = `Guest${Math.floor(Math.random() * 10000)}`;
 
-    // socket.on("setUsername", (username) => {
-    //   if (username) {
-    //     socket.username = username;
-    //     console.log("Pseudo défini :", username);
-    //   }
-    // });
-
-    socket.on('setUsername', (username) => {
-        socket.username = username || `Guest${Math.floor(Math.random() * 10000)}`;
+    socket.on("setUsername", (username) => {
+      if (username) {
+        socket.username = username;
+        console.log("Pseudo défini :", username);
+      }
     });
+
     
     // Émettre l'info du joueur connecté aux autres joueurs dans les lobbys :
     socket.emit('playerConnected', socket.username);
