@@ -293,6 +293,12 @@ io.on("connection", (socket) => {
             return false;
         }
     }
+    socket.on("setUsername", (username) => {
+        if (!socket.username) {
+            socket.username = username;
+        }
+    });
+    
 
     // socket.on("joinBombRoom", (name) => {
     //     console.log("room : " + name + " connecter avec : " + socket.id);

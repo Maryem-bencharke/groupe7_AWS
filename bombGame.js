@@ -4,15 +4,13 @@ let currentStreak = 0;
 let maxStreak = 0;
 let bombGameRoomName;
 let currentSyllable = "";
-
 let roomName;
-const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
-socket.emit('setUsername', username);
+window.socket = io('https://groupe7-aws.onrender.com');
 
-// Ensuite continue avec le jeu :
-// const roomName = sessionStorage.getItem("roomName") || "defaultRoom";
-// socket.emit("joinBombRoom", roomName);
-
+document.addEventListener("DOMContentLoaded", () => {
+    const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
+    window.socket.emit("setUsername", username);
+});
 
 // permet au bouton rejouer de rejoindre la partie en cours
 function setButtonJoinGame() {

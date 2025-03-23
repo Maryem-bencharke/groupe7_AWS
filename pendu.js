@@ -6,8 +6,13 @@ let lettersTyped = [];
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let gameMode = null;
 let roomName;
-const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
-socket.emit('setUsername', username);
+window.socket = io('https://groupe7-aws.onrender.com');
+
+document.addEventListener("DOMContentLoaded", () => {
+    const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
+    window.socket.emit("setUsername", username);
+});
+
 
 // let roomName = sessionStorage.getItem("roomName");
 // socket.emit("joinRoom", roomName);

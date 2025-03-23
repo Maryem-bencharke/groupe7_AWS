@@ -72,27 +72,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-        try {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-                const username = userDoc.data().username;
-                localStorage.setItem("username", username);
-                socket.emit("setUsername", username);
-            } else {
-                const fallback = `Guest${Math.floor(Math.random() * 10000)}`;
-                localStorage.setItem("username", fallback);
-                socket.emit("setUsername", fallback);
-            }
-        } catch (err) {
-            console.error("Erreur de récupération du pseudo : ", err);
+        // Récupérer pseudo depuis Firestore
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        let username = "";
+
+        if (docSnap.exists()) {
+            username = docSnap.data().username;
+        } else {
+            username = `Guest${Math.floor(Math.random() * 10000)}`;
+        }
+
+        // Stocker dans localStorage pour les autres jeux
+        localStorage.setItem("username", username);
+
+        // Émet la socket SEULEMENT si elle est déjà connectée
+        if (window.socket) {
+            window.socket.emit("setUsername", username);
         }
     } else {
         const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
         localStorage.setItem("username", guestName);
-        socket.emit("setUsername", guestName);
+        if (window.socket) {
+            window.socket.emit("setUsername", guestName);
+        }
     }
 });
-
 });
 
 // Fonction pour déconnecter l'utilisateur
