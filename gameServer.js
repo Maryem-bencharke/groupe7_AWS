@@ -51,19 +51,9 @@ let gameTimer = {};
 
 io.on("connection", (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
-    // // Gérer le pseudo ou générer un guestXXXXX
-    // socket.on('setUsername', (username) => {
-    //     socket.username = username || `Guest${Math.floor(Math.random() * 10000)}`;
-    //     console.log(`Pseudo défini : ${socket.username}`); // Pour déboguer précisément
-    // });
+
     socket.username = `Guest${Math.floor(Math.random() * 10000)}`;
 
-    // socket.on("setUsername", (username) => {
-    //   if (username) {
-    //     socket.username = username;
-    //     console.log("Pseudo défini :", username);
-    //   }
-    // });
     socket.on("setUsername", (username) => {
         if (username && username.startsWith("Guest")) {
             // Si déjà défini, ne pas écraser avec un Guest
@@ -77,7 +67,7 @@ io.on("connection", (socket) => {
     
     
     // Émettre l'info du joueur connecté aux autres joueurs dans les lobbys :
-    socket.emit('playerConnected', socket.username);
+    //socket.emit('playerConnected', socket.username);
     socket.emit("roomList", publicRooms);
 
     socket.on("createRoom", ({name, game, password}) => {
@@ -103,12 +93,12 @@ io.on("connection", (socket) => {
     });
 
     socket.on("joinRoom", (roomName) => {
-        if (!publicRooms[roomName]) publicRooms[roomName] = { players: [] };
+        console.log("room : " + roomName + " connecter avec : " + socket.id);
         publicRooms[roomName].players.push({ id: socket.id, name: socket.username });
     
         socket.join(roomName);
         io.to(socket.id).emit("loadPlayers", publicRooms[roomName].players);
-        socket.broadcast.to(roomName).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
+        socket.broadcast.to(roomName).emit("loadJoiningPlayer", socket.username, publicRooms[roomName].players.length - 1);
       });
     
 
@@ -192,10 +182,11 @@ io.on("connection", (socket) => {
             delete gameTimer[socket.id];
         } else {
             Object.keys(publicRooms).forEach(room => {
-                if (publicRooms[room] && publicRooms[room].players.includes(socket.id)) {
-                    publicRooms[room].players = publicRooms[room].players.filter(id => id !== socket.id);
+                if (publicRooms[room] && publicRooms[room].players.some(({ id }) => id === socket.id)) {
+                    publicRooms[room].players = publicRooms[room].players.filter(player => player.id !== socket.id);
                     if (publicRooms[room].players.length === 0) {
                         delete publicRooms[room];
+                        io.emit("roomList", publicRooms);
                     } else {
                         io.to(room).emit("victory", "L'adversaire s'est déconnecté.");
                         io.to(room).emit("disconnected", socket.id);
@@ -479,7 +470,7 @@ io.on("connection", (socket) => {
                 console.log("temps de la bombe : " + publicRooms[name].bombTime);
                 if (publicRooms[name].bombTime <= 0) {
                     io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("explosion", "multi");
-                    io.to(name).emit("displayExplosion", "multi", publicRooms[name].currentTurn);
+                    io.to(name).emit("displayExplosion", "multi", publicRooms[name].activePlayers[publicRooms[name].currentTurn]);
                     publicRooms[name].bombTime = bombGameMaxTimer;
                     // faire perdre une vie
                     publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] -= 1;

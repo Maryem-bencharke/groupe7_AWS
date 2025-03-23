@@ -1,4 +1,4 @@
-const socket = io('https://groupe7-aws.onrender.com');
+var socket = io('https://groupe7-aws.onrender.com');
 
 let currentStreak = 0;
 let maxStreak = 0;
@@ -110,7 +110,6 @@ socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
 
 for (let i = 0; i < trList.length; i++) {
     const playerCell = trList[i].children[0];
-    
     if (playerCell && playerCell.innerText === name) {
         trList[i].classList.add("activePlayer", `activePlayer_${id}`);
         trList[i].id = `activePlayer${id}`;
@@ -119,6 +118,7 @@ for (let i = 0; i < trList.length; i++) {
         tdLife.innerText = life;
         tdLife.classList.add("life", `life_${id}`);
         tdLife.id = `life_${id}`;
+        console.log("id du player life_" + id)
 
         const tdWord = document.createElement("td");
         tdWord.innerText = "";

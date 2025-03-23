@@ -1,4 +1,4 @@
-const socket = io('https://groupe7-aws.onrender.com');
+var socket = io('https://groupe7-aws.onrender.com');
 
 let life = 6;
 let wordToGuess = "";
@@ -298,6 +298,9 @@ socket.on("loadPlayers", (players) => {
     });
 });
 
+socket.on("loadJoiningPlayer", (name, number) => {
+    addLobbyMember(name, number);
+});
 
 
 function addLobbyMember(name, id) {
