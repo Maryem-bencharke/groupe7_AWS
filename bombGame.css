@@ -99,16 +99,16 @@ body {
     display: none;
 }
 
-.lobbyMembers {
+/* .lobbyMembers {
     position: fixed;
     left: 0%;
     bottom: 50%;
     transform: translateY(-50%);
-}
+} */
 
-.player {
+/* .player {
     color: gray;
-}
+} */
 
 .player.activePlayer {
     color: green;
@@ -150,12 +150,12 @@ body {
     margin: 20px;
 }
 
-.player-card {
+/* .player-card {
     text-align: center;
     padding: 10px;
     background-color: #ccc;
     border-radius: 10px;
-}
+} */
 
 .current-turn {
     border: 3px solid yellow;
@@ -180,6 +180,23 @@ body {
     position: relative;
     z-index: 1;
 }
+/* 
+/* .lobbyMembers {
+    clear: both;
+    text-align: left;
+    position: relative;
+    z-index: 2;
+    margin-top: 50px; /* Espace pour éviter le chevauchement 
+} */ 
+
+/* .player-card {
+    background-color: #fff;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: inline-block;
+    border-radius: 5px;
+} */
+
 
 .lobbyMembers {
     clear: both;
@@ -187,6 +204,15 @@ body {
     position: relative;
     z-index: 2;
     margin-top: 50px; /* Espace pour éviter le chevauchement */
+}
+
+.player {
+    background-color: #fff;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: inline-block;
+    border-radius: 5px;
+    list-style-type: none; /* Supprime les puces des listes */
 }
 
 .player-card {
