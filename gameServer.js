@@ -345,36 +345,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on("leaveRoom", (name) => {
-        if (name && publicRooms[name]) {
-            publicRooms[name].players = publicRooms[name].players.filter(id => id !== socket.id);
-            publicRooms[name].activePlayers = publicRooms[name].activePlayers.filter(id => id !== socket.id);
-            socket.leave(name);
-            console.log(`Le joueur ${socket.id} a quitté la salle ${name}`);
-    
-            if (publicRooms[name].players.length === 0) {
-                delete publicRooms[name]; // Supprime la salle si elle est vide
-            } else {
-                io.to(name).emit("disconnected", socket.id);
-            }
-    
-            // Vérifier s'il reste un seul joueur en jeu
-            if (publicRooms[name].activePlayers.length < 2) {
-                console.log("Partie arrêtée, pas assez de joueurs.");
-                clearInterval(gameTimer[name]); // Arrêter le timer
-                delete gameTimer[name];
-    
-                if (publicRooms[name].activePlayers.length === 1) {
-                    io.to(name).emit("victory", "Vous avez gagné car l'adversaire a quitté !");
-                    io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
-                }
-                publicRooms[name].activePlayers = [];
-            }
-        }
-    });
-    
-    
-
     function nextTurn(name) {
         setRandomSyllable(name);
         if (name) {
@@ -416,18 +386,16 @@ io.on("connection", (socket) => {
                         
                     }
                     if (publicRooms[name].activePlayers.length < 2) {
-                        console.log("Partie terminée, plus assez de joueurs.");
+                        // fin de la partie
+                        console.log("plus assez de personnes")
                         clearInterval(gameTimer[name]);
                         delete gameTimer[name];
-                    
-                        if (publicRooms[name].activePlayers.length === 1) {
-                            io.to(name).emit("victory", "Vous avez gagné car l'adversaire a quitté !");
-                            io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
-                        }
+                        io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
                         publicRooms[name].activePlayers = [];
+                        
+                        // peut être mettre le timer à 0 pour la bombe
                         return;
                     }
-                    
                     nextTurn(name);
                     return;
                 }
