@@ -5,12 +5,12 @@ let wordToGuess = "";
 let lettersTyped = [];
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let gameMode = null;
-// let roomName;
+let roomName;
 const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
 socket.emit('setUsername', username);
 
-let roomName = sessionStorage.getItem("roomName");
-socket.emit("joinRoom", roomName);
+// let roomName = sessionStorage.getItem("roomName");
+// socket.emit("joinRoom", roomName);
 
 
 socket.on("chooseWords", (msg) => {

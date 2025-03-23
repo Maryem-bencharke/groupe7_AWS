@@ -1,14 +1,3 @@
-// import { auth } from "./firebase-config.js";
-// import { 
-//     createUserWithEmailAndPassword, 
-//     signInWithEmailAndPassword,
-//     signOut
-// } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
-// import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
-// import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
-
-// const db = getFirestore();
-// const socket = io('https://groupe7-aws.onrender.com'); 
 import { auth } from "./firebase-config.js";
 import {
   createUserWithEmailAndPassword,
