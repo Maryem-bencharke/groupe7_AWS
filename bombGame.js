@@ -166,11 +166,12 @@ socket.on("updateCurrentWord", ({playerId, word}) => {
 
 socket.on("updateTimer", (timeLeft) => {
     const timer = document.getElementById("remainingTime");
-    if (!timer) {
-        console.warn("Erreur : l'élément 'remainingTime' n'existe pas dans ton HTML !");
-        return;
-    }
     timer.innerText = `Temps restant : ${timeLeft}s`;
+    if (timeLeft === 0) {
+        timer.style.display = "none";
+    } else {
+        timer.style.display = "block";
+    }
 });
 
 
@@ -199,9 +200,8 @@ socket.on("validate", (mode, bonnusLetters) => {
     } else {
         currentStreak += 1;
         showStreak();
-        createBonusLetters(bonnusLetters);
     }
-    
+    createBonusLetters(bonnusLetters);
 });
 
 socket.on("explosion", (mode) => {

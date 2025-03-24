@@ -338,19 +338,15 @@ io.on("connection", (socket) => {
             publicRooms[name].bombTime = bombGameMaxTimer;
         }
     
-        publicRooms[name].activePlayers.push(socket.id);
+        publicRooms[name].activePlayers.push({
+            id: socket.id,
+            life: bombGameStartLife,
+            bonusLetters: bonusLetterAlphabet
+        });
+
         socket.join(name + "_active");
         // Récupère clairement le joueur avec son pseudo
         let player = publicRooms[name].players.find(p => p.id === socket.id);
-        if (!publicRooms[name].activePlayers.life) {
-            publicRooms[name].activePlayers.life = bombGameStartLife;
-        }
-        publicRooms[name].activePlayers.life = bombGameStartLife;
-        
-        if (!publicRooms[name].activePlayers.bonusLetters) {
-            publicRooms[name].activePlayers.bonusLetters = bonusLetterAlphabet;
-        }
-        publicRooms[name].activePlayers.bonusLetters = bonusLetterAlphabet;
         
         io.to(name).emit("loadParticipatingPlayer", {
             id: socket.id,
@@ -383,13 +379,15 @@ io.on("connection", (socket) => {
         if (name) {
             if (!publicRooms[name].usedWords.includes(word)) {
                 // faire passer le tour au suivant
-                io.to(socket.id).emit("validate", "multi");
+                
                 publicRooms[name].usedWords.push(word);
     
                 // Diffuse clairement le mot tapé à tous les joueurs avec l'id du joueur
                 io.to(name).emit("updateCurrentWord", { playerId: socket.id, word });
-    
+                const player = publicRooms[name].activePlayers.find(p => p.id === socket.id);
+                checkBonusLetters(word, player);
                 nextTurn(name);
+                io.to(socket.id).emit("validate", "multi", player.bonusLetters);
             }
         } else {
             // mode solo
@@ -398,7 +396,6 @@ io.on("connection", (socket) => {
                 checkBonusLetters(word, privateRooms[socket.id]);
                 //nextTurn(null); // Bien préciser null ici pour solo
                 nextTurn(name);
-                console.log(privateRooms[socket.id].bonusLetters + " aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
                 socket.emit("validate", "solo", privateRooms[socket.id].bonusLetters);
             }
         }
@@ -428,7 +425,6 @@ io.on("connection", (socket) => {
                     io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
                 }
                 publicRooms[name].activePlayers = [];
-                console.log(privateRooms[socket.id].bonusLetters + " aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
                 socket.emit("validate", "solo", privateRooms[socket.id].bonusLetters);
             }
         }
@@ -442,10 +438,10 @@ io.on("connection", (socket) => {
     
             io.to(name).emit("refresh", {
                 syllable: publicRooms[name].currentSyllable,
-                currentTurn: publicRooms[name].activePlayers[publicRooms[name].currentTurn]
+                currentTurn: publicRooms[name].activePlayers[publicRooms[name].currentTurn].id
             });
     
-            io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("startTurn");
+            io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn].id).emit("startTurn");
     
             // gestion du temps minimum pour répondre
             if (publicRooms[name].bombTime < bombGameMinTimer) {
@@ -472,15 +468,16 @@ io.on("connection", (socket) => {
             gameTimer[name] = setInterval(() => {
                 console.log("temps de la bombe : " + publicRooms[name].bombTime);
                 if (publicRooms[name].bombTime <= 0) {
-                    io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn]).emit("explosion", "multi");
-                    io.to(name).emit("displayExplosion", "multi", publicRooms[name].activePlayers[publicRooms[name].currentTurn]);
+                    io.to(publicRooms[name].activePlayers[publicRooms[name].currentTurn].id).emit("explosion", "multi");
+                    io.to(name).emit("displayExplosion", "multi", publicRooms[name].activePlayers[publicRooms[name].currentTurn].id);
                     publicRooms[name].bombTime = bombGameMaxTimer;
                     // faire perdre une vie
-                    publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] -= 1;
-                    console.log("vies restante : " + publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]]);
-                    if (publicRooms[name].life[publicRooms[name].activePlayers[publicRooms[name].currentTurn]] < 1) {
+                    publicRooms[name].activePlayers[publicRooms[name].currentTurn].life -= 1;
+                    //publicRooms[name].life[publicRooms[name].activePlayers.id[publicRooms[name].currentTurn]] -= 1;
+                    console.log("vies restante : " + publicRooms[name].activePlayers[publicRooms[name].currentTurn].life);
+                    if (publicRooms[name].activePlayers[publicRooms[name].currentTurn].life < 1) {
                         io.to(name).emit("displaylimination", "multi", publicRooms[name].currentTurn);
-                        publicRooms[name].activePlayers = publicRooms[name].activePlayers.filter(id => id !== publicRooms[name].activePlayers[publicRooms[name].currentTurn]);
+                        publicRooms[name].activePlayers = publicRooms[name].activePlayers.filter(player => player.id !== publicRooms[name].activePlayers[publicRooms[name].currentTurn].id);
                         publicRooms[name].currentTurn = publicRooms[name].currentTurn - 1;
                         // actualiser la perte de vie pour tout le monde
                     }
@@ -491,11 +488,11 @@ io.on("connection", (socket) => {
                         delete gameTimer[name];
     
                         // Exemple précis quand un joueur gagne :
-                        const winnerId = publicRooms[name].activePlayers[0]; // exemple
+                        const winnerId = publicRooms[name].activePlayers[0].id; // exemple
                         const winner = publicRooms[name].players.find(p => p.id === winnerId);
                         io.to(name).emit("gameOver", { winnerName: winner ? winner.name : "Inconnu" });
     
-                        io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0]);
+                        io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0].id);
                         publicRooms[name].activePlayers = [];
                         
                         // peut être mettre le timer à 0 pour la bombe
