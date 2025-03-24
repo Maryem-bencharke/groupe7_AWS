@@ -99,16 +99,6 @@ body {
     display: none;
 }
 
-/* .lobbyMembers {
-    position: fixed;
-    left: 0%;
-    bottom: 50%;
-    transform: translateY(-50%);
-} */
-
-/* .player {
-    color: gray;
-} */
 
 .player.activePlayer {
     color: green;
@@ -150,29 +140,14 @@ body {
     margin: 20px;
 }
 
-/* .player-card {
-    text-align: center;
-    padding: 10px;
-    background-color: #ccc;
-    border-radius: 10px;
-} */
 
 .current-turn {
     border: 3px solid yellow;
 }
 
-.player-lives {
-    color: red;
-    font-size: 18px;
-}
-
-.player-word {
-    font-size: 20px;
-    font-weight: bold;
-}
 
 /* Ajout des nouvelles règles CSS */
-#playersDisplay, #remainingTime {
+#remainingTime {
     margin-top: 20px;
     margin-bottom: 20px;
     text-align: center;
@@ -180,23 +155,6 @@ body {
     position: relative;
     z-index: 1;
 }
-/* 
-/* .lobbyMembers {
-    clear: both;
-    text-align: left;
-    position: relative;
-    z-index: 2;
-    margin-top: 50px; /* Espace pour éviter le chevauchement 
-} */ 
-
-/* .player-card {
-    background-color: #fff;
-    padding: 10px;
-    margin-bottom: 10px;
-    display: inline-block;
-    border-radius: 5px;
-} */
-
 
 .lobbyMembers {
     clear: both;
@@ -215,10 +173,47 @@ body {
     list-style-type: none; /* Supprime les puces des listes */
 }
 
+
+
+
+/*hello*/
 .player-card {
-    background-color: #fff;
+    display: flex;
+    flex-direction: column; /* Aligne les éléments verticalement */
+    align-items: center;
+    justify-content: center;
+    width: 120px;
     padding: 10px;
-    margin-bottom: 10px;
-    display: inline-block;
-    border-radius: 5px;
+    margin: 5px;
+    background-color: white;
+    border-radius: 10px;
+    border: 2px solid #ccc;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    font-weight: bold;
+}
+
+.player-name {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.player-lives {
+    font-size: 18px;
+    color: red;
+    margin-bottom: 5px;
+}
+
+.player-word {
+    font-size: 18px;
+    color: black;
+    margin-top: 5px;
+}
+
+
+#playersDisplay {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px auto;
 }

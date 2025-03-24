@@ -138,7 +138,9 @@ socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
 });
 
 socket.on("updateCurrentWord", ({playerId, word}) => {
-    let wordDisplay = document.getElementById(`word_${playerId}`);
+    // let wordDisplay = document.getElementById(`word_${playerId}`);
+    let wordDisplay = document.getElementById(`word-${playerId}`);
+
     if (!wordDisplay) {
         // Si l'élément n'existe pas, on le crée immédiatement
         const playersDisplay = document.getElementById('playersDisplay');
@@ -152,7 +154,7 @@ socket.on("updateCurrentWord", ({playerId, word}) => {
         playerCard.classList.add('player-card');
 
         wordDisplay = document.createElement('div');
-        wordDisplay.id = `word_${playerId}`;
+        wordDisplay.id = `word-${playerId}`;
         wordDisplay.classList.add('player-word');
 
         playerCard.appendChild(wordDisplay);
