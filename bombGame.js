@@ -1,5 +1,4 @@
 var socket = io('https://groupe7-aws.onrender.com');
-
 let currentStreak = 0;
 let maxStreak = 0;
 let bombGameRoomName;
@@ -176,11 +175,6 @@ socket.on("updateTimer", (timeLeft) => {
     }
 });
 
-
-// socket.on("refresh", (syllable, currentTurn) => {
-//     reloadSyllableDisplay(syllable);
-//     //currentPlayerTurn = currentTurn;
-// });
 socket.on("refresh", ({ syllable, currentTurn }) => {
     reloadSyllableDisplay(syllable);
 
@@ -220,12 +214,6 @@ socket.on("explosion", (mode) => {
     }
 });
 
-// socket.on("displayExplosion", (mode, turn) => {
-//     if (mode === "multi") {
-//         let life = document.getElementById("life_" + turn);
-//         life.innerText = parseInt(life.innerText) - 1;
-//     }
-// });
 socket.on("displayExplosion", (mode, turn) => {
     if (mode === "multi") {
         let lifeEl = document.getElementById("life_" + turn);
@@ -256,7 +244,7 @@ socket.on("defeat", () => {
     document.getElementById("victoryBanner").innerText = "plus longue série : " + maxStreak;    
 });
 
-socket.on("joinNextGame", (winner) => {
+socket.on("joinNextGame", () => {
     showJoinButton();
     hideTextArea();
     document.getElementById("syllableDisplay").innerText = "";

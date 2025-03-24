@@ -47,7 +47,6 @@ process.on('unhandledRejection', (err) => {
 let wordsNumber = 4000;
 let publicRooms = {};
 let privateRooms = {};
-let gameTimer = {};
 
 io.on("connection", (socket) => {
     console.log(`Un joueur s'est connecté : ${socket.id}`);
@@ -184,10 +183,18 @@ io.on("connection", (socket) => {
             Object.keys(publicRooms).forEach(room => {
                 if (publicRooms[room] && publicRooms[room].players.some(({ id }) => id === socket.id)) {
                     publicRooms[room].players = publicRooms[room].players.filter(player => player.id !== socket.id);
+                    publicRooms[room].activePlayers = publicRooms[room].activePlayers.filter(player => player.id !== socket.id);
                     if (publicRooms[room].players.length === 0) {
+                        clearInterval(gameTimer[room]);
                         delete publicRooms[room];
-                        io.emit("roomList", publicRooms);
-                    } else {
+                        io.emit("roomList", publicRooms);                        
+                        delete gameTimer[room];
+                    } else if (publicRooms[room].activePlayers.length === 1) {
+                        clearInterval(gameTimer[room]);
+                        delete gameTimer[room];
+                        io.to(room).emit("joinNextGame");
+                    } 
+                    else {
                         io.to(room).emit("victory", "L'adversaire s'est déconnecté.");
                         io.to(room).emit("disconnected", socket.id);
                     }
@@ -310,10 +317,6 @@ io.on("connection", (socket) => {
             publicRooms[name].life = {};
         }
         publicRooms[name].life[socket.id] = bombGameStartLife;
-
-        if (!publicRooms[name].players.find(p => p.id === socket.id)) {
-            publicRooms[name].players.push({ id: socket.id, name: socket.username });
-        }
         
         // Ajoute l'utilisateur avec son pseudo ou guestXXXX
         publicRooms[name].players.push({ id: socket.id, name: socket.username });
@@ -494,6 +497,7 @@ io.on("connection", (socket) => {
     
                         io.to(name).emit("joinNextGame", publicRooms[name].activePlayers[0].id);
                         publicRooms[name].activePlayers = [];
+                        publicRooms[name].usedWords = [];
                         
                         // peut être mettre le timer à 0 pour la bombe
                         return;
