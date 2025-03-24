@@ -1,6 +1,6 @@
 var socket = io('https://groupe7-aws.onrender.com');
 
-socket.on("roomList", (rooms, password) => {
+socket.on("roomList", (rooms) => {
     const table = document.getElementById("roomsList");
     table.innerHTML = "";
     if (Object.keys(rooms).length === 0) {
@@ -8,28 +8,37 @@ socket.on("roomList", (rooms, password) => {
     } else {
         console.log("Nouvelle salle reçue");
         for (let name in rooms) {
+            let isFull = false;
             const tr = document.createElement("tr");
             const td = document.createElement("td");
             td.innerText = `${name.toUpperCase()}, joue à ${rooms[name].game}`;
             td.classList.add("cursor");
             tr.className = rooms[name].game;
-            if (password && password.trim() !== "") {
-                td.innerText += ", mot de passe requis";
-                td.addEventListener("click", async () => {
-                    try {
-                        const correctPassword = await getPassword(name);
-                        if (correctPassword) {
-                            localStorage.setItem("name", name);
-                            goToGame(rooms[name].game);
-                        }
-                    } catch (error) {}
-                });
+
+            if (rooms[name].players.length >= 2 && rooms[name].game != "bombGame") {
+                td.innerText += " COMPLET";
+                td.classList.remove("cursor");
+                isFull = true;
             } else {
-                td.addEventListener("click", () => {
-                    localStorage.setItem("name", name);
-                    goToGame(rooms[name].game);
-                });
+                if (rooms[name].password && rooms[name].password.trim() !== "") {
+                    td.innerText += ", mot de passe requis";
+                    td.addEventListener("click", async () => {
+                        try {
+                            const correctPassword = await getPassword(name);
+                            if (correctPassword) {
+                                localStorage.setItem("name", name);
+                                goToGame(rooms[name].game);
+                            }
+                        } catch (error) {}
+                    });
+                } else {
+                    td.addEventListener("click", () => {
+                        localStorage.setItem("name", name);
+                        goToGame(rooms[name].game);
+                    });
+                }
             }
+            
             
             tr.appendChild(td);
             table.appendChild(tr);

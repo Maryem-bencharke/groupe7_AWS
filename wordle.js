@@ -1,5 +1,6 @@
 var socket = io('https://groupe7-aws.onrender.com');
 
+
 let targetWordLenght = 0;
 let wordleLife  = 6;
 let currentGuess = "";
@@ -100,16 +101,24 @@ function removeChooseWordEvent() {
 function chooseWordEventHandler(event) {
     if (!event.key) return;
         if (event.key.toUpperCase() === "ENTER") {
-            const word = document.getElementById("choosenWord").value;
-            if (word.length < 1) {
-                // afficher un message pour dire trop petit
-                alert("mot trop petit");
+            let word = document.getElementById("choosenWord").value;
+            word = removeAccents(word).toUpperCase();
+            if (!/^[A-Z]+$/.test(word)) {
+                alert("Veuillez écrire que des lettres");
             } else {
-                socket.emit("wordChoosen", ({name: roomName, word: word.toUpperCase()}));
+                socket.emit("wordChoosen", ({name: roomName, word: word}));
                 hideChoosenWordDisplay();
                 removeChooseWordEvent();
             }     
         }
+}
+
+function removeAccents(str) {
+    return str
+        .replace(/ç/g, "c")
+        .normalize("NFD") // Décompose les caractères accentués
+        .replace(/[\u0300-\u036f]/g, "") // Supprime les accents
+        .replace(/[^a-zA-Z0-9]/g, "");
 }
 
 function hideChoosenWordDisplay() {

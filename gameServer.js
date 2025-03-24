@@ -80,7 +80,7 @@ io.on("connection", (socket) => {
             password: password,
         };
         socket.join(name);
-        io.emit("roomList", publicRooms, password);        
+        io.emit("roomList", publicRooms);        
     });
 
     socket.on("getPassword", (password, name) => {
@@ -96,6 +96,7 @@ io.on("connection", (socket) => {
         publicRooms[roomName].players.push({ id: socket.id, name: socket.username });
     
         socket.join(roomName);
+        io.emit("roomList", publicRooms);
         io.to(socket.id).emit("loadPlayers", publicRooms[roomName].players);
         socket.broadcast.to(roomName).emit("loadJoiningPlayer", socket.username, publicRooms[roomName].players.length - 1);
       });
@@ -184,7 +185,9 @@ io.on("connection", (socket) => {
                 if (publicRooms[room] && publicRooms[room].players.some(({ id }) => id === socket.id)) {
                     publicRooms[room].players = publicRooms[room].players.filter(player => player.id !== socket.id);
                     publicRooms[room].activePlayers = publicRooms[room].activePlayers.filter(player => player.id !== socket.id);
-                    if (publicRooms[room].players.length === 0) {
+                    if (publicRooms[room].players.length === 1) {
+                        io.emit("roomList", publicRooms);
+                    } else if (publicRooms[room].players.length === 0) {
                         clearInterval(gameTimer[room]);
                         delete publicRooms[room];
                         io.emit("roomList", publicRooms);                        
@@ -193,7 +196,8 @@ io.on("connection", (socket) => {
                         clearInterval(gameTimer[room]);
                         delete gameTimer[room];
                         io.to(room).emit("joinNextGame");
-                    } 
+                        publicRooms[room].activePlayers = [];
+                    }
                     else {
                         io.to(room).emit("victory", "L'adversaire s'est déconnecté.");
                         io.to(room).emit("disconnected", socket.id);
