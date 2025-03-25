@@ -40,34 +40,33 @@
 
     <div id="logoutContainer" class="logout-container"></div>
     
-    <section class="create-room-container">
-        <h2>Créer une salle</h2>
-        <div class="form-group">
-            <label for="roomName">Nom de la salle</label>
-            <input id="roomName" class="textArea" placeholder="Saisissez un nom">
-        </div>
-
-        <div class="form-group">
-            <label for="gameSelect">Choisir le jeu</label>
-            <select class="textArea" id="gameSelect">
-                <option value="pendu">Pendu</option>
-                <option value="wordle">Wordle</option>
-                <option value="bombGame">Bomb Game</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="password">Mot de passe (optionnel)</label>
-            <input id="password" class="textArea" placeholder="Entrez un mot de passe">
-        </div>
-
-        <button id="createRoom">Créer une salle</button>
-    </section>
-
-    <section id="roomsListContainer">
-        <h2>Salles disponibles</h2>
-        <table id="roomsList"></table>
-    </section>
+    <div class="rooms-container">
+        <section class="create-room-container">
+            <h2>Créer une salle</h2>
+            <div class="form-group">
+                <label for="roomName">Nom de la salle</label>
+                <input id="roomName" class="textArea" placeholder="Saisissez un nom">
+            </div>
+            <div class="form-group">
+                <label for="gameSelect">Choisir le jeu</label>
+                <select class="textArea" id="gameSelect">
+                    <option value="pendu">Pendu</option>
+                    <option value="wordle">Wordle</option>
+                    <option value="bombGame">Bomb Game</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="password">Mot de passe (optionnel)</label>
+                <input id="password" class="textArea" placeholder="Entrez un mot de passe">
+            </div>
+            <button id="createRoom">Créer une salle</button>
+        </section>
+    
+        <section id="roomsListContainer">
+            <h2>Salles disponibles</h2>
+            <table id="roomsList"></table>
+        </section>
+    </div>
 
     <section id="passwordTable" class="passwordTable">
         <h3>Accès protégé</h3>
