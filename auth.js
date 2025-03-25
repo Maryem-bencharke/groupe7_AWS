@@ -20,6 +20,60 @@ const socket = io("https://groupe7-aws.onrender.com");
 
 let failedAttempts = 0;
 let inactivityTimeout;
+function setupPasswordToggle() {
+  const toggleButtons = document.querySelectorAll('.toggle-password');
+  toggleButtons.forEach(button => {
+      button.addEventListener('click', function() {
+          const input = this.previousElementSibling;
+          if (input.type === 'password') {
+              input.type = 'text';
+              this.textContent = '🙈';
+          } else {
+              input.type = 'password';
+              this.textContent = '👁️';
+          }
+      });
+  });
+}
+
+function setupPasswordValidation() {
+  const passwordInput = document.getElementById('password');
+  if (!passwordInput) return;
+
+  const requirements = {
+      length: document.getElementById('req-length'),
+      lower: document.getElementById('req-lower'),
+      upper: document.getElementById('req-upper'),
+      number: document.getElementById('req-number'),
+      special: document.getElementById('req-special')
+  };
+
+  passwordInput.addEventListener('input', function() {
+      const value = this.value;
+      
+      // Vérifie chaque critère
+      const hasMinLength = value.length >= 8;
+      const hasLower = /[a-z]/.test(value);
+      const hasUpper = /[A-Z]/.test(value);
+      const hasNumber = /\d/.test(value);
+      const hasSpecial = /[\W_]/.test(value);
+      
+      // Met à jour l'affichage
+      toggleClass(requirements.length, hasMinLength);
+      toggleClass(requirements.lower, hasLower);
+      toggleClass(requirements.upper, hasUpper);
+      toggleClass(requirements.number, hasNumber);
+      toggleClass(requirements.special, hasSpecial);
+  });
+
+  function toggleClass(element, isValid) {
+      if (isValid) {
+          element.classList.add('valid');
+      } else {
+          element.classList.remove('valid');
+      }
+  }
+}
 
 function resetInactivityTimer() {
   clearTimeout(inactivityTimeout);
@@ -37,6 +91,8 @@ resetInactivityTimer(); // initial
 
 document.addEventListener("DOMContentLoaded", function () {
   const signupForm = document.getElementById("signup-form");
+  setupPasswordToggle();
+  setupPasswordValidation();
   if (signupForm) {
     signupForm.addEventListener("submit", async function (event) {
       event.preventDefault();
