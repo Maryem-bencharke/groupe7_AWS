@@ -268,11 +268,37 @@ function logoutUser() {
 // Rendre la fonction logoutUser accessible globalement
 window.logoutUser = logoutUser;
 
-window.resetPassword = function () {
+// window.resetPassword = function () {
+//   const email = prompt("Entrez votre adresse email :");
+//   if (email) {
+//     sendPasswordResetEmail(auth, email)
+//       .then(() => alert("Email de réinitialisation envoyé."))
+//       .catch((error) => alert("Erreur : " + error.message));
+//   }
+// };
+
+
+window.resetPassword = async function () {
   const email = prompt("Entrez votre adresse email :");
   if (email) {
-    sendPasswordResetEmail(auth, email)
-      .then(() => alert("Email de réinitialisation envoyé."))
-      .catch((error) => alert("Erreur : " + error.message));
+    try {
+      // Vérifie si l'email existe
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+      
+      if (methods.length === 0) {
+        alert("Cet email n'est associé à aucun compte. Vérifiez l'email ou créez un compte.");
+        return;
+      }
+
+      // Si l'email existe, envoyer l'email de réinitialisation
+      await sendPasswordResetEmail(auth, email);
+      alert("Un email de réinitialisation a été envoyé à " + email);
+    } catch (error) {
+      if (error.code === 'auth/invalid-email') {
+        alert("L'email saisi est invalide. Veuillez entrer une adresse email valide.");
+      } else {
+        alert("Erreur : " + error.message);
+      }
+    }
   }
 };
