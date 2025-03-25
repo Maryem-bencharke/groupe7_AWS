@@ -280,30 +280,15 @@ window.logoutUser = logoutUser;
 // };
 
 // 
+// Solution de secours sans vérification préalable
 window.resetPassword = async function() {
   const email = prompt("Entrez votre adresse email :");
   if (!email) return;
 
   try {
-    // Vérification robuste de l'existence de l'email
-    const methods = await fetchSignInMethodsForEmail(auth, email);
-    
-    if (!methods || methods.length === 0) {
-      alert("Aucun compte trouvé avec cet email. Vérifiez l'adresse ou créez un compte.");
-      return;
-    }
-
-    // Si l'email existe, envoyer le lien
     await sendPasswordResetEmail(auth, email);
-    alert(`Un email de réinitialisation a été envoyé à ${email}`);
-    
+    alert(`Si un compte existe avec cet email, un lien de réinitialisation a été envoyé à ${email}`);
   } catch (error) {
-    console.error("Erreur détaillée:", error);
-    
-    if (error.code === 'auth/invalid-email') {
-      alert("Format d'email invalide");
-    } else {
-      alert(`Erreur: ${error.message}`);
-    }
+    alert("Erreur : " + error.message);
   }
 };
