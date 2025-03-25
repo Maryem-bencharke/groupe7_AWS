@@ -46,6 +46,17 @@ document.addEventListener("DOMContentLoaded", function () {
       let password = document.getElementById("password").value;
 
       try {
+        // Vérifie le mot de passe
+        const isValidPassword = (password) => {
+          const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+          return regex.test(password);
+        };
+
+        if (!isValidPassword(password)) {
+          alert("Votre mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un symbole.");
+          return;
+        }
+
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
@@ -102,14 +113,18 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = "games.html";
       } catch (error) {
         failedAttempts++;
-        if (failedAttempts >= 5) {
-          alert("Trop de tentatives. Réessayez plus tard.");
+        if (failedAttempts >= 3) {
+          alert("Trop de tentatives. Veuillez réessayer plus tard.");
+          loginForm.querySelector("button").disabled = true;
+          setTimeout(() => {
+            loginForm.querySelector("button").disabled = false;
+            failedAttempts = 0;
+          }, 60000); // Bloqué pendant 1 minute
         } else {
           alert("Erreur : " + error.message);
         }
       }
-      
-    });
+      });
   }
 
   onAuthStateChanged(auth, async (user) => {
