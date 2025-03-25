@@ -95,7 +95,7 @@ socket.on("loadPlayers", (players) => {
 });
 
 socket.on("loadJoiningPlayer", (name, number) => {
-    addLobbyMember(name.name, number);
+    addLobbyMember(name, number);
 });
 
 
@@ -237,10 +237,6 @@ socket.on("displayExplosion", (mode, turn) => {
             }
         }
     }
-});
-
-socket.on("displayElimination", (turn) => {
-    document.getElementById("player_" + turn).classList.add("eliminated");
 });
 
 socket.on("defeat", () => {

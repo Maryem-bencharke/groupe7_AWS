@@ -343,7 +343,7 @@ io.on("connection", (socket) => {
         io.to(socket.id).emit("loadPlayers", publicRooms[name].players);
     
         // Informe les autres joueurs qu'un nouveau joueur a rejoint (pseudo inclus)
-        socket.broadcast.to(name).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
+        socket.broadcast.to(name).emit("loadJoiningPlayer", socket.username, publicRooms[name].players.length - 1);
         if (publicRooms[name].activePlayers.length > 1 && publicRooms[name].currentSyllable !== "") {
             io.to(socket.id).emit("gameAlreadyStarted");
         }
@@ -496,7 +496,6 @@ io.on("connection", (socket) => {
                     //publicRooms[name].life[publicRooms[name].activePlayers.id[publicRooms[name].currentTurn]] -= 1;
                     console.log("vies restante : " + publicRooms[name].activePlayers[publicRooms[name].currentTurn].life);
                     if (publicRooms[name].activePlayers[publicRooms[name].currentTurn].life < 1) {
-                        io.to(name).emit("displaylimination", "multi", publicRooms[name].currentTurn);
                         publicRooms[name].activePlayers = publicRooms[name].activePlayers.filter(player => player.id !== publicRooms[name].activePlayers[publicRooms[name].currentTurn].id);
                         publicRooms[name].currentTurn = publicRooms[name].currentTurn - 1;
                         // actualiser la perte de vie pour tout le monde
