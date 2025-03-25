@@ -1,5 +1,5 @@
-//const socket = io("http://127.0.0.1:3000");
 var socket = io('https://groupe7-aws.onrender.com');
+
 let currentStreak = 0;
 let maxStreak = 0;
 let soloLife = 2; // Nombre de vies en mode solo
@@ -102,26 +102,7 @@ socket.on("loadJoiningPlayer", (name, number) => {
 });
 
 
-socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
-    const trList = document.getElementsByClassName("player");
-
-    for (let i = 0; i < trList.length; i++) {
-        const playerLi = trList[i];  // chaque trList[i] est déjà un <li>
-        if (playerLi && playerLi.innerText === name) {
-            playerLi.classList.add("activePlayer", `activePlayer_${id}`);
-            playerLi.id = `activePlayer${id}`;
-
-            // Vérifiez si l'élément vie existe déjà avant de l'ajouter
-            if (!document.getElementById(`life_${id}`)) {
-                const lifeSpan = document.createElement("span");
-                lifeSpan.innerText = ` ❤️ ${life}`;
-                lifeSpan.classList.add("life", `life_${id}`);
-                lifeSpan.id = `life_${id}`;
-                playerLi.appendChild(lifeSpan);
-            }
-        }
-    }
-
+function addParticipatingLobbyPlayer(id, name, life) {
     // mise à jour carte joueur
     const playersDisplay = document.getElementById('playersDisplay');
     if (playersDisplay && !document.getElementById(`player-${id}`)) {
@@ -135,7 +116,29 @@ socket.on("loadParticipatingPlayer", ({ id, name, life }) => {
             <div class="player-word" id="word-${id}"></div>
         `;
         playersDisplay.appendChild(playerCard);
+    } else {
+        console.log("l'élement existe deja donc on met sa vie : " + life + " avec id : " + id);
+        let playerCard = document.getElementById(`player-${id}`);
+        playerCard.innerHTML = `
+            <div class="player-name">${name}</div>
+            <div class="player-lives" id="card-life-${id}">❤️ ${life}</div>
+            <div class="player-word" id="word-${id}"></div>
+        `;
     }
+}
+
+socket.on("loadParticipatingPlayers", (room) => {
+    console.log(room.length)
+    room.activePlayers.forEach(player => {
+        let id = player.id;
+        let name = room.players.find(p => p.id === id);
+        let life = player.life;
+        addParticipatingLobbyPlayer(id, name.name, life);
+    });
+});
+
+socket.on("loadJoiningParticipatingPlayer", ({id, name, life}) => {
+    addParticipatingLobbyPlayer(id, name, life);
 });
 
 socket.on("updateCurrentWord", ({playerId, word}) => {

@@ -1,4 +1,3 @@
-//const socket = io("http://127.0.0.1:3000");
 var socket = io('https://groupe7-aws.onrender.com');
 
 socket.on("roomList", (rooms) => {
@@ -15,6 +14,7 @@ socket.on("roomList", (rooms) => {
             td.innerText = `${name.toUpperCase()}, joue à ${rooms[name].game}`;
             td.classList.add("cursor");
             tr.className = rooms[name].game;
+            tr.id = name.toUpperCase();
 
             if (rooms[name].players.length >= 2 && rooms[name].game != "bombGame") {
                 td.innerText += " COMPLET";
@@ -62,12 +62,25 @@ function goToGame(game) {
 }
 
 function createRoom() {
-    const name = document.getElementById("roomName").value;
-    const game = document.getElementById("gameSelect").value;
-    const password = document.getElementById("password").value;
-    localStorage.setItem("name", name);
-    socket.emit("createRoom", ({name, game, password}));
-    window.location.href = `/${game}.html`;
+    let name = document.getElementById("roomName");
+    if (document.getElementById(name.value.toUpperCase())) {
+        alert("Nom déjà utilisé");
+        name.value = "";
+    } else {
+        const game = document.getElementById("gameSelect").value;
+        const password = document.getElementById("password").value;
+        localStorage.setItem("name", name.value);
+        socket.emit("createRoom", ({name: name.value, game, password}));
+        window.location.href = `/${game}.html`;
+    }
+    
+}
+
+function validName(name) {
+    if (document.getElementById(name)) {
+        return false;
+    }
+    return true;
 }
 
 function getPassword(name) {

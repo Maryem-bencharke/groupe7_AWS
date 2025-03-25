@@ -1,4 +1,3 @@
-//const socket = io("http://127.0.0.1:3000");
 var socket = io('https://groupe7-aws.onrender.com');
 
 
@@ -237,6 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         // mode solo
         hideChoosenWordDisplay();
+        document.getElementById("lobbyMembers").style.display = "none";
         socket.emit("getRandomWord");
     }
     replayButton();

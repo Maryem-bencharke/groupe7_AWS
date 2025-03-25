@@ -355,11 +355,13 @@ io.on("connection", (socket) => {
         // Récupère clairement le joueur avec son pseudo
         let player = publicRooms[name].players.find(p => p.id === socket.id);
         
-        io.to(name).emit("loadParticipatingPlayer", {
+        io.to(socket.id).emit("loadParticipatingPlayers", (publicRooms[name]));
+        
+        socket.broadcast.to(name).emit("loadJoiningParticipatingPlayer", {
             id: socket.id,
             name: player.name,
             life: bombGameStartLife
-        });
+        }); 
 
         if (publicRooms[name].activePlayers.length === 2) {
             io.to(name).emit("waitingToLaunch");
@@ -401,6 +403,7 @@ io.on("connection", (socket) => {
             if (!privateRooms[socket.id].usedWords.includes(word)) {
                 privateRooms[socket.id].usedWords.push(word);
                 checkBonusLetters(word, privateRooms[socket.id]);
+                socket.emit("updateSoloLife", privateRooms[socket.id].life);
                 //nextTurn(null); // Bien préciser null ici pour solo
                 nextTurn(name);
                 socket.emit("validate", "solo", privateRooms[socket.id].bonusLetters);
