@@ -183,8 +183,18 @@ io.on("connection", (socket) => {
         } else {
             Object.keys(publicRooms).forEach(room => {
                 if (publicRooms[room] && publicRooms[room].players.some(({ id }) => id === socket.id)) {
+                    let isTurn = false;
+                    if (socket.id === publicRooms[room].activePlayers[publicRooms[room].currentTurn]?.id) {
+                        isTurn = true;
+                        publicRooms[room].currentTurn = publicRooms[room].currentTurn - 1;
+                    }
                     publicRooms[room].players = publicRooms[room].players.filter(player => player.id !== socket.id);
                     publicRooms[room].activePlayers = publicRooms[room].activePlayers.filter(player => player.id !== socket.id);
+                    if (isTurn) {
+                        nextTurn(room);
+                    }
+                    io.to(room).emit("loadParticipatingPlayers", (publicRooms[room]));
+                    io.to(room).emit("loadPlayers", (publicRooms[room].players));
                     if (publicRooms[room].players.length === 1) {
                         io.emit("roomList", publicRooms);
                     } else if (publicRooms[room].players.length === 0) {
@@ -350,11 +360,13 @@ io.on("connection", (socket) => {
             life: bombGameStartLife,
             bonusLetters: bonusLetterAlphabet
         });
+        if (publicRooms[name].activePlayers.length === 1) {
+            io.to(name).emit("clearActivePlayers");
+        }
 
         socket.join(name + "_active");
         // Récupère clairement le joueur avec son pseudo
         let player = publicRooms[name].players.find(p => p.id === socket.id);
-        
         io.to(socket.id).emit("loadParticipatingPlayers", (publicRooms[name]));
         
         socket.broadcast.to(name).emit("loadJoiningParticipatingPlayer", {
@@ -386,9 +398,7 @@ io.on("connection", (socket) => {
 
     socket.on("guessBombWord", async (word, name) => {
         if (name) {
-            if (!publicRooms[name].usedWords.includes(word)) {
-                // faire passer le tour au suivant
-                
+            if (!publicRooms[name].usedWords.includes(word)) {                
                 publicRooms[name].usedWords.push(word);
     
                 // Diffuse clairement le mot tapé à tous les joueurs avec l'id du joueur

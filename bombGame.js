@@ -88,6 +88,7 @@ function addLobbyMember(name, id) {
 }
 
 socket.on("loadPlayers", (players) => {
+    document.getElementById('lobbyList').innerHTML = "";
     players.forEach(player => {
         addLobbyMember(player.name, player.id);
     });
@@ -123,6 +124,7 @@ function addParticipatingLobbyPlayer(id, name, life) {
 }
 
 socket.on("loadParticipatingPlayers", (room) => {
+    document.getElementById('playersDisplay').innerHTML = "";
     room.activePlayers.forEach(player => {
         let id = player.id;
         let name = room.players.find(p => p.id === id);
@@ -133,6 +135,10 @@ socket.on("loadParticipatingPlayers", (room) => {
 
 socket.on("loadJoiningParticipatingPlayer", ({id, name, life}) => {
     addParticipatingLobbyPlayer(id, name, life);
+});
+
+socket.on("clearActivePlayers", () => {
+    document.getElementById('playersDisplay').innerHTML = "";
 });
 
 socket.on("updateCurrentWord", ({playerId, word}) => {

@@ -302,6 +302,7 @@ function goBackToGames() {
 }
 
 socket.on("loadPlayers", (players) => {
+    document.getElementById('lobbyList').innerHTML = "";
     players.forEach(player => {
         addLobbyMember(player.name, player.id);
     });

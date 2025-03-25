@@ -1,8 +1,4 @@
-
-const socket = io("http://127.0.0.1:3000");
-
-//var socket = io('https://groupe7-aws.onrender.com');
-
+var socket = io('https://groupe7-aws.onrender.com');
 
 socket.on("roomList", (rooms) => {
     const table = document.getElementById("roomsList");

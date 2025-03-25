@@ -1,6 +1,5 @@
 var socket = io('https://groupe7-aws.onrender.com');
 
-
 let targetWordLenght = 0;
 let wordleLife  = 6;
 let currentGuess = "";
@@ -244,6 +243,7 @@ function goBackToGames() {
 }
 
 socket.on("loadPlayers", (players) => {
+    document.getElementById('lobbyList').innerHTML = "";
     players.forEach(player => {
         addLobbyMember(player.name, player.id);
     });
