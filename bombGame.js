@@ -113,7 +113,6 @@ function addParticipatingLobbyPlayer(id, name, life) {
         `;
         playersDisplay.appendChild(playerCard);
     } else {
-        console.log("l'élement existe deja donc on met sa vie : " + life + " avec id : " + id);
         let playerCard = document.getElementById(`player-${id}`);
         playerCard.innerHTML = `
             <div class="player-name">${name}</div>
@@ -124,7 +123,6 @@ function addParticipatingLobbyPlayer(id, name, life) {
 }
 
 socket.on("loadParticipatingPlayers", (room) => {
-    console.log(room.length)
     room.activePlayers.forEach(player => {
         let id = player.id;
         let name = room.players.find(p => p.id === id);

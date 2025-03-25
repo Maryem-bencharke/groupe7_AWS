@@ -334,7 +334,7 @@ io.on("connection", (socket) => {
     
         // Informe les autres joueurs qu'un nouveau joueur a rejoint (pseudo inclus)
         socket.broadcast.to(name).emit("loadJoiningPlayer", { id: socket.id, name: socket.username });
-        if (publicRooms[name].activePlayers.length > 1) {
+        if (publicRooms[name].activePlayers.length > 1 && publicRooms[name].currentSyllable !== "") {
             io.to(socket.id).emit("gameAlreadyStarted");
         }
     });
