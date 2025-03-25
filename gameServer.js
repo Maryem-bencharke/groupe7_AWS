@@ -526,6 +526,8 @@ io.on("connection", (socket) => {
                         clearInterval(gameTimer[socket.id]);
                         delete gameTimer[socket.id];
                         return;
+                    } else {
+                        socket.emit("updateSoloLife", privateRooms[socket.id].life);
                     }
                     nextTurn(name);
                     return;

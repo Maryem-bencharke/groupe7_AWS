@@ -1,6 +1,8 @@
-var socket = io('https://groupe7-aws.onrender.com');
+const socket = io("http://127.0.0.1:3000");
+//var socket = io('https://groupe7-aws.onrender.com');
 let currentStreak = 0;
 let maxStreak = 0;
+let soloLife = 2; // Nombre de vies en mode solo
 let bombGameRoomName;
 let currentSyllable = "";
 let db;
@@ -243,6 +245,11 @@ socket.on("defeat", () => {
     document.getElementById("endBanner").style.display = "block";
     document.getElementById("victoryBanner").innerText = "plus longue série : " + maxStreak;    
 });
+socket.on("updateSoloLife", (life) => {
+    soloLife = life;
+    document.getElementById("soloLifeDisplay").innerText = `❤️ Vies : ${soloLife}`;
+});
+
 
 socket.on("joinNextGame", () => {
     showJoinButton();
@@ -321,6 +328,8 @@ function replayButton() {
     if (replay) {
         replay.addEventListener("click", () => {
             hideEndBanner();
+            soloLife = 2; // Remet le nombre de vies à 2
+            document.getElementById("soloLifeDisplay").innerText = `❤️ Vies : ${soloLife}`;
             socket.emit("joinBombSolo", bombGameRoomName);
             createBonusLetters();
         });
@@ -449,6 +458,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("scoreBoard").style.display = "block";
         loadScore();
         showStreak();
+        document.getElementById("soloLifeDisplay").innerText = `❤️ Vies : ${soloLife}`;
+
     }
 });
 
