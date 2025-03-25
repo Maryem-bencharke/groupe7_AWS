@@ -1,5 +1,5 @@
-//var socket = io('https://groupe7-aws.onrender.com');
-const socket = io("http://127.0.0.1:3000");
+//const socket = io("http://127.0.0.1:3000");
+var socket = io('https://groupe7-aws.onrender.com');
 let life = 6;
 let wordToGuess = "";
 let lettersTyped = [];

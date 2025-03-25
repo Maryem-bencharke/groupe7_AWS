@@ -44,6 +44,10 @@ header {
     background-color: #788be7;
 }
 
+.bombGame {
+    background-color: #788be7;
+}
+
 .game-card img {
     width: 100px;
     height: 100px;
@@ -108,3 +112,69 @@ button:hover {
     cursor: pointer;
     color: red;
 }
+.create-room-container {
+    width: 350px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.create-room-container h2 {
+    font-size: 22px;
+    color: #3d405b;
+    margin-bottom: 15px;
+}
+
+.create-room-container .form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.create-room-container label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.create-room-container input,
+.create-room-container select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.create-room-container button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background-color: #3d405b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.create-room-container button:hover {
+    background-color: #282c40;
+}
+
+.create-room-container select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #282c40;
+    appearance: none;
+    background: rgba(0, 0, 0, 0.7);
+    
+}
+
