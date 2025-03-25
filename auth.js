@@ -6,7 +6,8 @@ import {
   sendPasswordResetEmail,
   signOut,
   onAuthStateChanged,
-  fetchSignInMethodsForEmail
+  fetchSignInMethodsForEmail,
+  getAuth
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
 import {
@@ -15,6 +16,7 @@ import {
   setDoc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+
 
 const db = getFirestore();
 const socket = io("https://groupe7-aws.onrender.com"); 
@@ -277,31 +279,28 @@ window.logoutUser = logoutUser;
 //   }
 // };
 
-
 window.resetPassword = async function () {
   const email = prompt("Entrez votre adresse email :");
-  if (email) {
-    try {
-      // Vérifie si l'email existe
-      const methods = await fetchSignInMethodsForEmail(auth, email);
-      
-      if (methods && methods.length === 0) {
-        alert("Cet email n'est associé à aucun compte. Vérifiez l'email ou créez un compte.");
-        return;
-      }
+  if (!email) return;
 
-      // Si l'email existe, envoyer l'email de réinitialisation
-      await sendPasswordResetEmail(auth, email);
-      alert("Un email de réinitialisation a été envoyé à " + email);
-    } catch (error) {
-      console.error("Erreur détaillée:", error);
-      if (error.code === 'auth/invalid-email') {
-        alert("L'email saisi est invalide. Veuillez entrer une adresse email valide.");
-      } else if (error.code === 'auth/user-not-found') {
-        alert("Cet email n'est associé à aucun compte. Vérifiez l'email ou créez un compte.");
-      } else {
-        alert("Erreur lors de l'envoi de l'email de réinitialisation: " + error.message);
-      }
+  try {
+    // Tentative directe d'envoi du mail de reset
+    await sendPasswordResetEmail(auth, email);
+    alert(`Un email de réinitialisation a été envoyé à ${email}`);
+    
+  } catch (error) {
+    console.error("Erreur Firebase:", error);
+    
+    // Gestion spécifique des erreurs
+    switch (error.code) {
+      case 'auth/user-not-found':
+        alert("Aucun compte trouvé avec cet email");
+        break;
+      case 'auth/invalid-email':
+        alert("Format d'email invalide");
+        break;
+      default:
+        alert(`Erreur inattendue: ${error.message}`);
     }
   }
 };
