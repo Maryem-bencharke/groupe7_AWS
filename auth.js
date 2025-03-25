@@ -1,7 +1,9 @@
 import { auth } from "./firebase-config.js";
 import {
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
@@ -16,6 +18,23 @@ import {
 const db = getFirestore();
 const socket = io("https://groupe7-aws.onrender.com"); 
 
+let failedAttempts = 0;
+let inactivityTimeout;
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimeout);
+  inactivityTimeout = setTimeout(() => {
+    signOut(auth).then(() => {
+      alert("Vous avez été déconnecté pour inactivité.");
+      window.location.href = "index.html";
+    });
+  }, 30 * 60 * 1000); // 30 min
+}
+
+document.addEventListener("mousemove", resetInactivityTimer);
+document.addEventListener("keydown", resetInactivityTimer);
+resetInactivityTimer(); // initial
+
 document.addEventListener("DOMContentLoaded", function () {
   const signupForm = document.getElementById("signup-form");
   if (signupForm) {
@@ -29,6 +48,9 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
+        
+
+        await sendEmailVerification(user);
 
         await setDoc(doc(db, "users", user.uid), {
           username,
@@ -36,7 +58,8 @@ document.addEventListener("DOMContentLoaded", function () {
           createdAt: new Date()
         });
 
-        alert("Compte créé !");
+        // alert("Compte créé !");
+        alert("Compte créé ! Un email de vérification vous a été envoyé.");
         window.location.href = "login.html";
       } catch (error) {
         alert("Erreur : " + error.message);
@@ -55,28 +78,37 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
-        // const userDoc = await getDoc(doc(db, "users", user.uid));
-        // const username = userDoc.exists() ? userDoc.data().username : `Guest${Math.floor(Math.random() * 10000)}`;
-
-        // // ENVOI DU PSEUDO VERS LE SERVEUR
-        // socket.emit("setUsername", username);
+      
+        if (!user.emailVerified) {
+          alert("Veuillez vérifier votre email.");
+          await signOut(auth);
+          return;
+        }
+      
+        failedAttempts = 0; // Reset échecs
+      
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-            const username = userDoc.data().username;
-            localStorage.setItem('username', username); // 🔥 C'EST ÇA QUI MANQUAIT !
-            socket.emit('setUsername', username);
+          const username = userDoc.data().username;
+          localStorage.setItem("username", username);
+          socket.emit("setUsername", username);
         } else {
-            const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
-            localStorage.setItem('username', guestName);
-            socket.emit('setUsername', guestName);
+          const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
+          localStorage.setItem("username", guestName);
+          socket.emit("setUsername", guestName);
         }
-
+      
         alert("Connexion réussie !");
         window.location.href = "games.html";
       } catch (error) {
-        alert("Erreur : " + error.message);
+        failedAttempts++;
+        if (failedAttempts >= 5) {
+          alert("Trop de tentatives. Réessayez plus tard.");
+        } else {
+          alert("Erreur : " + error.message);
+        }
       }
+      
     });
   }
 
@@ -121,73 +153,11 @@ function logoutUser() {
 // Rendre la fonction logoutUser accessible globalement
 window.logoutUser = logoutUser;
 
-// // Gestion des formulaires d'inscription et connexion
-// document.addEventListener("DOMContentLoaded", function() {
-//     const signupForm = document.getElementById("signup-form");
-//     if (signupForm) {
-//         signupForm.addEventListener("submit", async function(event) {
-//             event.preventDefault();
-
-//             let username = document.getElementById("username").value;
-//             let email = document.getElementById("email").value;
-//             let password = document.getElementById("password").value;
-
-//             try {
-//                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-//                 const user = userCredential.user;
-
-//                 await setDoc(doc(db, "users", user.uid), {
-//                     username: username,
-//                     email: email,
-//                     createdAt: new Date()
-//                 });
-
-//                 alert("Compte créé avec succès !");
-//                 window.location.href = "login.html";
-//             } catch (error) {
-//                 console.error("Erreur d'inscription :", error);
-//                 alert("Erreur : " + error.message);
-//             }
-//         });
-//     }
-
-//     const loginForm = document.getElementById("login-form");
-//     if (loginForm) {
-//         loginForm.addEventListener("submit", async function(event) {
-//             event.preventDefault();
-
-//             let email = document.getElementById("login-email").value;
-//             let password = document.getElementById("login-password").value;
-
-//             try {
-//                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
-//                 const user = userCredential.user;
-
-//                 // 🔥 Récupération précise du username depuis Firestore
-//                 const userDoc = await getDoc(doc(db, "users", user.uid));
-//                 let username;
-//                 if (userDoc.exists()) {
-//                     username = userDoc.data().username;
-//                 } else {
-//                     username = `Guest${Math.floor(Math.random() * 10000)}`;
-//                 }
-
-//                 socket.emit('setUsername', username);  // 🚨 envoie clairement une seule fois
-
-//                 alert("Connexion réussie !");
-//                 window.location.href = "games.html";
-//             } catch (error) {
-//                 console.error("Erreur de connexion :", error);
-//                 alert("Erreur : " + error.message);
-//             }
-//         });
-//     }
-
-//     onAuthStateChanged(auth, (user) => {
-//         if (!user) {
-//             // 🚨 seulement si déconnecté, car connecté est déjà géré précisément ailleurs
-//             socket.emit('setUsername', `Guest${Math.floor(Math.random() * 10000)}`);
-//         }
-//     });
-// });
-
+window.resetPassword = function () {
+  const email = prompt("Entrez votre adresse email :");
+  if (email) {
+    sendPasswordResetEmail(auth, email)
+      .then(() => alert("Email de réinitialisation envoyé."))
+      .catch((error) => alert("Erreur : " + error.message));
+  }
+};
