@@ -79,3 +79,74 @@ a:hover {
 .logout-button:hover {
     background-color: #a71d2a; /* rouge foncé au survol */
 }
+
+
+.password-requirements {
+    text-align: left;
+    margin: 5px 0 15px;
+    font-size: 12px;
+    color: #666;
+}
+
+.password-requirements ul {
+    padding-left: 20px;
+    margin: 5px 0;
+}
+
+.password-requirements li {
+    margin-bottom: 3px;
+    list-style-type: none;
+}
+
+.password-requirements li:before {
+    content: "• ";
+    color: #dc3545;
+}
+
+.password-requirements li.valid:before {
+    color: #28a745;
+}
+/*hello*/
+/* Ajoute/Modifie ces règles dans auth.css */
+
+.password-container {
+    position: relative;
+    width: 100%; /* Prend toute la largeur */
+    margin: 10px 0; /* Marge cohérente avec les autres champs */
+}
+
+.password-container input {
+    width: 100%;
+    padding-right: 40px; /* Espace pour le bouton */
+    box-sizing: border-box; /* Inclut le padding dans la largeur */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-size: 14px;
+    width: 30px;
+    height: 30px;
+    padding: 0; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+input[type="email"], 
+input[type="password"], 
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+}

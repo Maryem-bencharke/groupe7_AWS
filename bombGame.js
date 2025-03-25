@@ -20,9 +20,6 @@ function waitForUsername(callback) {
     check();
 }
 
-// waitForUsername((username) => {
-//     socket.emit("setUsername", username);
-// });
 document.addEventListener("DOMContentLoaded", () => {
     const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
     socket.emit("setUsername", username);
@@ -78,7 +75,6 @@ function eraseTextArea() {
     document.getElementById("textArea").value = "";
 }
 
-// Ajoute dans une table un nouvel élement 
 // représentant une personne qui se connecte à la salle.
 function addLobbyMember(name, id) {
     const lobbyList = document.getElementById("lobbyList");
