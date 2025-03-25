@@ -279,28 +279,31 @@ window.logoutUser = logoutUser;
 //   }
 // };
 
-window.resetPassword = async function () {
+// 
+window.resetPassword = async function() {
   const email = prompt("Entrez votre adresse email :");
   if (!email) return;
 
   try {
-    // Tentative directe d'envoi du mail de reset
+    // Vérification robuste de l'existence de l'email
+    const methods = await fetchSignInMethodsForEmail(auth, email);
+    
+    if (!methods || methods.length === 0) {
+      alert("Aucun compte trouvé avec cet email. Vérifiez l'adresse ou créez un compte.");
+      return;
+    }
+
+    // Si l'email existe, envoyer le lien
     await sendPasswordResetEmail(auth, email);
     alert(`Un email de réinitialisation a été envoyé à ${email}`);
     
   } catch (error) {
-    console.error("Erreur Firebase:", error);
+    console.error("Erreur détaillée:", error);
     
-    // Gestion spécifique des erreurs
-    switch (error.code) {
-      case 'auth/user-not-found':
-        alert("Aucun compte trouvé avec cet email");
-        break;
-      case 'auth/invalid-email':
-        alert("Format d'email invalide");
-        break;
-      default:
-        alert(`Erreur inattendue: ${error.message}`);
+    if (error.code === 'auth/invalid-email') {
+      alert("Format d'email invalide");
+    } else {
+      alert(`Erreur: ${error.message}`);
     }
   }
 };
