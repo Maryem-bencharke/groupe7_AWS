@@ -12,10 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.emit("setUsername", username);
 });
 
-
-// let roomName = sessionStorage.getItem("roomName");
-// socket.emit("joinRoom", roomName);
-
 //Mise à jour de la grille
 function updateGrid() {
     for (let i = targetWordLenght - 1; i >= 0; i--) {
