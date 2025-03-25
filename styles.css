@@ -177,4 +177,112 @@ button:hover {
     background: rgba(0, 0, 0, 0.7);
     
 }
+.rooms-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Aligne les sections en haut */
+    margin: 40px auto;
+    max-width: 900px;
+    gap: 20px; /* Ajoute un petit espace entre les deux sections */
+}
 
+.create-room-container {
+    width: 48%; /* Largeur de la section à gauche */
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 400px;
+    flex-grow: 1;
+    margin-top: 40px; /* Marge en haut de la section à gauche */
+}
+
+#roomsListContainer {
+    width: 48%; /* Largeur de la section à droite */
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 400px;
+    flex-grow: 1;
+    margin-top: 40px; /* Ajoute une marge en haut de la section à droite pour aligner avec celle de gauche */
+}
+
+.password-modal {
+    display: none; /* Masqué par défaut */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Fond semi-transparent */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Met le pop-up au-dessus des autres éléments */
+}
+
+.password-modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.password-modal input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.password-modal button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 8px;
+    background-color: #3d405b;
+    color: white;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.password-modal button:hover {
+    background-color: #282c40;
+}
+
+.close-button {
+    background-color: red; 
+    color: white; 
+    border: none; 
+    padding: 10px 20px;
+    font-size: 16px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    display: block; 
+    width: 100%; 
+    margin-top: 10px; 
+}
+
+.close-button:hover {
+    background-color: darkred; /* Changement de couleur au survol */
+}
+
+
+.password-modal input {
+    width: 100%;
+    box-sizing: border-box; /* Assure que padding et border ne changent pas la largeur */
+}
