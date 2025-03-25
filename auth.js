@@ -270,17 +270,7 @@ function logoutUser() {
 // Rendre la fonction logoutUser accessible globalement
 window.logoutUser = logoutUser;
 
-// window.resetPassword = function () {
-//   const email = prompt("Entrez votre adresse email :");
-//   if (email) {
-//     sendPasswordResetEmail(auth, email)
-//       .then(() => alert("Email de réinitialisation envoyé."))
-//       .catch((error) => alert("Erreur : " + error.message));
-//   }
-// };
 
-// 
-// Solution de secours sans vérification préalable
 window.resetPassword = async function() {
   const email = prompt("Entrez votre adresse email :");
   if (!email) return;
