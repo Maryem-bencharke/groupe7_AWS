@@ -5,7 +5,8 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  fetchSignInMethodsForEmail
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
 import {
@@ -20,6 +21,18 @@ const socket = io("https://groupe7-aws.onrender.com");
 
 let failedAttempts = 0;
 let inactivityTimeout;
+
+
+async function checkEmailExists(email) {
+  try {
+      // Cette méthode est disponible dans Firebase v9+
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+      return methods.length > 0;
+  } catch (error) {
+      // En cas d'erreur, on considère que l'email n'existe pas
+      return false;
+  }
+}
 
 function setupPasswordToggle() {
   document.querySelectorAll('.toggle-password').forEach(button => {
@@ -107,8 +120,28 @@ document.addEventListener("DOMContentLoaded", function () {
       let username = document.getElementById("username").value;
       let email = document.getElementById("email").value;
       let password = document.getElementById("password").value;
-
       try {
+            // Validation du nom d'utilisateur 
+          const isValidUsername = (username) => {
+          const regex = /^[a-zA-Z0-9]+$/;
+          return regex.test(username);
+           };
+
+        if (!isValidUsername(username)) {
+            alert("Le nom d'utilisateur ne doit contenir que des lettres et chiffres");
+            return;
+        }
+
+        if (username.length < 3 || username.length > 20) {
+            alert("Le nom d'utilisateur doit faire 3-20 caractères");
+            return;
+        }
+
+        // Vérification email existant 
+        const methods = await fetchSignInMethodsForEmail(auth, email);
+        if (methods.length > 0) {
+            throw new Error("Cet email existe déjà. Utilisez un autre email ou connectez-vous.");
+        }
         // Vérifie le mot de passe
         const isValidPassword = (password) => {
           const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
@@ -136,7 +169,11 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Compte créé ! Un email de vérification vous a été envoyé.");
         window.location.href = "login.html";
       } catch (error) {
-        alert("Erreur : " + error.message);
+            if (error.message.includes("existe déjà") || error.code === 'auth/email-already-in-use') {
+              alert("Cet email est déjà utilisé. Veuillez vous connecter ou utiliser un autre email.");
+          } else {
+              alert("Erreur : " + error.message);
+          }
       }
     });
   }

@@ -14,7 +14,10 @@
     <div class="container">
         <h1>Créer un compte</h1>
         <form id="signup-form">
-            <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+            <!-- <input type="text" id="username" placeholder="Nom d'utilisateur" required> -->
+            <input type="text" id="username" placeholder="Nom d'utilisateur" 
+                pattern="[a-zA-Z0-9]+" 
+                title="Seuls les lettres et chiffres sont autorisés" required>
             <input type="email" id="email" placeholder="Email" required>
             <div class="password-container">
                 <input type="password" id="password" placeholder="Mot de passe" required>

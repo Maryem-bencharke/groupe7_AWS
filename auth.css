@@ -150,3 +150,11 @@ input[type="text"] {
     font-size: 16px;
     box-sizing: border-box;
 }
+
+input:invalid {
+    border-color: #dc3545;
+}
+
+input:valid {
+    border-color: #28a745;
+}
