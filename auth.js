@@ -6,7 +6,8 @@ import {
   sendPasswordResetEmail,
   signOut,
   onAuthStateChanged,
-  fetchSignInMethodsForEmail
+  fetchSignInMethodsForEmail,
+  getAuth
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-auth.js";
 
 import {
@@ -15,6 +16,7 @@ import {
   setDoc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/11.3.0/firebase-firestore.js";
+
 
 const db = getFirestore();
 const socket = io("https://groupe7-aws.onrender.com"); 
@@ -277,31 +279,16 @@ window.logoutUser = logoutUser;
 //   }
 // };
 
-
-window.resetPassword = async function () {
+// 
+// Solution de secours sans vérification préalable
+window.resetPassword = async function() {
   const email = prompt("Entrez votre adresse email :");
-  if (email) {
-    try {
-      // Vérifie si l'email existe
-      const methods = await fetchSignInMethodsForEmail(auth, email);
-      
-      if (methods && methods.length === 0) {
-        alert("Cet email n'est associé à aucun compte. Vérifiez l'email ou créez un compte.");
-        return;
-      }
+  if (!email) return;
 
-      // Si l'email existe, envoyer l'email de réinitialisation
-      await sendPasswordResetEmail(auth, email);
-      alert("Un email de réinitialisation a été envoyé à " + email);
-    } catch (error) {
-      console.error("Erreur détaillée:", error);
-      if (error.code === 'auth/invalid-email') {
-        alert("L'email saisi est invalide. Veuillez entrer une adresse email valide.");
-      } else if (error.code === 'auth/user-not-found') {
-        alert("Cet email n'est associé à aucun compte. Vérifiez l'email ou créez un compte.");
-      } else {
-        alert("Erreur lors de l'envoi de l'email de réinitialisation: " + error.message);
-      }
-    }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    alert(`Si un compte existe avec cet email, un lien de réinitialisation a été envoyé à ${email}`);
+  } catch (error) {
+    alert("Erreur : " + error.message);
   }
 };
