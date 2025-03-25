@@ -20,27 +20,96 @@ const socket = io("https://groupe7-aws.onrender.com");
 
 let failedAttempts = 0;
 let inactivityTimeout;
+// function setupPasswordToggle() {
+//   const toggleButtons = document.querySelectorAll('.toggle-password');
+//   toggleButtons.forEach(button => {
+//       button.addEventListener('click', function() {
+//           const input = this.previousElementSibling;
+//           if (input.type === 'password') {
+//               input.type = 'text';
+//               this.textContent = '🙈';
+//           } else {
+//               input.type = 'password';
+//               this.textContent = '👁️';
+//           }
+//       });
+//   });
+// }
+
 function setupPasswordToggle() {
-  const toggleButtons = document.querySelectorAll('.toggle-password');
-  toggleButtons.forEach(button => {
-      button.addEventListener('click', function() {
-          const input = this.previousElementSibling;
-          if (input.type === 'password') {
-              input.type = 'text';
-              this.textContent = '🙈';
-          } else {
-              input.type = 'password';
-              this.textContent = '👁️';
-          }
-      });
+  document.querySelectorAll('.toggle-password').forEach(button => {
+    button.addEventListener('click', function() {
+      // Trouve l'input password associé à ce bouton
+      const container = this.closest('.password-container');
+      const input = container ? container.querySelector('input') : null;
+      
+      if (input) {
+        // Alterne entre type password/text
+        input.type = input.type === 'password' ? 'text' : 'password';
+        // Change l'icône
+        this.textContent = input.type === 'password' ? '👁️' : '🙈';
+        // Garde le focus sur l'input
+        input.focus();
+      }
+    });
   });
 }
+// function setupPasswordValidation() {
+//   const passwordInput = document.getElementById('password');
+//   const loginPasswordInput = document.getElementById('login-password');
+  
+//   // Validation pour la page d'inscription
+//   if (passwordInput) {
+//     const requirements = {
+//         length: document.getElementById('req-length'),
+//         lower: document.getElementById('req-lower'),
+//         upper: document.getElementById('req-upper'),
+//         number: document.getElementById('req-number'),
+//         special: document.getElementById('req-special')
+//     };
+
+//     // Vérifie si tous les éléments de requirements existent
+//     if (Object.values(requirements).every(el => el !== null)) {
+//       passwordInput.addEventListener('input', function() {
+//           const value = this.value;
+          
+//           const hasMinLength = value.length >= 8;
+//           const hasLower = /[a-z]/.test(value);
+//           const hasUpper = /[A-Z]/.test(value);
+//           const hasNumber = /\d/.test(value);
+//           const hasSpecial = /[\W_]/.test(value);
+          
+//           toggleClass(requirements.length, hasMinLength);
+//           toggleClass(requirements.lower, hasLower);
+//           toggleClass(requirements.upper, hasUpper);
+//           toggleClass(requirements.number, hasNumber);
+//           toggleClass(requirements.special, hasSpecial);
+//       });
+//     }
+//   }
+  
+//   // Toggle pour la page de login
+//   if (loginPasswordInput) {
+//     // Juste le toggle, pas de validation pour le login
+//     const toggleButton = document.querySelector('#login-form .toggle-password');
+//     if (toggleButton) {
+//       toggleButton.addEventListener('click', function() {
+//           if (loginPasswordInput.type === 'password') {
+//               loginPasswordInput.type = 'text';
+//               this.textContent = '🙈';
+//           } else {
+//               loginPasswordInput.type = 'password';
+//               this.textContent = '👁️';
+//           }
+//       });
+//     }
+//   }
+// }
 
 function setupPasswordValidation() {
   const passwordInput = document.getElementById('password');
-  const loginPasswordInput = document.getElementById('login-password');
   
-  // Validation pour la page d'inscription
+  // Validation pour la page d'inscription seulement
   if (passwordInput) {
     const requirements = {
         length: document.getElementById('req-length'),
@@ -50,11 +119,9 @@ function setupPasswordValidation() {
         special: document.getElementById('req-special')
     };
 
-    // Vérifie si tous les éléments de requirements existent
     if (Object.values(requirements).every(el => el !== null)) {
       passwordInput.addEventListener('input', function() {
           const value = this.value;
-          
           const hasMinLength = value.length >= 8;
           const hasLower = /[a-z]/.test(value);
           const hasUpper = /[A-Z]/.test(value);
@@ -66,23 +133,6 @@ function setupPasswordValidation() {
           toggleClass(requirements.upper, hasUpper);
           toggleClass(requirements.number, hasNumber);
           toggleClass(requirements.special, hasSpecial);
-      });
-    }
-  }
-  
-  // Toggle pour la page de login
-  if (loginPasswordInput) {
-    // Juste le toggle, pas de validation pour le login
-    const toggleButton = document.querySelector('#login-form .toggle-password');
-    if (toggleButton) {
-      toggleButton.addEventListener('click', function() {
-          if (loginPasswordInput.type === 'password') {
-              loginPasswordInput.type = 'text';
-              this.textContent = '🙈';
-          } else {
-              loginPasswordInput.type = 'password';
-              this.textContent = '👁️';
-          }
       });
     }
   }
