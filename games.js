@@ -72,26 +72,36 @@ function createRoom() {
 
 function getPassword(name) {
     return new Promise((resolve, reject) => {
-        document.getElementById("passwordTable").style.display = "block";
+        const modal = document.getElementById("passwordModal");
         const button = document.getElementById("buttonPassword");
+        const closeButton = document.getElementById("closePasswordTable");
+
+        // Afficher le modal
+        modal.style.display = "flex";
+
+        // Valider le mot de passe
         button.addEventListener("click", () => {
-            const tryPassword = document.getElementById("inputPassword");
-            socket.emit("getPassword", tryPassword.value, name);
+            const tryPassword = document.getElementById("inputPassword").value;
+            socket.emit("getPassword", tryPassword, name);
             socket.once("passwordResponse", (isCorrect) => {
                 if (isCorrect) {
                     resolve(true);
+                    modal.style.display = "none"; // Fermer le modal si le mot de passe est correct
                 } else {
                     tryPassword.value = "";
-                    tryPassword.placeholder = "Mdp incorrect";
+                    tryPassword.placeholder = "Mot de passe incorrect";
                 }
             });
         });
-        document.getElementById("closePasswordTable").addEventListener("click", () => {
+
+        // Fermer le modal
+        closeButton.addEventListener("click", () => {
             reject();
-            document.getElementById("passwordTable").style.display = "none";
+            modal.style.display = "none"; // Masquer le modal si l'utilisateur annule
         });
     });
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("createRoom").addEventListener("click", createRoom);
