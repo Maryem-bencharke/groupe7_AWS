@@ -285,7 +285,7 @@ window.resetPassword = async function () {
       // Vérifie si l'email existe
       const methods = await fetchSignInMethodsForEmail(auth, email);
       
-      if (methods.length === 0) {
+      if (methods && methods.length === 0) {
         alert("Cet email n'est associé à aucun compte. Vérifiez l'email ou créez un compte.");
         return;
       }
@@ -294,10 +294,13 @@ window.resetPassword = async function () {
       await sendPasswordResetEmail(auth, email);
       alert("Un email de réinitialisation a été envoyé à " + email);
     } catch (error) {
+      console.error("Erreur détaillée:", error);
       if (error.code === 'auth/invalid-email') {
         alert("L'email saisi est invalide. Veuillez entrer une adresse email valide.");
+      } else if (error.code === 'auth/user-not-found') {
+        alert("Cet email n'est associé à aucun compte. Vérifiez l'email ou créez un compte.");
       } else {
-        alert("Erreur : " + error.message);
+        alert("Erreur lors de l'envoi de l'email de réinitialisation: " + error.message);
       }
     }
   }
