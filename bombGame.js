@@ -1,5 +1,5 @@
-//var socket = io('https://groupe7-aws.onrender.com');
-const socket = io("http://127.0.0.1:3000");
+var socket = io('https://groupe7-aws.onrender.com');
+
 let currentStreak = 0;
 let maxStreak = 0;
 let soloLife = 2; // Nombre de vies en mode solo

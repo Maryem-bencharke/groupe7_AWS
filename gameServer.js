@@ -179,30 +179,24 @@ io.on("connection", (socket) => {
     socket.on("getRandomWord", async () => {
         const word = await getRandomWord();
     
-        // ✅ Initialise bien l'entrée pour le joueur solo
         privateRooms[socket.id] = {
             word,
             life: 6,
             usedWords: []
         };
-    
-        console.log(`Initialisation de privateRooms[${socket.id}] avec le mot : ${word}`);
-    
+        
         io.to(socket.id).emit("startGuessing", "_ ".repeat(word.length));
     });
 
     socket.on("getRandomWordp", async () => {
         const word = await getRandomWordp();
     
-        // ✅ Initialise bien l'entrée pour le joueur solo
         privateRooms[socket.id] = {
             word,
             life: 6,
             usedWords: []
         };
-    
-        console.log(`Initialisation de privateRooms[${socket.id}] avec le mot : ${word}`);
-    
+        
         io.to(socket.id).emit("startGuessing", "_ ".repeat(word.length));
     });
     
@@ -326,7 +320,18 @@ io.on("connection", (socket) => {
 
     // pour bombGame
 
-    let syllables = ["NS", "ALO", "ES", "TR", "CON", "PO", "AIE", "NT", "IS", "TO", "ER", "EN", "ONI", "ONS", "UR", "MI", "SIO", "NAU", "RIS", "SSE", "ASS", "TS", "SUR", "LAS", "HE", "GO", "SSA", "GN", "ANC", "EZ", "ON"];
+    let syllables = ["NS", "ALO", "ES", "TR", "CON", "PO", "AIE", "NT", 
+        "IS", "TO", "ON", "ER", "EN", "ONI", "ONS", "UR", 
+        "MI", "SIO", "NAU", "RIS", "SSE", "ASS", "TS", 
+        "SUR", "LAS", "HE", "GO", "SSA", "GN", "ANC", 
+        "EZ", "EFA", "LA", "OU", "AN", "EI", "EV", 
+        "AI", "PA", "TE", "MA", "ENC", "IN", "NV", 
+        "HY", "ICA", "NGE", "RAI", "AE", "ITE", "CT",
+        "RO", "AME", "RIC", "ION", "CH", "FA", "DI",
+        "TI", "IA", "ISA", "ONT", "TIO", "EUR", "RA", 
+        "ANT", "EBA", "RE", "AH", "ILL", "NTA", "RC", 
+        "ME", "AT", "US", "NAT", "SAI", "ULE", "TAT", 
+        "DE", "EVA", "DAI", "PIQ", "VRE", "UI", "IT", "RGE"];
     let bombGameStartLife = 2;
     let bombGameMinTimer = 5.0;
     let bombGameMaxTimer = 15.0;
@@ -342,7 +347,6 @@ io.on("connection", (socket) => {
         let randomSyllable = getRandomSyllable();
         if (name) {
             publicRooms[name].currentSyllable = randomSyllable;
-            console.log("syllable assigné : " + publicRooms[name].currentSyllable);
         } else {
             // mode solo
             privateRooms[socket.id].currentSyllable = randomSyllable;
