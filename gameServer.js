@@ -10,11 +10,6 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const wordsRef = collection(db, "words");
-const q = query(wordsRef, where("length", ">=", 5), where("length", "<=", 6));
-const qp = query(wordsRef);
-
-
 
 const app = express();
 const server = http.createServer(app);
@@ -652,7 +647,7 @@ function removeAccents(str) {
 async function getRandomWord() {
     try {
         const wordsRef = collection(db, "words");
-        const q = query(wordsRef, where("length", "==", 6));
+        const q = query(wordsRef, where("length", ">=", 5), where("length", "<=", 6));
         const querySnapshot = await getDocs(q);
 
         const words = [];
@@ -674,8 +669,8 @@ async function getRandomWord() {
 async function getRandomWordp() {
     try {
         const wordsRef = collection(db, "words");
-        const qp = query(wordsRef, where("length", "==", 6));
-        const querySnapshot = await getDocs(q);
+        const qp = query(wordsRef);
+        const querySnapshot = await getDocs(qp);
 
         const words = [];
         querySnapshot.forEach((doc) => {
