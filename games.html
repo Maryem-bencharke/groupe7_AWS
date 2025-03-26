@@ -93,7 +93,9 @@
             }
         });
     </script> -->
-    <script>
+    <script type="module">
+        import { auth, onAuthStateChanged } from './firebase-config.js';
+        
         document.addEventListener("DOMContentLoaded", function() {
             onAuthStateChanged(auth, (user) => {
                 const logoutContainer = document.getElementById('logoutContainer');
