@@ -1,19 +1,32 @@
-const express = require('express');
-const http = require('http');
-const path = require('path');
-const socketIo = require('socket.io');
+import express from 'express';
+import http from 'http';
+import path from 'path';
+import { Server as socketIo } from 'socket.io';
+import { db } from "./firebase-config.js";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { Server } from 'socket.io';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const wordsRef = collection(db, "words");
+const q = query(wordsRef, where("length", ">=", 5), where("length", "<=", 6));
+const qp = query(wordsRef);
+
+
 
 const app = express();
 const server = http.createServer(app);
 //const io = socketIo(server);
-const io = socketIo(server, {
+const io = new Server(server, { 
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
     }
 });
 
-app.use(express.static(__dirname));  // sert directement depuis la racine
+app.use(express.static(path.join(__dirname)));  // sert directement depuis la racine
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));  // charge directement index.html depuis racine
@@ -131,6 +144,10 @@ io.on("connection", (socket) => {
         }
         } else {
             // mode solo
+            if (!privateRooms[socket.id]) {
+                console.error(`Erreur : privateRooms[${socket.id}] est undefined !`);
+                return;
+            } 
             guessLetter(letter, privateRooms[socket.id].word, socket.id);
         }
     });
@@ -164,15 +181,37 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on("getRandomWord", () => {
-        if (!privateRooms[socket.id]) {
-            privateRooms[socket.id] = {}; 
-        }
-        privateRooms[socket.id].life = 6;
-        const word = getRandomWordTest();
-        privateRooms[socket.id].word = word;
+    socket.on("getRandomWord", async () => {
+        const word = await getRandomWord();
+    
+        // ✅ Initialise bien l'entrée pour le joueur solo
+        privateRooms[socket.id] = {
+            word,
+            life: 6,
+            usedWords: []
+        };
+    
+        console.log(`Initialisation de privateRooms[${socket.id}] avec le mot : ${word}`);
+    
         io.to(socket.id).emit("startGuessing", "_ ".repeat(word.length));
     });
+
+    socket.on("getRandomWordp", async () => {
+        const word = await getRandomWordp();
+    
+        // ✅ Initialise bien l'entrée pour le joueur solo
+        privateRooms[socket.id] = {
+            word,
+            life: 6,
+            usedWords: []
+        };
+    
+        console.log(`Initialisation de privateRooms[${socket.id}] avec le mot : ${word}`);
+    
+        io.to(socket.id).emit("startGuessing", "_ ".repeat(word.length));
+    });
+    
+    
 
     socket.on("disconnect", () => {
         console.log(`Un joueur s'est déconnecté : ${socket.id}`);
@@ -220,6 +259,8 @@ io.on("connection", (socket) => {
 
     // pour wordle
     socket.on("guessWord", ({name, wordGuessed}) => {
+        let result, remainingLife, win;
+    
         if (name) {
             const players = Object.keys(publicRooms[name].words);
             if (!publicRooms[name].win) {
@@ -266,14 +307,23 @@ io.on("connection", (socket) => {
             }
         } else {
             // mode solo
-            ({result, remainingLife, win} = guessWord(wordGuessed, privateRooms[socket.id].word, privateRooms[socket.id].life));
-            io.to(socket.id).emit("guessResult", ({result, remainingLife}));
-            if (win == 2) {
-                privateRooms[socket.id].life = remainingLife;
-            } else if (win == 1) {
-                io.to(socket.id).emit("soloGameResult", "Victoire");
+            if (privateRooms[socket.id] && privateRooms[socket.id].word) {
+                ({result, remainingLife, win} = guessWord(
+                    wordGuessed,
+                    privateRooms[socket.id].word,
+                    privateRooms[socket.id].life
+                ));
+                io.to(socket.id).emit("guessResult", ({result, remainingLife}));
+    
+                if (win == 2) {
+                    privateRooms[socket.id].life = remainingLife;
+                } else if (win == 1) {
+                    io.to(socket.id).emit("soloGameResult", "Victoire");
+                } else {
+                    io.to(socket.id).emit("soloGameResult", "Défaite");
+                }
             } else {
-                io.to(socket.id).emit("soloGameResult", "Défaite");
+                console.error("privateRooms[socket.id] est undefined ou ne contient pas 'word'", privateRooms[socket.id]);
             }
         }
     });
@@ -561,6 +611,10 @@ io.on("connection", (socket) => {
     }
 
     socket.on("joinBombSolo", (name) => {
+        if (!privateRooms[socket.id]) {
+            console.error(`privateRooms[${socket.id}] non initialisé !`);
+        }
+        
         privateRooms[socket.id] = {
             life: bombGameStartLife,
             usedWords: [],
@@ -588,29 +642,56 @@ io.on("connection", (socket) => {
 
 });
 
-function getRandomWordTest() {
-    const words = ["APPLE", "BANANA", "CHERRY", "ORANGE", "MELON"];
-    return words[Math.floor(Math.random() * words.length)];
-}
+
 
 // Mode solo : génération d'un mot aléatoire
+function removeAccents(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 async function getRandomWord() {
     try {
-        const random = ~~(Math.random() * wordsNumber);
-        const wordQuery = query(collection(db, "words"), where("id", "==", random));
-        const querySnapshot = await getDocs(wordQuery);
-        if (!querySnapshot.empty) {
-            console.log("mot trouvé " + querySnapshot.docs[0].data().word.toUpperCase())
-            return querySnapshot.docs[0].data().word.toUpperCase();
-        } else {
-            console.log("Aucun mot trouvé dans la base de données")
-            return null;
+        const wordsRef = collection(db, "words");
+        const q = query(wordsRef, where("length", "==", 6));
+        const querySnapshot = await getDocs(q);
+
+        const words = [];
+        querySnapshot.forEach((doc) => {
+            words.push(removeAccents(doc.data().word.toUpperCase())); // Supprime les accents
+        });
+
+        if (words.length === 0) {
+            throw new Error("Aucun mot trouvé.");
         }
+
+        return words[Math.floor(Math.random() * words.length)];
     } catch (error) {
-        console.error("Erreur lors de la récupération :", error);
+        console.error("Erreur Firebase :", error);
+        return "SECRET"; // Mot par défaut en cas d'échec
     }
 }
 
+async function getRandomWordp() {
+    try {
+        const wordsRef = collection(db, "words");
+        const qp = query(wordsRef, where("length", "==", 6));
+        const querySnapshot = await getDocs(q);
+
+        const words = [];
+        querySnapshot.forEach((doc) => {
+            words.push(removeAccents(doc.data().word.toUpperCase())); // Supprime les accents
+        });
+
+        if (words.length === 0) {
+            throw new Error("Aucun mot trouvé.");
+        }
+
+        return words[Math.floor(Math.random() * words.length)];
+    } catch (error) {
+        console.error("Erreur Firebase :", error);
+        return "SECRET"; // Mot par défaut en cas d'échec
+    }
+}
 // Vérification des lettres entrées
 function guessLetter(letterGuessed, word, player) {
     if (word.includes(letterGuessed)) {

@@ -222,7 +222,7 @@ function replayButton() {
           hideEndBanner();
           life = 6;
           lettersTyped = [];
-          socket.emit("getRandomWord");
+          socket.emit("getRandomWordp");
       });
     }
 }
@@ -284,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // mode solo
         hideChoosenWordDisplay();
         document.getElementById("lobbyMembers").style.display = "none";
-        socket.emit("getRandomWord");
+        socket.emit("getRandomWordp");
     }
     replayButton();
     console.log("Jeu prêt");

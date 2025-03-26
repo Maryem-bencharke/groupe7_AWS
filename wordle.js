@@ -162,12 +162,17 @@ function replayButton() {
 
 // affichage après avoir envoyé et reçu son mot
 socket.on("startGuessing", (word) => {
+    if (!word || typeof word !== "string") {
+        console.error("Mot invalide reçu :", word);
+        return; // Quitter si le mot est invalide
+    }
     document.getElementById("gameContainer").style = "display: block";
     addKeyboardEvent();
     addVirtualKeyboardEvent();
     targetWordLenght = word.length / 2;
     createGrid(word.length / 2); // on divise par 2 car word c'est '_ _ _ '
 });
+
 
 socket.on("guessResult", ({result, remainingLife}) => {
     wordleLife  = remainingLife;
