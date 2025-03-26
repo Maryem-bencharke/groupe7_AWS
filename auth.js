@@ -258,6 +258,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Fonction pour déconnecter l'utilisateur
 function logoutUser() {
+  if (!auth.currentUser) {
+    alert("Vous êtes déjà déconnecté (mode invité)");
+    return;
+}
     signOut(auth).then(() => {
         alert("Vous êtes maintenant déconnecté !");
         window.location.href = "index.html";

@@ -83,7 +83,7 @@
         </div>
     </section>
 
-    <script>
+    <!-- <script>
         document.addEventListener("DOMContentLoaded", function() {
             const isLoggedIn = localStorage.getItem('isLoggedIn');
             if (isLoggedIn === 'true') {
@@ -91,6 +91,23 @@
                     <button onclick="logoutUser()">Déconnexion</button>
                 `;
             }
+        });
+    </script> -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Vérifie si l'utilisateur est connecté via Firebase
+            onAuthStateChanged(auth, (user) => {
+                const logoutContainer = document.getElementById('logoutContainer');
+                if (user) {
+                    // Utilisateur connecté - affiche le bouton
+                    logoutContainer.innerHTML = `
+                        <button onclick="logoutUser()" class="logout-btn">Déconnexion</button>
+                    `;
+                } else {
+                    // Invité - vide le container
+                    logoutContainer.innerHTML = '';
+                }
+            });
         });
     </script>
 </body>
