@@ -1,4 +1,5 @@
-var socket = io('https://groupe7-aws.onrender.com');
+const socket = io("http://127.0.0.1:3000");
+//var socket = io('https://groupe7-aws.onrender.com');
 
 let life = 6;
 let wordToGuess = "";
@@ -222,7 +223,7 @@ function replayButton() {
           hideEndBanner();
           life = 6;
           lettersTyped = [];
-          socket.emit("getRandomWord");
+          socket.emit("getRandomWordp");
       });
     }
 }
@@ -284,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // mode solo
         hideChoosenWordDisplay();
         document.getElementById("lobbyMembers").style.display = "none";
-        socket.emit("getRandomWord");
+        socket.emit("getRandomWordp");
     }
     replayButton();
     console.log("Jeu prêt");
@@ -328,6 +329,3 @@ function addLobbyMember(name, id) {
 socket.on("gameOver", ({ winnerName }) => {
     document.getElementById('winnerDisplay').innerText = `Gagnant : ${winnerName}`;
 });
-
-
-
